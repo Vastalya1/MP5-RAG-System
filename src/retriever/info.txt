@@ -1,0 +1,4 @@
+-perform hnsw search 
+- re-rank the chunks
+-give the chunks, prompt and query to the llm
+-generate results

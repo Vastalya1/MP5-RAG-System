@@ -1,0 +1,3 @@
+-get the query from the user
+-use llm to rewrite teh query into proper format
+-send the query to the retriver
