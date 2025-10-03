@@ -1,0 +1,3 @@
+-display the ui
+- take the input query and pdf as required
+- display the results
