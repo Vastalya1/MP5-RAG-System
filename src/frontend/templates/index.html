@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policy QA System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-8">Policy Question Answering System</h1>
+        
+        <!-- File Upload Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Upload New Policy</h2>
+            <form id="uploadForm" class="space-y-4">
+                <div class="flex items-center space-x-4">
+                    <input type="file" 
+                           id="policyFile" 
+                           accept=".pdf"
+                           class="flex-1 p-2 border rounded">
+                    <button type="submit"
+                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        Upload
+                    </button>
+                </div>
+                <div id="uploadStatus" class="text-sm"></div>
+            </form>
+        </div>
+
+        <!-- Query Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Ask a Question</h2>
+            <form id="queryForm" class="space-y-4">
+                <textarea id="query"
+                          placeholder="Enter your question here..."
+                          class="w-full p-3 border rounded-lg resize-none h-32"></textarea>
+                <button type="submit"
+                        class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
+                    Submit
+                </button>
+            </form>
+
+            <!-- Response Section -->
+            <div class="mt-8">
+                <h3 class="font-semibold mb-2">Response:</h3>
+                <div id="response" class="p-4 bg-gray-50 rounded-lg min-h-[100px] whitespace-pre-wrap"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File Upload Handler
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('policyFile');
+            const statusDiv = document.getElementById('uploadStatus');
+            
+            if (!fileInput.files[0]) {
+                statusDiv.textContent = 'Please select a file first.';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                statusDiv.textContent = 'Uploading...';
+                const response = await fetch('/upload-policy', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                statusDiv.textContent = data.message || data.error;
+            } catch (error) {
+                statusDiv.textContent = 'Upload failed: ' + error.message;
+            }
+        });
+
+        // Query Handler
+        document.getElementById('queryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const queryInput = document.getElementById('query');
+            const responseDiv = document.getElementById('response');
+            
+            if (!queryInput.value.trim()) {
+                responseDiv.textContent = 'Please enter a question.';
+                return;
+            }
+
+            try {
+                responseDiv.textContent = 'Processing...';
+                const formData = new FormData();
+                formData.append('query', queryInput.value);
+
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                responseDiv.textContent = data.response || data.error;
+            } catch (error) {
+                responseDiv.textContent = 'Query failed: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
