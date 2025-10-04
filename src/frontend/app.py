@@ -5,9 +5,16 @@ from fastapi.responses import HTMLResponse
 import shutil
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Import your ingestion pipeline and other necessary components
-from ..ingestion.ingestionPipeline import IngestionPipeline
+from src.ingestion.ingestionPipeline import IngestionPipeline
+from src.queryRewriter.rewriting import QueryRewriter
+
+
+# Initialize the query rewriter with your API key
+GEMINI_API_KEY = 'your-api-key-here'  # Replace with your actual API key
+query_rewriter = QueryRewriter(GEMINI_API_KEY)
 
 # Get the base directory
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -53,10 +60,16 @@ async def upload_policy(file: UploadFile = File(...)):
 @app.post("/query")
 async def query(query: str = Form(...)):
     try:
-        # Here you'll implement the query processing logic
-        # For now, returning a placeholder
+        # Rewrite the query using medical insurance terminology
+        rewritten_query = await query_rewriter.rewrite_query(query)
+        
+        if rewritten_query is None:
+            return {"error": "Failed to rewrite query"}
+            
+        # Here you'll implement the RAG logic with the rewritten query
+        # For now, returning the rewritten query
         return {
-            "response": f"Your query: {query}\nThis is a placeholder response. Implement your RAG logic here."
+            "response": f"Original query: {query}\nRewritten query: {rewritten_query}"
         }
     except Exception as e:
         return {"error": str(e)}
