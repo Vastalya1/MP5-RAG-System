@@ -1,9 +1,9 @@
 import os
 from typing import List, Dict
+import os
+from typing import List, Dict
 import chromadb
-from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
-from .chunker import chunk_pdfs
 
 class DocumentEmbedder:
     def __init__(self, collection_name: str = "policy_documents"):
@@ -12,10 +12,9 @@ class DocumentEmbedder:
         self.model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
         
         # Initialize ChromaDB
-        self.client = chromadb.Client(Settings(
-            chroma_db_impl="duckdb+parquet",
-            persist_directory="D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\chromadb"
-        ))
+        self.client = chromadb.PersistentClient(
+                path=r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\chromadb",
+        )
         
         # Get or create collection
         self.collection = self.client.get_or_create_collection(
