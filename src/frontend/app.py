@@ -12,8 +12,8 @@ from src.ingestion.ingestionPipeline import IngestionPipeline
 from src.queryRewriter.rewriting import QueryRewriter
 
 
-# Initialize the query rewriter with your API key
-GEMINI_API_KEY = 'your-api-key-here'  # Replace with your actual API key
+# Initialize the query rewriter with API key
+GEMINI_API_KEY = "AIzaSyBLJ_eYaCBQ6TY4RUGf_gelHyU1H4pPw1g"  # Replace this with your actual Gemini API key
 query_rewriter = QueryRewriter(GEMINI_API_KEY)
 
 # Get the base directory
@@ -60,16 +60,25 @@ async def upload_policy(file: UploadFile = File(...)):
 @app.post("/query")
 async def query(query: str = Form(...)):
     try:
+        print(f"Processing query: {query}")
+        print(f"Using API key: {GEMINI_API_KEY[:10]}...")  # Print first 10 chars of API key for verification
+        
         # Rewrite the query using medical insurance terminology
         rewritten_query = await query_rewriter.rewrite_query(query)
         
         if rewritten_query is None:
-            return {"error": "Failed to rewrite query"}
+            print("Query rewriting failed")
+            return {"error": "Failed to rewrite query. Please check server logs for details."}
             
+        print(f"Successfully rewrote query: {rewritten_query}")
         # Here you'll implement the RAG logic with the rewritten query
         # For now, returning the rewritten query
         return {
             "response": f"Original query: {query}\nRewritten query: {rewritten_query}"
         }
     except Exception as e:
-        return {"error": str(e)}
+        print(f"Error in query endpoint: {str(e)}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        traceback.print_exc()
+        return {"error": f"An error occurred: {str(e)}"}
