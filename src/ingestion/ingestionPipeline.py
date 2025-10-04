@@ -59,15 +59,15 @@ class IngestionPipeline:
             print(f"\n❌ Error during ingestion: {str(e)}")
             raise
 
-if __name__ == "__main__":
-    # Example usage
-    dataset_dir = r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\dataset"
-    output_dir = None
+# if __name__ == "__main__":
+#     # Example usage
+#     dataset_dir = r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\dataset"
+#     output_dir = None
     
-    pipeline = IngestionPipeline(
-        dataset_dir=dataset_dir,
-        collection_name="policy_documents",
-        chunk_output_dir=output_dir
-    )
+#     pipeline = IngestionPipeline(
+#         dataset_dir=dataset_dir,
+#         collection_name="policy_documents",
+#         chunk_output_dir=output_dir
+#     )
     
-    pipeline.run()
+#     pipeline.run()
