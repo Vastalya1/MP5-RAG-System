@@ -4,6 +4,7 @@ import os
 from typing import List, Dict
 import chromadb
 from sentence_transformers import SentenceTransformer
+from .chunker import chunk_pdfs
 
 class DocumentEmbedder:
     def __init__(self, collection_name: str = "policy_documents"):
@@ -53,7 +54,7 @@ class DocumentEmbedder:
             input_folder: Path to folder containing PDF files
         """
         # Get chunks from PDFs
-        chunks = chunk_pdfs(input_folder)
+        chunks = chunk_pdfs(input_folder, None)
         
         # Embed and store chunks
         self.embed_documents(chunks)
