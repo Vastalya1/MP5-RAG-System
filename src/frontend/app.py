@@ -7,14 +7,20 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Import your ingestion pipeline and other necessary components
+# Import all RAG pipeline components
 from src.ingestion.ingestionPipeline import IngestionPipeline
 from src.queryRewriter.rewriting import QueryRewriter
+from src.retriever.retrival import retrivalModel
+from src.retriever.reranking import ChunkReranker
+from src.output.answerGeneration import AnswerGenerator
 
 
-# Initialize the query rewriter with API key
+# Initialize all components with API key
 GEMINI_API_KEY = "AIzaSyBLJ_eYaCBQ6TY4RUGf_gelHyU1H4pPw1g"  # Replace this with your actual Gemini API key
 query_rewriter = QueryRewriter(GEMINI_API_KEY)
+retriever = retrivalModel()
+reranker = ChunkReranker(GEMINI_API_KEY)
+answer_generator = AnswerGenerator(GEMINI_API_KEY)
 
 # Get the base directory
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -63,18 +69,35 @@ async def query(query: str = Form(...)):
         print(f"Processing query: {query}")
         print(f"Using API key: {GEMINI_API_KEY[:10]}...")  # Print first 10 chars of API key for verification
         
-        # Rewrite the query using medical insurance terminology
+        # Step 1: Rewrite the query using medical insurance terminology
         rewritten_query = await query_rewriter.rewrite_query(query)
-        
         if rewritten_query is None:
             print("Query rewriting failed")
             return {"error": "Failed to rewrite query. Please check server logs for details."}
-            
-        print(f"Successfully rewrote query: {rewritten_query}")
-        # Here you'll implement the RAG logic with the rewritten query
-        # For now, returning the rewritten query
+        print(f"✨ Successfully rewrote query: {rewritten_query}")
+
+        # Step 2: Retrieve relevant chunks
+        initial_chunks = retriever.retrive_Chunks(rewritten_query)
+        if not initial_chunks:
+            return {"error": "No relevant information found in the database."}
+        print(f"📄 Retrieved {len(initial_chunks)} initial chunks")
+
+        # Step 3: Rerank chunks
+        reranked_chunks = await reranker.rerank_chunks(rewritten_query, initial_chunks)
+        if not reranked_chunks:
+            return {"error": "Failed to rerank chunks."}
+        print(f"🔄 Reranked chunks successfully")
+
+        # Step 4: Generate answer
+        answer_response = await answer_generator.generate_answer(rewritten_query, reranked_chunks)
+        
+        # Step 5: Return formatted response
         return {
-            "response": f"Original query: {query}\nRewritten query: {rewritten_query}"
+            "original_query": query,
+            "rewritten_query": rewritten_query,
+            "answer": answer_response["answer"],
+            "justification": answer_response["justification"],
+            "sources": answer_response["source_chunks"]
         }
     except Exception as e:
         print(f"Error in query endpoint: {str(e)}")
