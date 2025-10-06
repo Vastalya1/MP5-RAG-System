@@ -8,9 +8,9 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-8">
     <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold text-center mb-8">Policy Question Answering System</h1>
+        <h1 class="text-3xl font-bold text-center mb-8">RAG based System for Policy Query Resolution</h1>
         
-        <!-- File Upload Section -->
+        <!-- File Upload Section
         <div class="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 class="text-xl font-semibold mb-4">Upload New Policy</h2>
             <form id="uploadForm" class="space-y-4">
@@ -26,7 +26,7 @@
                 </div>
                 <div id="uploadStatus" class="text-sm"></div>
             </form>
-        </div>
+        </div> -->
 
         <!-- Query Section -->
         <div class="bg-white p-6 rounded-lg shadow-md">
@@ -112,9 +112,15 @@
             }
 
             try {
-                // Show loading state
+                // Show loading state and clear previous outputs
                 responseSection.classList.remove('hidden');
-                answer.innerHTML = '<div class="animate-pulse">Processing your question...</div>';
+                
+                // Clear all previous content
+                document.getElementById('originalQuery').textContent = '';
+                document.getElementById('rewrittenQuery').textContent = '';
+                document.getElementById('answer').innerHTML = '<div class="animate-pulse">Processing your question...</div>';
+                document.getElementById('justification').textContent = '';
+                document.getElementById('sources').innerHTML = '';
 
                 const formData = new FormData();
                 formData.append('query', queryInput.value);
@@ -129,11 +135,37 @@
                     throw new Error(data.error);
                 }
 
+                // Function to format text with markdown-style formatting
+                function formatText(text) {
+                    // First split the text into main content and numbered points
+                    let parts = text.split(/(?=\d+\.\s)/);
+                    
+                    // Format the initial text (if any)
+                    let formattedText = parts[0];
+                    
+                    // If there are numbered points, format them as a list
+                    if (parts.length > 1) {
+                        formattedText += '<ul class="list-none space-y-2 mt-2">';
+                        for (let i = 1; i < parts.length; i++) {
+                            formattedText += `<li class="pl-4">${parts[i]}</li>`;
+                        }
+                        formattedText += '</ul>';
+                    }
+
+                    // Handle bold text (**text**)
+                    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>');
+                    
+                    // Handle line breaks
+                    formattedText = formattedText.replace(/\n/g, '<br>');
+                    
+                    return formattedText;
+                }
+
                 // Update all sections with the response
                 document.getElementById('originalQuery').textContent = data.original_query;
                 document.getElementById('rewrittenQuery').textContent = data.rewritten_query;
-                document.getElementById('answer').textContent = data.answer;
-                document.getElementById('justification').textContent = data.justification;
+                document.getElementById('answer').innerHTML = formatText(data.answer);
+                document.getElementById('justification').innerHTML = formatText(data.justification);
 
                 // Update sources
                 const sourcesDiv = document.getElementById('sources');

@@ -80,7 +80,16 @@ Referenced from Section: [section_heading]"""
                 # Parse the response into parts
                 answer_parts = answer_text.split("Justification:")
                 main_answer = answer_parts[0].replace("Answer:", "").strip()
-                justification = answer_parts[1].strip() if len(answer_parts) > 1 else ""
+                
+                # Extract just the section references from justification
+                justification = ""
+                if len(answer_parts) > 1:
+                    # Get only the "Referenced from Section:" part
+                    section_parts = answer_parts[1].split("Referenced from Section:")
+                    if len(section_parts) > 1:
+                        justification = "Referenced from Section: " + section_parts[1].strip()
+                    else:
+                        justification = answer_parts[1].strip()
                 
                 # Create response object
                 response_object = {
