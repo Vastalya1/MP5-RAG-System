@@ -15,9 +15,13 @@ from src.retriever.reranking import ChunkReranker
 from src.output.answerGeneration import AnswerGenerator
 
 
-# Initialize all components with API key
-GEMINI_API_KEY = "AIzaSyBLJ_eYaCBQ6TY4RUGf_gelHyU1H4pPw1g"  # Replace this with your actual Gemini API key
-query_rewriter = QueryRewriter(GEMINI_API_KEY)
+# Initialize all components with API keys
+MISTRAL_API_KEY = "IQEYxF0lNL2msXCKTg1ryDz9v3tSiQ59"  # Replace with your Mistral API key
+GEMINI_API_KEY = "AIzaSyBLJ_eYaCBQ6TY4RUGf_gelHyU1H4pPw1g"  # Replace with your Gemini API key
+
+# Initialize components
+# query_rewriter = QueryRewriter(GEMINI_API_KEY)
+query_rewriter = QueryRewriter(MISTRAL_API_KEY)  # Now using Mistral API
 retriever = retrivalModel()
 reranker = ChunkReranker(GEMINI_API_KEY)
 answer_generator = AnswerGenerator(GEMINI_API_KEY)
