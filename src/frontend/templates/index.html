@@ -32,7 +32,7 @@
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-semibold mb-4">Ask a Question</h2>
             <form id="queryForm" class="space-y-4">
-                <textarea id="query"
+                <textarea id="query" name="query"
                           placeholder="Enter your question here..."
                           class="w-full p-3 border rounded-lg resize-none h-32"></textarea>
                 <button type="submit"
@@ -72,36 +72,67 @@
     </div>
 
     <script>
-        // File Upload Handler
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('policyFile');
-            const statusDiv = document.getElementById('uploadStatus');
+        // Function to format text with markdown-style formatting
+        function formatText(text) {
+            if (!text) return '';
             
-            if (!fileInput.files[0]) {
-                statusDiv.textContent = 'Please select a file first.';
-                return;
+            // First split the text into main content and numbered points
+            let parts = text.split(/(?=\d+\.\s)/);
+            
+            // Format the initial text (if any)
+            let formattedText = parts[0];
+            
+            // If there are numbered points, format them as a list
+            if (parts.length > 1) {
+                formattedText += '<ul class="list-none space-y-2 mt-2">';
+                for (let i = 1; i < parts.length; i++) {
+                    formattedText += `<li class="pl-4">${parts[i]}</li>`;
+                }
+                formattedText += '</ul>';
             }
 
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
+            // Handle bold text (**text**)
+            formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>');
+            
+            // Handle line breaks
+            formattedText = formattedText.replace(/\n/g, '<br>');
+            
+            return formattedText;
+        }
 
-            try {
-                statusDiv.textContent = 'Uploading...';
-                const response = await fetch('/upload-policy', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                statusDiv.textContent = data.message || data.error;
-            } catch (error) {
-                statusDiv.textContent = 'Upload failed: ' + error.message;
-            }
-        });
+        // File Upload Handler (only attach if the upload form exists)
+        const uploadForm = document.getElementById('uploadForm');
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const fileInput = document.getElementById('policyFile');
+                const statusDiv = document.getElementById('uploadStatus');
+                
+                if (!fileInput.files[0]) {
+                    statusDiv.textContent = 'Please select a file first.';
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                try {
+                    statusDiv.textContent = 'Uploading...';
+                    const response = await fetch('/upload-policy', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    statusDiv.textContent = data.message || data.error;
+                } catch (error) {
+                    statusDiv.textContent = 'Upload failed: ' + error.message;
+                }
+            });
+        }
 
         // Query Handler
         document.getElementById('queryForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Prevent the form from submitting normally
             const queryInput = document.getElementById('query');
             const responseSection = document.getElementById('responseSection');
             const answer = document.getElementById('answer');
@@ -125,8 +156,13 @@
                 const formData = new FormData();
                 formData.append('query', queryInput.value);
 
+                // Set headers to indicate we want JSON response
+                const headers = new Headers();
+                headers.append('Accept', 'application/json');
+
                 const response = await fetch('/query', {
                     method: 'POST',
+                    headers: headers,
                     body: formData
                 });
                 const data = await response.json();
