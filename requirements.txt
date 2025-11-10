@@ -8,3 +8,5 @@ PyPDF2
 google-generativeai
 mistralai
 python-dotenv
+pdfplumber
+python-dotenv
