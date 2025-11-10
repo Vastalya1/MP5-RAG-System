@@ -235,95 +235,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Policy QA System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Links to your external CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f9fc;
-        }
-        .card-shadow {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06), 0 0 0 4px rgba(99, 102, 241, 0.1);
-        }
+        /* Placeholder styling for consistency if style.css hasn't loaded */
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .query-section { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
-<body class="min-h-screen p-4 sm:p-8">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-extrabold text-gray-900 text-center mb-10">RAG-based System for Policy Query Resolution</h1>
+<body>
+    <div class="container">
+        <h1>RAG-based System for Policy Query Resolution</h1>
         
-        <!-- Query Section -->
-        <div class="bg-white p-6 rounded-2xl card-shadow">
-            <h2 class="text-2xl font-semibold mb-4 text-indigo-700">Ask a Question</h2>
+        <!-- Query Section using a class for styling -->
+        <div class="query-section">
+            <h2>Ask a Question</h2>
             
-            <!-- Message Box for Alerts (Replaces alert()) -->
-            <div id="messageBox" class="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg hidden mb-4" role="alert"></div>
+            <!-- Message Box for JS status messages -->
+            <div id="messageBox" class="error hidden" role="alert"></div>
 
-            <form id="queryForm" class="space-y-4">
+            <form id="queryForm" action="/query" method="POST">
                 <textarea id="query" name="query"
-                          placeholder="Enter your policy question here (e.g., What are the rules regarding remote work eligibility?)"
-                          class="w-full p-4 border border-gray-300 rounded-xl resize-none h-32 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="Enter your policy question here..."
+                          rows="5"
+                          style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px;"
                           required></textarea>
-                <div class="flex justify-end">
+                <div class="actions" style="text-align: right;">
                     <button type="submit"
                             id="submitButton"
-                            class="bg-indigo-600 text-white font-semibold px-8 py-3 rounded-xl hover:bg-indigo-700 transition duration-150 ease-in-out shadow-lg disabled:opacity-50"
-                            >
+                            class="button">
                         Submit Query
                     </button>
                 </div>
             </form>
-
-            <!-- Response Section -->
-            <div id="responseSection" class="mt-10 hidden border-t border-gray-200 pt-8">
-                <div class="space-y-6">
-
-                    <!-- Original Query Card -->
-                    <div class="p-5 bg-indigo-50 rounded-xl border border-indigo-200">
-                        <h3 class="font-bold text-indigo-800 mb-2 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c0-3.379 2.16-6.128 4.832-6.128s4.832 2.749 4.832 6.128c0 2.923-1.6 5.485-3.832 7.027"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21h-2a2 2 0 01-2-2v-4a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2z"></path></svg>
-                            Original Question:
-                        </h3>
-                        <div id="originalQuery" class="text-gray-800"></div>
-                    </div>
-                    
-                    <!-- Rewritten Query Card -->
-                    <div class="p-5 bg-gray-50 rounded-xl border border-gray-200">
-                        <h3 class="font-bold text-gray-700 mb-2 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7l5 5m0 0l5-5m-5 5v12"></path></svg>
-                            Rewritten Query (Internal Search):
-                        </h3>
-                        <div id="rewrittenQuery" class="text-gray-600 italic"></div>
-                    </div>
-
-                    <!-- Answer Card -->
-                    <div class="p-6 bg-green-50 rounded-2xl border border-green-300">
-                        <h3 class="font-bold text-green-800 mb-3 text-lg flex items-center">
-                            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.27a8 8 0 11-12.723 11.233L12 22l3.105-3.037a8 8 0 015.618-8.77z"></path></svg>
-                            Resolution Answer:
-                        </h3>
-                        <div id="answer" class="text-gray-800 leading-relaxed space-y-3"></div>
-                    </div>
-
-                    <!-- Justification Card -->
-                    <div class="p-5 bg-yellow-50 rounded-xl border border-yellow-300">
-                        <h3 class="font-bold text-yellow-800 mb-2 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Justification / Confidence:
-                        </h3>
-                        <div id="justification" class="text-gray-700 leading-snug"></div>
-                    </div>
-
-                    <!-- Sources Card -->
-                    <div class="p-5 bg-gray-50 rounded-xl border border-gray-200">
-                        <h3 class="font-bold text-gray-700 mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v4a4 4 0 004 4h4a4 4 0 004-4V7m0 0H8m0 0V5a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
-                            Sources (Retrieved Chunks):
-                        </h3>
-                        <div id="sources" class="space-y-4"></div>
-                    </div>
-                    
-                </div>
-            </div>
         </div>
     </div>
 
@@ -332,7 +276,7 @@
         function showMessage(message, type = 'error') {
             const msgBox = document.getElementById('messageBox');
             msgBox.textContent = message;
-            msgBox.className = `p-3 border rounded-lg mb-4 ${type === 'error' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-green-100 border-green-400 text-green-700'}`;
+            msgBox.className = type === 'error' ? 'error' : 'success';
             msgBox.classList.remove('hidden');
             
             setTimeout(() => {
@@ -340,134 +284,21 @@
             }, 5000);
         }
 
-        // Function to format text with simple HTML equivalents for markdown
-        function formatText(text) {
-            if (!text) return '';
-            
-            // Handle numbered lists (1. 2. 3.) and bullet points (* or -)
-            let html = text.replace(/\n\s*(\d+\.\s.*)/g, '<br><li>$1</li>')
-                             .replace(/\n\s*([-*]\s.*)/g, '<br><li>$1</li>');
-
-            // Wrap list items if they exist
-            if (html.includes('<li>')) {
-                // Ensure list starts with ul/ol if it doesn't already
-                if (!html.startsWith('<li>')) {
-                    html = html.substring(0, html.indexOf('<li>')) + '<ul class="list-disc ml-6 space-y-1">' + html.substring(html.indexOf('<li>'));
-                } else {
-                    html = '<ul class="list-disc ml-6 space-y-1">' + html;
-                }
-                html = html.replace(/<br><li>/g, '<li>');
-                // Close the list at the end
-                if (!html.endsWith('</ul>')) {
-                    html += '</ul>';
-                }
-            }
-
-            // Handle bold text (**text**)
-            html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>');
-            
-            // Handle simple paragraphs/line breaks
-            html = html.replace(/\n\n/g, '</p><p class="mt-2">').replace(/\n/g, '<br>');
-            
-            // Wrap in paragraph tags if no list was created
-            if (!html.includes('<ul') && !html.includes('<li')) {
-                 html = `<p>${html}</p>`;
-            } else if (html.includes('</ul>')) {
-                // Ensure text before list is in a p tag
-                const parts = html.split('<ul');
-                if (parts[0].trim()) {
-                    parts[0] = `<p>${parts[0].trim()}</p>`;
-                    html = parts.join('<ul');
-                }
-            }
-
-            return html;
-        }
-
-        // Query Handler
-        document.getElementById('queryForm').addEventListener('submit', async (e) => {
-            e.preventDefault(); 
+        // Handles visual loading state before form submission (POST)
+        document.getElementById('queryForm').addEventListener('submit', function(e) {
             const queryInput = document.getElementById('query');
             const submitButton = document.getElementById('submitButton');
-            const responseSection = document.getElementById('responseSection');
             
             if (!queryInput.value.trim()) {
+                e.preventDefault(); 
                 showMessage('Please enter a question before submitting.', 'error');
                 return;
             }
 
-            // --- Start Loading State ---
+            // Start Loading State (disables button and adds loading style)
             submitButton.disabled = true;
-            submitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...';
-
-            // Clear previous outputs
-            responseSection.classList.remove('hidden');
-            document.getElementById('originalQuery').textContent = queryInput.value.trim();
-            document.getElementById('rewrittenQuery').textContent = 'Generating...';
-            document.getElementById('answer').innerHTML = '<div class="text-gray-500">Retrieving and generating answer...</div>';
-            document.getElementById('justification').textContent = 'Retrieving...';
-            document.getElementById('sources').innerHTML = '';
-
-
-            try {
-                // Prepare API call (Simulated for this frontend)
-                // NOTE: In a real application, the fetch URL would point to your backend (e.g., http://127.0.0.1:8000/query)
-                // Since this is a standalone HTML file, we need to mock the response.
-                
-                // --- MOCK API RESPONSE ---
-                // Replace this block with your actual fetch call to your Uvicorn backend:
-                // const formData = new FormData(); formData.append('query', queryInput.value);
-                // const response = await fetch('/query', { method: 'POST', body: formData });
-                // const data = await response.json();
-                
-                // Mock data to show the aesthetic layout is working
-                await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
-                const data = {
-                    original_query: queryInput.value,
-                    rewritten_query: "What is the policy regarding eligibility for permanent remote work options and required documentation?",
-                    answer: "Based on the policy document, employees are eligible for permanent remote work if they have completed their 6-month probationary period and have a job role that does not require mandatory on-site presence. **1. Eligibility Criteria:** Must have a performance rating of 'Exceeds Expectations' or higher. **2. Required Documentation:** A formal request must be submitted via the HR portal, accompanied by a signed agreement from the department manager and an assessment of the home workspace environment. **3. Review Period:** All requests are subject to review every six months.",
-                    justification: "The answer is synthesized directly from sections 3.1, 3.2, and 4.0 of the 'Remote Work Policy', which detail eligibility, documentation, and compliance requirements.",
-                    sources: [
-                        { document: 'Remote Work Policy V2.1', section: '3.1', text: 'Eligibility for remote work is granted only after a successful completion of the initial six-month employment period.' },
-                        { document: 'Remote Work Policy V2.1', section: '3.2', text: 'The employee must maintain a performance rating of 'Exceeds Expectations' and their role must be classified as R-Tier for remote suitability.' },
-                        { document: 'Remote Work Policy V2.1', section: '4.0', text: 'All remote agreements require submission via the internal HR portal, manager signature, and proof of a suitable ergonomic setup at the home location.' }
-                    ]
-                };
-                // --- END MOCK API RESPONSE ---
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                // Update all sections with the response
-                document.getElementById('rewrittenQuery').textContent = data.rewritten_query;
-                document.getElementById('answer').innerHTML = formatText(data.answer);
-                document.getElementById('justification').innerHTML = formatText(data.justification);
-
-                // Update sources
-                const sourcesDiv = document.getElementById('sources');
-                sourcesDiv.innerHTML = ''; 
-                data.sources.forEach((source, index) => {
-                    const sourceEl = document.createElement('div');
-                    sourceEl.className = 'p-4 bg-white rounded-lg border border-indigo-100 shadow-sm transition hover:shadow-md';
-                    sourceEl.innerHTML = `
-                        <p class="font-medium text-indigo-700">Source ${index + 1}: ${source.document} (Section: ${source.section})</p>
-                        <p class="mt-2 text-gray-800 text-sm italic">${source.text}</p>
-                    `;
-                    sourcesDiv.appendChild(sourceEl);
-                });
-
-                showMessage('Query answered successfully.', 'success');
-
-            } catch (error) {
-                document.getElementById('answer').innerHTML = `<div class="text-red-600 font-semibold">Error: Could not process query. ${error.message}.</div>`;
-                document.getElementById('justification').textContent = 'An error occurred during retrieval or generation.';
-                showMessage('An error occurred during processing. See the answer box for details.', 'error');
-            } finally {
-                // --- End Loading State ---
-                submitButton.disabled = false;
-                submitButton.innerHTML = 'Submit Query';
-            }
+            submitButton.textContent = 'Processing...';
+            document.body.classList.add('loading'); // Use the loading CSS class
         });
     </script>
 </body>
