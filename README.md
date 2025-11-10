@@ -9,8 +9,13 @@
 **LLM:** GPT-based model for generation & query rewrite.
 
 **Modules Implemented:**
+
 Document Ingestion
+
 Query Rewrite
+
 Chunk Retrieval
+
 Response Generator
+
 Agent Controller
