@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!--<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,7 +10,7 @@
     <div class="max-w-4xl mx-auto">
         <h1 class="text-3xl font-bold text-center mb-8">RAG based System for Policy Query Resolution</h1>
         
-        <!-- File Upload Section
+        File Upload Section
         <div class="bg-white p-6 rounded-lg shadow-md mb-8">
             <h2 class="text-xl font-semibold mb-4">Upload New Policy</h2>
             <form id="uploadForm" class="space-y-4">
@@ -26,9 +26,9 @@
                 </div>
                 <div id="uploadStatus" class="text-sm"></div>
             </form>
-        </div> -->
+        </div> 
 
-        <!-- Query Section -->
+        Query Section
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-semibold mb-4">Ask a Question</h2>
             <form id="queryForm" class="space-y-4">
@@ -41,7 +41,7 @@
                 </button>
             </form>
 
-            <!-- Response Section -->
+            Response Section
             <div id="responseSection" class="mt-8 hidden">
                 <div class="mb-6">
                     <h3 class="font-semibold text-gray-700 mb-2">Original Question:</h3>
@@ -225,6 +225,80 @@
                     </div>
                 `;
             }
+        });
+    </script>
+</body>
+</html>-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policy QA System</title>
+    <!-- Links to your external CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <style>
+        /* Placeholder styling for consistency if style.css hasn't loaded */
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .query-section { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RAG-based System for Policy Query Resolution</h1>
+        
+        <!-- Query Section using a class for styling -->
+        <div class="query-section">
+            <h2>Ask a Question</h2>
+            
+            <!-- Message Box for JS status messages -->
+            <!--<div id="messageBox" class="error hidden" role="alert"></div>-->
+
+            <form id="queryForm" action="/query" method="POST">
+                <textarea id="query" name="query"
+                          placeholder="Enter your policy question here..."
+                          rows="5"
+                          style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px;"
+                          required></textarea>
+                <div class="actions" style="text-align: right;">
+                    <button type="submit"
+                            id="submitButton"
+                            class="button">
+                        Submit Query
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Use a function to show temporary messages instead of alert()
+        function showMessage(message, type = 'error') {
+            const msgBox = document.getElementById('messageBox');
+            msgBox.textContent = message;
+            msgBox.className = type === 'error' ? 'error' : 'success';
+            msgBox.classList.remove('hidden');
+            
+            setTimeout(() => {
+                msgBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Handles visual loading state before form submission (POST)
+        document.getElementById('queryForm').addEventListener('submit', function(e) {
+            const queryInput = document.getElementById('query');
+            const submitButton = document.getElementById('submitButton');
+            
+            if (!queryInput.value.trim()) {
+                e.preventDefault(); 
+                showMessage('Please enter a question before submitting.', 'error');
+                return;
+            }
+
+            // Start Loading State (disables button and adds loading style)
+            submitButton.disabled = true;
+            submitButton.textContent = 'Processing...';
+            document.body.classList.add('loading'); // Use the loading CSS class
         });
     </script>
 </body>
