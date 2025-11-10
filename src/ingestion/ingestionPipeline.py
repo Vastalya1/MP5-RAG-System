@@ -1,7 +1,8 @@
 import os
 from typing import Optional
 from pathlib import Path
-from .chunker import chunk_pdfs
+from src.ingestion.chunker import chunk_pdfs
+# from .chunker import chunk_pdfs
 from .embedder import DocumentEmbedder
 
 class IngestionPipeline:
@@ -61,7 +62,7 @@ class IngestionPipeline:
 
 if __name__ == "__main__":
     # Example usage
-    dataset_dir = r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\dataset"
+    dataset_dir = r"E:\python\MP5-RAG-System\dataset"
     output_dir = None
     
     pipeline = IngestionPipeline(

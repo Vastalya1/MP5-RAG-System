@@ -9,7 +9,7 @@ class retrivalModel:
         self.model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
         self.client = chromadb.PersistentClient(
-                path=r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\chromadb",
+                path=r"E:\python\MP5-RAG-System\chromadb",
         )
 
 

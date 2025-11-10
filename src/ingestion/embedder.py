@@ -4,7 +4,7 @@ import os
 from typing import List, Dict
 import chromadb
 from sentence_transformers import SentenceTransformer
-from .chunker import chunk_pdfs
+from src.ingestion.chunker import chunk_pdfs
 
 class DocumentEmbedder:
     def __init__(self, collection_name: str = "policy_documents"):
@@ -14,7 +14,7 @@ class DocumentEmbedder:
         
         # Initialize ChromaDB
         self.client = chromadb.PersistentClient(
-                path=r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\chromadb",
+                path=r"E:\python\MP5-RAG-System\chromadb",
         )
         
         # Get or create collection
@@ -66,6 +66,7 @@ class DocumentEmbedder:
 
 # if __name__ == "__main__":
 #     # Example usage
-#     input_folder = "D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\dataset"  # folder containing your PDFs
+#     # Use repository-local dataset path instead of old D: drive path
+#     input_folder = r"E:\python\MP5-RAG-System\dataset"  # folder containing your PDFs
 #     embedder = DocumentEmbedder()
 #     embedder.process_pdf_folder(input_folder)
