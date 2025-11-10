@@ -1,0 +1,122 @@
+[
+  {
+    "question": "My father fell from stairs and broke his hip. He's 68 years old. The policy was taken last week only. Emergency case. Will insurance pay?",
+    "contexts": [
+      "Treatment Expenses, Personal Accident, Accidental Death and Permanent Total Disability \u2013 Common Carrier,\nDaily allowance in case of Hospitalization Sections.",
+      "\uf0a7 Is required for the medical management of the Illness or injury suffered by the Insured",
+      "If You contract any Illness/ sustain any Injury which necessitates Emergency Hospitalization, We will pay",
+      "e) If the Insured Person is continuously covered without any break as defined under the",
+      "i. such medical expenses are incurred for the same condition for which the insured person\u2019s hospitalisation was required, and"
+    ],
+    "answer": "Yes, the policy will cover inpatient hospitalization expenses for a fractured hip resulting from an accidental fall. Since the policy was issued one week prior to the incident and the treatment was emergency in nature, the insured is continuously covered without any break, and the hospitalization is required for the medical management of the injury.",
+    "ground_truth": "Accidental injuries are covered immediately without waiting periods. Hip fracture due to fall is an accident (sudden, unforeseen, involuntary event caused by external, visible and violent means). Emergency hospitalization for fracture treatment is covered under In-patient Hospitalization Treatment."
+  },
+  {
+    "question": "Can I claim for my spectacles? My eye power is -6.5 and doctor says I need new glasses?",
+    "contexts": [
+      "The Company shall indemnify the Hospital or the Insured the Medical Expenses, including Pre Hospitalisation expenses and Post\nHospitalisation expenses incurred for expenses related to the treatment for correction of eye sight due to refractive error equal to or\nmore than 7.5 dioptres, subject to Waiting Period of two (02) years as per Section 4.2.f.iii.",
+      "Expenses related to the treatment for correction of eye sight due to refractive error less than 7.5 dioptres.",
+      "Expenses related to the treatment for correction of eye sight due to refractive error less than 7.5 dioptres.",
+      "Expenses related to the treatment for correction of eye sight due to refractive error less than 7.5 dioptres.",
+      "i. Non-infective arthritis r. Refractive error of the eye more than 7.5 dioptres"
+    ],
+    "answer": "No, the policy does not cover optical expenses for corrective lenses when prescribed by an ophthalmologist for a refractive error of -6.5 diopters. The policy only covers refractive errors equal to or more than 7.5 diopters.",
+    "ground_truth": "Spectacles and contact lenses are explicitly excluded from coverage (Specific Exclusion 4). The policy only covers treatment for refractive error \u22657.5 dioptres after 24-month waiting period, and only when requiring medical intervention, not spectacles. Decision: REJECTED."
+  },
+  {
+    "question": "Wife is pregnant, 7 months. Do you cover delivery charges? We have Imperial Plus plan for 14 months now.",
+    "contexts": [
+      "The Company shall indemnify Maternity Expenses as described below for any female Insured Person, and also Pre-Natal and Post-\nNatal Hospitalisation expenses per delivery, including expenses for necessary vaccination for New Born Baby, subject to the limit",
+      "a) Medical treatment expenses traceable to childbirth (including complicated deliveries and caesarean sections incurred during",
+      "a. medical treatment expenses traceable to childbirth (including complicated deliveries and caesarean sections",
+      "Covers routine medical care provided to an insured female (expectant mothers and mothers who have\ndelivered new born baby), which includes routine preventive care services and immunizations (within the",
+      "\u2022 Routine Medical Care would include expenses recommended by a doctor and incurred on \u2013\nPharmacy, Diagnostics, Doctor Consultations and Therapy.\n\u2022 Routine Preventive Care Services will include expenses recommended by a doctor and incurred\non \u2013 Pharmacy and Diagnostic Tests.\nThe insured shall have option to opt for this cover for any one of the below mentioned period:\ni) At the onset of pregnancy and up to pre-hospitalization period for maternity.\nii) At the onset of pregnancy and maternity hospitalization (only routine preventive care services and\nimmunizations) up to first discharge from hospital.\niii) At the onset of pregnancy, maternity hospitalization (only routine preventive care services and\nimmunizations) and until 30 days following birth of new born baby."
+    ],
+    "answer": "The Imperial Plus health insurance policy does cover maternity expenses, including delivery charges, for the policyholder. However, since the policy has been active for 14 months and the policyholder is currently 7 months pregnant, it's important to note that most insurance policies require the policy to be active for a certain period before covering maternity expenses. The provided chunks do not specify a waiting period, so it's unclear if the policyholder's current pregnancy would be covered.",
+    "ground_truth": "Maternity expenses including normal delivery, complicated deliveries, and caesarean sections are permanently excluded (Code-Excl18). Only ectopic pregnancy is covered as an exception. Duration of policy or plan type does not affect this exclusion. Decision: REJECTED."
+  },
+  {
+    "question": "Can I get treatment in ayurvedic hospital? My back pain needs ayurvedic therapy.",
+    "contexts": [
+      "If You are Hospitalized for not less than 24 hrs, in an Ayurvedic / Homeopathic Hospital which is a government\nHospital or in any institute recognized by government and/or accredited by Quality Council of India/National\nAccreditation Board on Health on the advice of a Medical Practitioner because of Illness or Accidental Bodily Injury",
+      "The Company shall indemnify Medical Expenses incurred for Inpatient Care treatment under Ayurveda, Yoga and Naturopathy,",
+      "which is undertaken under general or local 2. Treatment a NOT taken at a Hospital",
+      "registered AYUSH Medical Practitioner(s) on day care basis without in-patient services and must",
+      "c. AYUSH Hospital, standalone or co-located with Inpatient healthcare facility of any recognized system of\nmedicine, registered with the local authorities, wherever applicable, and is under the supervision of a qualified"
+    ],
+    "answer": "Yes, the policy covers inpatient hospitalization and therapeutic procedures at an ayurvedic hospital for chronic back pain, but only if the hospital is government-run or recognized/accredited by specific authorities, and the treatment is advised by a medical practitioner.",
+    "ground_truth": "Ayurvedic/Homeopathic Hospitalization Expenses covered for minimum 24-hour admission in government ayurvedic hospital or government-recognized/QCI/NABH-accredited institute (Section C, Part A, I-8). Covers room, nursing, consultation, medicines, ayurvedic treatment procedures. Must be medically necessary and require inpatient admission. Subject to waiting periods and exclusions. Decision: APPROVED if meets criteria."
+  },
+  {
+    "question": "Policy document mentions cumulative bonus. What is that? How do I get it?",
+    "contexts": [
+      "Cumulative Bonus means any increase or addition in the Sum Insured granted by the insurer without an\nassociated increase in premium.",
+      "b) In relation to a Family Floater, the cumulative bonus so applied will only be available in respect of",
+      "amount. A co-payment does not reduce the Sum Insured.\nDef. 9. Cumulative Bonus means any increase in the Sum Insured granted by the insurer without\nan associated increase in premium.\nDef. 10. Critical Illness means Cancer of specified severity, Open Chest CABG, First Heart Attack of",
+      "such as Cumulative Bonus, waiver of waiting period as per IRDAI guidelines, provided the",
+      "be no impact on the Inpatient Sum Insured, only the accrued cumulative bonus will be decreased."
+    ],
+    "answer": "A cumulative bonus is an increase in your insurance coverage (Sum Insured) that the insurer gives you without raising your premium. It's like a reward for not making claims. The bonus can increase up to 100% of your original Sum Insured. However, if you make a claim, the bonus may decrease by 10% in the next policy year. Also, for family floater policies, the bonus applies to the entire family's coverage.",
+    "ground_truth": "Cumulative Bonus (Domestic Cover only): If policy renewed without break and NO claim made in preceding year, Sum Insured increases by 20% of base Sum Insured annually. Maximum cumulative increase: 100% of base Sum Insured. If claim made in any year with bonus, bonus reduces by 20% in next renewal (base Sum Insured preserved). Bonus does not reduce sum insured when used. Not a claim response - benefit explanation."
+  },
+  {
+    "question": "I slipped in hotel bathroom during my Goa trip and fractured my arm. Got admitted for 2 days. Policy is 5 months old. Will you cover the hospital bills?",
+    "contexts": [
+      "i. is required for the medical management of the Illness or Injury suffered by the Insured Person;",
+      "\uf0a7 Is required for the medical management of the Illness or injury suffered by the Insured",
+      "i. such medical expenses are incurred for the same condition for which the insured person\u2019s hospitalisation was required, and",
+      "i. such medical expenses are incurred for the same condition for which the insured person\u2019s hospitalisation was required, and",
+      "\uf09f Medical Report on the illness or accidental injury suffered by the insured from the"
+    ],
+    "answer": "Yes, the policy will cover inpatient hospitalization expenses incurred due to a fracture sustained in a slip-and-fall accident, as long as the hospitalization is required for the medical management of the injury. Since the policy was issued five months prior to the incident, it is active and should cover the expenses.",
+    "ground_truth": "Accidental injury requiring emergency hospitalization is covered under Base Cover 1 - Emergency Accidental Hospitalization. Covers in-patient treatment, X-rays, diagnostic tests during hospitalization. The 30-day waiting period does not apply to accidents. Policy is 5 months old, so waiting period already passed. Decision: APPROVED subject to reasonable and customary charges and deductible."
+  },
+  {
+    "question": "Got dengue fever while on business trip to Mumbai. Hospitalized for 4 days. Policy purchased 3 weeks ago. Covered?",
+    "contexts": [
+      "a. Expenses related to the treatment of a Pre-Existing Disease (PED) and its direct complications shall be",
+      "a. Expenses related to the treatment of a Pre-Existing Disease (PED) and its direct complications shall be",
+      "a) Expenses related to the treatment of a Pre-Existing Disease (PED) and its direct complications shall be excluded until the",
+      "a) Expenses related to the treatment of a pre-existing disease (PED) and its direct",
+      "i. such medical expenses are incurred for the same condition for which the insured person\u2019s hospitalisation was required, and"
+    ],
+    "answer": "No, the policy does not cover inpatient hospitalization expenses for dengue fever if the policy was purchased within the waiting period for pre-existing diseases. Dengue fever would be considered a pre-existing condition if you had symptoms or were diagnosed before the policy's start date. The policy excludes coverage for pre-existing diseases and their direct complications until the waiting period is over.",
+    "ground_truth": "Dengue is an illness/disease, not an accident. Base cover only includes Emergency Accidental Hospitalization, which covers accidents only. For illness coverage, Endorsement no.1 - Emergency Medical Expenses (Illness/Disease) must be opted and paid for separately. Even if opted, policy is only 3 weeks old, within 30-day waiting period for illness (General Exclusion 4). Decision: REJECTED."
+  },
+  {
+    "question": "Died in car accident during road trip. Policy has INR 5 lakh personal accident cover. Will nominee get payment?",
+    "contexts": [
+      "Subject to the above; the Company shall pay to the Insured/Insured Person, his/her nominee or legal",
+      "death of the Insured Person or the travelling Insured Person\u2019s parent, spouse or child;",
+      "death of the Insured Person or the travelling Insured Person\u2019s parent, spouse or child;",
+      "other than those specifically excluded, in a manner necessitating repair or replacement, the Company will indemnify\nthe Insured Person in respect of such loss or damage upto the maximum of the Sum Insured subject to a Co-payment",
+      "addition to the sum insured opted."
+    ],
+    "answer": "Yes, the nominee will receive the sum insured under the personal accident cover in the event of the insured's death due to a motor vehicle accident during a road trip.",
+    "ground_truth": "Accidental Death is covered under Base Cover 3a - Personal Accident Covers. Accident during trip covered by policy. Table of Benefits shows 100% of sum insured payable for Accident Death. Nominee must submit death certificate, police report, detailed sequence of events, post mortem report. Decision: APPROVED - Full sum insured to nominee."
+  },
+  {
+    "question": "My mother accompanying me got sick during trip. She's not insured under this policy. Can I claim her medical expenses?",
+    "contexts": [
+      "If the Insured Person is travelling with his Pet and during the Trip:\n(a) If the Insured Person\u2019s Pet suffers an Injury or Illness not related or attributed to any Pre-Existing condition,\nthen the company will reimburse the medical expenses incurred towards the inpatient & / or outpatient",
+      "c. travel costs of Insured members to be with a family member who is at peril of death or who has died",
+      "c. travel costs of Insured members to be with a family member who is at peril of death or who has died",
+      "death of the Insured Person or the travelling Insured Person\u2019s parent, spouse or child;",
+      "death of the Insured Person or the travelling Insured Person\u2019s parent, spouse or child;"
+    ],
+    "answer": "No, the policyholder cannot claim medical expenses for an uninsured dependent who fell ill during the trip. The policy only covers medical expenses for the Insured Person's pet, not for uninsured dependents.",
+    "ground_truth": "Only persons named as Insured in Policy Schedule are covered (General Condition - Insured definition). Policy does not provide coverage for non-insured persons. Mother must be separately insured under group policy or have own policy. Decision: REJECTED - No coverage for non-insured persons."
+  },
+  {
+    "question": "I have diabetes and blood pressure. Took medicine along. During Jaipur trip, sugar went very high, admitted in ICU for 2 days. Policy is 8 months old. What happens?",
+    "contexts": [
+      "Above co-payments shall not be applicable on Critical illness & Outpatient treatment optional covers, but shall apply on Pre-existing\ndiabetes and/ or hypertension optional cover.",
+      "being declared at the time of application and accepted by Insurer.",
+      "incurred in the Republic of India by insured for immediate medical services as an in-patient due to any covered illness\nor disease contracted by an insured and which does not relate to his / her past medical history up to the maximum",
+      "waiting period for pre-existing diseases and Moratorium period of the Insured Person.",
+      "All Illnesses and treatments shall be covered subject to the waiting periods specified below:"
+    ],
+    "answer": "Within the first year of the policy, inpatient hospitalization due to complications of pre-existing conditions of diabetes and hypertension is subject to a 10% co-payment on each admissible claim. This means you will have to pay 10% of the costs, and the insurance will cover the remaining 90%.",
+    "ground_truth": "Diabetes and hypertension are pre-existing diseases (diagnosed/treated within 48 months before policy). General Exclusion 2 excludes pre-existing conditions. Base cover only covers accidents. For illness, need Endorsement no.1 (Emergency Medical Expenses-Illness), which also excludes pre-existing. Only Endorsement no.3 - Pre-existing Condition in Life Threatening Situation covers ICU admission for pre-existing if life-threatening. Decision: REJECTED unless Endorsement no.3 opted and condition truly life-threatening."
+  }
+]
