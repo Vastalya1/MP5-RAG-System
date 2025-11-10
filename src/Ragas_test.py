@@ -9,10 +9,9 @@ from ragas.metrics import (
     answer_correctness
 )
 from ragas import evaluate
-from ragas.embeddings import SentenceTransformersEmbeddings
-
-# from ragas.llms import GoogleLLM
-
+# from ragas.llms import LangchainLLM
+# from langchain_google_genai import ChatGoogleGenerativeAI
+import google.generativeai as genai
 from datasets import Dataset
 # Import all RAG pipeline components
 from ingestion.ingestionPipeline import IngestionPipeline
@@ -23,11 +22,11 @@ from output.answerGeneration_mistral import AnswerGenerator
 
 # Initialize components with API keys
 MISTRAL_API_KEY = "IQEYxF0lNL2msXCKTg1ryDz9v3tSiQ59"
-GEMINI_API_KEY = "AIzaSyBLJ_eYaCBQ6TY4RUGf_gelHyU1H4pPw1g"
+GEMINI_API_KEY = "AIzaSyCjrF7-2SNHMa-nYdu9MGNCRnvQOIDTOAM"
 
 # Configure Gemini for evaluation
-# genai.configure(api_key=GEMINI_API_KEY)
-# llm = GoogleLLM(model_name="gemini-pro")
+genai.configure(api_key=GEMINI_API_KEY)
+llm = genai.GenerativeModel('gemini-2.5-flash')
 
 # Initialize RAG components
 query_rewriter = QueryRewriter(MISTRAL_API_KEY)
@@ -35,8 +34,9 @@ retriever = retrivalModel()
 reranker = ChunkReranker(MISTRAL_API_KEY)
 answer_generator = AnswerGenerator(MISTRAL_API_KEY)
 
-# Initialize embeddings
-embedding_model = SentenceTransformersEmbeddings(model_name="intfloat/e5-base-v2")
+from langchain_community.embeddings import HuggingFaceEmbeddings
+embedding_model = HuggingFaceEmbeddings(model_name="intfloat/e5-base-v2")
+
 
 queries = [
     "My father fell from stairs and broke his hip. He's 68 years old. The policy was taken last week only. Emergency case. Will insurance pay?",
@@ -127,17 +127,46 @@ async def evaluate_rag_system():
             answer_correctness
         ],
         embeddings=embedding_model,
-        # llm=llm  # Optional: comment out if you don't want to use Gemini
+        llm=llm  # Optional: comment out if you don't want to use Gemini
     )
     
-    print("\nEvaluation Results:")
-    for metric_name, score in scores.items():
-        print(f"{metric_name}: {score:.4f}")
+    # print("\n📊 Evaluation Results:")
+    # results_dict = scores # <- the correct way for v0.3.8
+
+    # for metric_name, score in results_dict.items():
+    #     print(f"{metric_name}: {float(score):.4f}")
+
+    # # Save results to file
+    # with open("rag_evaluation_scores.json", "w") as f:
+    #     # [Line 143]
+    #     json.dump(results_dict, f, indent=2)
+    # print("\nDetailed results saved to rag_evaluation_scores.json")
+
+    print("\n📊 Evaluation Results:")
+    # In Ragas v0.3.8, scores are attributes of the EvaluationResult object
+    metric_names = [
+        "context_precision",
+        "context_recall", 
+        "faithfulness",
+        "answer_relevancy",
+        "answer_correctness"
+    ]
+    
+    # Create a dictionary with the results
+    results_dict = {}
+    for metric in metric_names:
+        if hasattr(scores, metric):
+            score_value = getattr(scores, metric)
+            results_dict[metric] = float(score_value)
+            print(f"{metric}: {float(score_value):.4f}")
+        else:
+            print(f"{metric}: Not available")
+            results_dict[metric] = None
     
     # Save results to file
-    with open("rag_evaluation_results.json", "w") as f:
-        json.dump(results, f, indent=2)
-    print("\nDetailed results saved to rag_evaluation_results.json")
+    with open("rag_evaluation_scores.json", "w") as f:
+        json.dump(results_dict, f, indent=2)
+    print("\nDetailed results saved to rag_evaluation_scores.json")
 
 # async def run_rag_pipeline(query: str) -> Dict[str, Any]:
 #     """Run the complete RAG pipeline on a single query."""
