@@ -8,6 +8,7 @@
 
 **LLM:** GPT-based model for generation & query rewrite.
 
+
 **Modules Implemented:**
 
 Document Ingestion
