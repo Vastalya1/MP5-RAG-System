@@ -6,7 +6,7 @@ class AnswerGenerator:
     def __init__(self, api_key: str):
         """Initialize the Answer Generator with Mistral API"""
         self.client = Mistral(api_key=api_key)
-        self.model_name = "mistral-small"  # Using the same model as query rewriter
+        self.model_name = "mistral-tiny"  # Using the same model as query rewriter
         
         self.ANSWER_PROMPT = """You are an expert assistant specialized in medical insurance policies.
 
@@ -121,7 +121,7 @@ Referenced from Section: [section_heading]"""
                     }
                 }
                 
-                print("✨ Successfully generated answer")
+                print(" Successfully generated answer")
                 return response_object
                 
             else:
