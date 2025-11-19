@@ -11,7 +11,7 @@ class ChunkReranker:
         
         # Initialize Mistral
         self.client = Mistral(api_key=api_key)
-        self.model_name = "mistral-small"  # Using the same model as query rewriter
+        self.model_name = "mistral-tiny"  # Using the same model as query rewriter
         
         # Prompt template for LLM reranking
         self.RERANK_PROMPT = """You are a medical insurance expert tasked with ranking document chunks by relevance to a query.
@@ -81,7 +81,7 @@ Response:"""
             
             # Sort by combined score
             reranked_chunks = sorted(chunks, key=lambda x: x['combined_score'], reverse=True)
-            print(f"✨ Completed metadata-enhanced reranking")
+            print(f"Completed metadata-enhanced reranking")
             return reranked_chunks
             
         except Exception as e:
@@ -155,7 +155,7 @@ Response:"""
                     indices = valid_indices
                     # Get chunks in the order specified by LLM
                     reranked_chunks = [chunks[idx] for idx in indices if idx < len(chunks)]
-                    print(f"✨ Completed LLM reranking, selected {len(reranked_chunks)} chunks")
+                    print(f" Completed LLM reranking, selected {len(reranked_chunks)} chunks")
                     return reranked_chunks
                 except Exception as e:
                     print(f"Error parsing LLM response: {str(e)}")

@@ -121,10 +121,20 @@ def chunk_pdf_files(file_paths: List[str], output_file: str = None) -> List[Dict
         chunks = chunk_document(text, doc_name=file_name)
         all_chunks.extend(chunks)
         print(f"Processed {file_name} - {len(chunks)} chunks")
+    for file_name in os.listdir(input_folder):
+        if file_name.endswith(".pdf"):
+            file_path = os.path.join(input_folder, file_name)
+            print(f"Extracting text from {file_name}...")
+            text = extract_text_from_pdf(file_path)
+            
+            chunks = chunk_document(text, doc_name=file_name)
+            all_chunks.extend(chunks)
+            print(f"Processed {file_name} → {len(chunks)} chunks")
 
     if output_file:
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(all_chunks, f, indent=2, ensure_ascii=False)
+        print(f"Saved all chunks to {output_file}")
         print(f"Saved all chunks to {output_file}")
 
     return all_chunks

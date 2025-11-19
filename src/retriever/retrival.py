@@ -57,7 +57,7 @@ class retrivalModel:
                 
                 # Sort chunks by distance (most relevant first)
                 chunks = sorted(chunks, key=lambda x: x['distance'])
-                print(f"✨ Retrieved {len(chunks)} relevant chunks")
+                print(f" Retrieved {len(chunks)} relevant chunks")
             
             return chunks
 
