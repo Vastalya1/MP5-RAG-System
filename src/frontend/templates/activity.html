@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolicyOps Activity</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1115;
+            --panel: #151923;
+            --panel-strong: #1d2330;
+            --text: #f5f7fb;
+            --muted: #a7b0c1;
+            --accent: #5dd6ff;
+            --shadow: 0 20px 50px rgba(10, 14, 24, 0.4);
+            --radius: 18px;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            background: radial-gradient(1200px 800px at 80% -10%, rgba(93, 214, 255, 0.18), transparent 60%),
+                        radial-gradient(900px 600px at -10% 20%, rgba(247, 200, 95, 0.14), transparent 60%),
+                        var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .shell {
+            padding: 32px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            background: linear-gradient(120deg, rgba(93, 214, 255, 0.16), rgba(21, 25, 35, 0.9));
+            border-radius: var(--radius);
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-family: "Fraunces", serif;
+            margin: 0 0 6px;
+            font-size: 30px;
+        }
+
+        .hero p {
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .card {
+            background: var(--panel);
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: var(--shadow);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            vertical-align: top;
+        }
+
+        .table th {
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .tagline {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: var(--panel-strong);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <a class="link" href="{{ '/admin' if user.role == 'admin' else '/app' }}">Back to Dashboard</a>
+        <div class="hero">
+            <h1>Activity History</h1>
+            <p>Showing the latest actions for <strong>{{ user.username }}</strong>.</p>
+        </div>
+
+        <div class="card">
+            {% if events %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Event</th>
+                            <th>Resource</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                            <tr>
+                                <td>{{ event.created_at }}</td>
+                                <td>{{ event.event_type }}</td>
+                                <td>
+                                    {% if event.resource_type %}
+                                        {{ event.resource_type }}: {{ event.resource_id }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td class="tagline">{{ event.metadata }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="tagline">No activity recorded yet.</div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

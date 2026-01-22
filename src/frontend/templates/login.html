@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolicyOps Access</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1115;
+            --panel: #151923;
+            --panel-strong: #1d2330;
+            --text: #f5f7fb;
+            --muted: #a7b0c1;
+            --accent: #5dd6ff;
+            --accent-strong: #16b6ff;
+            --gold: #f7c85f;
+            --danger: #ff7c7c;
+            --shadow: 0 20px 50px rgba(10, 14, 24, 0.4);
+            --radius: 20px;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            min-height: 100vh;
+            background: radial-gradient(1200px 800px at 80% -10%, rgba(93, 214, 255, 0.18), transparent 60%),
+                        radial-gradient(900px 600px at -10% 20%, rgba(247, 200, 95, 0.14), transparent 60%),
+                        var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+        }
+
+        .wrap {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 24px;
+            max-width: 980px;
+            width: 100%;
+        }
+
+        .panel {
+            background: var(--panel);
+            border-radius: var(--radius);
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: var(--shadow);
+            animation: fadeUp 600ms ease-out;
+        }
+
+        .panel h1 {
+            font-family: "Fraunces", serif;
+            margin: 0 0 12px;
+            font-size: 32px;
+        }
+
+        .panel p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .card {
+            background: var(--panel-strong);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #0f131b;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .button {
+            width: 100%;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+            color: #081018;
+            transition: transform 200ms ease, box-shadow 200ms ease;
+            box-shadow: 0 12px 30px rgba(22, 182, 255, 0.25);
+        }
+
+        .button.secondary {
+            background: linear-gradient(120deg, rgba(247, 200, 95, 0.9), rgba(247, 200, 95, 0.6));
+            box-shadow: 0 12px 30px rgba(247, 200, 95, 0.2);
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+        }
+
+        .note {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 12px;
+        }
+
+        .error {
+            color: var(--danger);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .success {
+            color: var(--gold);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 900px) {
+            .wrap {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <section class="panel">
+            <h1>PolicyOps Access</h1>
+            <p>Secure access to your policy intelligence workspace. Sign in to continue or create a new account.</p>
+            <div class="card">
+                <p><strong>Admins</strong> can upload policies and run queries.</p>
+                <p class="note">Users can ask questions but cannot upload shared files.</p>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="card">
+                <h2 style="margin: 0 0 12px;">Sign In</h2>
+                <form method="post" action="/login">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <label for="username">Username</label>
+                    <input id="username" name="username" type="text" required>
+                    <label for="password">Password</label>
+                    <input id="password" name="password" type="password" required>
+                    {% if error %}
+                        <div class="error">{{ error }}</div>
+                    {% endif %}
+                    <button type="submit" class="button">Sign In</button>
+                </form>
+            </div>
+
+            <div class="card" style="margin-top: 18px;">
+                <h2 style="margin: 0 0 12px;">Create Account</h2>
+                <form method="post" action="/register">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <label for="new-username">Username</label>
+                    <input id="new-username" name="username" type="text" required>
+                    <label for="new-password">Password</label>
+                    <input id="new-password" name="password" type="password" required>
+                    {% if register_error %}
+                        <div class="error">{{ register_error }}</div>
+                    {% endif %}
+                    {% if register_success %}
+                        <div class="success">{{ register_success }}</div>
+                    {% endif %}
+                    <button type="submit" class="button secondary">Create Account</button>
+                </form>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
