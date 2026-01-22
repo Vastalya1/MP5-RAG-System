@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Query Result</h1>
+        
+        <div class="result-section">
+            <h2>Original Query</h2>
+            <p>{{ result.original_query }}</p>
+            
+            <h2>Rewritten Query</h2>
+            <p>{{ result.rewritten_query }}</p>
+            
+            <h2>Answer</h2>
+            <p>{{ result.answer }}</p>
+            
+            <!-- <h2>Justification</h2>
+            <p>{{ result.justification }}</p> -->
+            
+            <h2>Sources</h2>
+            <div class="sources">
+                {% for source in result.sources %}
+                <div class="source-item">
+                    <p>{{ source }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <p class="timestamp">Query processed at: {{ result.timestamp }}</p>
+        </div>
+        
+        <div class="actions">
+            <a href="/" class="button">Ask Another Question</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,4 +1,3 @@
-
 # Local data/cache
 chromadb/
 dataset/uploads/
@@ -6,4 +5,3 @@ dataset/user_uploads/
 __pycache__/
 *.pyc
 .venv/
-
