@@ -22,7 +22,11 @@ The main objective of this project is to leverage current technology by developi
 ## Setup
 
 python -m venv .venv
+
+
 .\.venv\Scripts\Activate.ps1
+
+
 pip install -r requirements.txt
 
 
@@ -32,8 +36,14 @@ Create `.env`  and set your keys:
 Minimum env values:
 
 DATABASE_URL=postgresql://mp5_user:your_password@localhost:5432/mp5_rag
+
+
 SESSION_SECRET=change_me
+
+
 MISTRAL_API_KEY=your_key_here
+
+
 CHROMA_PERSIST_DIR=chromadb
 
 
