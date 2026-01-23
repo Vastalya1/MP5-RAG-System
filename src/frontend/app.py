@@ -14,9 +14,18 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import secrets
 from passlib.context import CryptContext
+from dotenv import load_dotenv
+
+from queryRewriter.rewriting import QueryRewriter
+from retriever.retrival import retrivalModel
+from retriever.reranking_mistral import ChunkReranker
+from output.answerGeneration_mistral import AnswerGenerator
 
 # Import your ingestion pipeline and other necessary components
 from ingestion.ingestionPipeline import IngestionPipeline
+
+# Load environment variables from .env (if present)
+load_dotenv()
 
 # Get the base directory
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -51,6 +60,42 @@ MAX_FAILED_ATTEMPTS = int(os.getenv("MAX_FAILED_ATTEMPTS", "5"))
 LOCKOUT_MINUTES = int(os.getenv("LOCKOUT_MINUTES", "15"))
 PASSWORD_MIN_LENGTH = int(os.getenv("PASSWORD_MIN_LENGTH", "8"))
 PWD_CONTEXT = CryptContext(schemes=["argon2"], deprecated="auto")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+
+_retriever_instance: retrivalModel | None = None
+_rewriter_instance: QueryRewriter | None = None
+_reranker_instance: ChunkReranker | None = None
+_answer_generator_instance: AnswerGenerator | None = None
+
+def _get_retriever() -> retrivalModel:
+    global _retriever_instance
+    if _retriever_instance is None:
+        _retriever_instance = retrivalModel()
+    return _retriever_instance
+
+def _get_rewriter() -> QueryRewriter:
+    global _rewriter_instance
+    if not MISTRAL_API_KEY:
+        raise RuntimeError("MISTRAL_API_KEY is required for query rewriting.")
+    if _rewriter_instance is None:
+        _rewriter_instance = QueryRewriter(MISTRAL_API_KEY)
+    return _rewriter_instance
+
+def _get_reranker() -> ChunkReranker:
+    global _reranker_instance
+    if not MISTRAL_API_KEY:
+        raise RuntimeError("MISTRAL_API_KEY is required for reranking.")
+    if _reranker_instance is None:
+        _reranker_instance = ChunkReranker(MISTRAL_API_KEY)
+    return _reranker_instance
+
+def _get_answer_generator() -> AnswerGenerator:
+    global _answer_generator_instance
+    if not MISTRAL_API_KEY:
+        raise RuntimeError("MISTRAL_API_KEY is required for answer generation.")
+    if _answer_generator_instance is None:
+        _answer_generator_instance = AnswerGenerator(MISTRAL_API_KEY)
+    return _answer_generator_instance
 
 def _hash_password(password: str, salt: str) -> str:
     return hashlib.pbkdf2_hmac(
@@ -762,15 +807,40 @@ async def query(
             request,
             metadata={"scope": scope, "query_length": len(query)},
         )
-        # Here you'll implement the query processing logic
-        # For now, returning a placeholder
-        return {
-            "response": (
-                f"Scope: {scope}\n"
-                f"User: {user['username']}\n"
-                f"Query: {query}\n"
-                "This is a placeholder response. Implement your RAG logic here."
+        rewritten_query = query
+        rewriter = _get_rewriter()
+        rewritten_query = await rewriter.rewrite_query(query) or query
+
+        retriever = _get_retriever()
+        chunks: list[dict] = []
+        if scope == "shared":
+            chunks = retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+        elif scope == "personal":
+            chunks = retriever.retrive_Chunks(
+                rewritten_query,
+                collection_name=f"user_{user['username']}_documents",
             )
+        elif scope == "combined":
+            chunks = retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+            chunks += retriever.retrive_Chunks(
+                rewritten_query,
+                collection_name=f"user_{user['username']}_documents",
+            )
+        else:
+            return {"error": f"Unknown scope: {scope}"}
+
+        if not chunks:
+            return {"response": "No relevant policy content found for this question."}
+
+        reranker = _get_reranker()
+        answer_generator = _get_answer_generator()
+        reranked = await reranker.rerank_chunks(rewritten_query, chunks, top_k=5)
+        answer = await answer_generator.generate_answer(rewritten_query, reranked)
+
+        return {
+            "response": answer.get("answer", ""),
+            "justification": answer.get("justification"),
+            "sources": answer.get("source_chunks", []),
         }
     except Exception as e:
         return {"error": str(e)}
