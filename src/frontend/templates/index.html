@@ -1,127 +1,326 @@
-<!--<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Policy QA System</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>PolicyOps Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1115;
+            --panel: #151923;
+            --panel-strong: #1d2330;
+            --text: #f5f7fb;
+            --muted: #a7b0c1;
+            --accent: #5dd6ff;
+            --accent-strong: #16b6ff;
+            --gold: #f7c85f;
+            --danger: #ff7c7c;
+            --shadow: 0 20px 50px rgba(10, 14, 24, 0.4);
+            --radius: 18px;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            background: radial-gradient(1200px 800px at 80% -10%, rgba(93, 214, 255, 0.18), transparent 60%),
+                        radial-gradient(900px 600px at -10% 20%, rgba(247, 200, 95, 0.14), transparent 60%),
+                        var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .shell {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            padding: 32px;
+        }
+
+        .rail {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius);
+            padding: 24px;
+            position: sticky;
+            top: 24px;
+            height: fit-content;
+            box-shadow: var(--shadow);
+            animation: floatIn 600ms ease-out;
+        }
+
+        .brand {
+            font-family: "Fraunces", serif;
+            font-size: 26px;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .tagline {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .rail-card {
+            background: var(--panel);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .role-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(93, 214, 255, 0.12);
+            color: var(--accent);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .logout {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: var(--panel-strong);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: transform 200ms ease, border-color 200ms ease;
+        }
+
+        .logout:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .hero {
+            background: linear-gradient(120deg, rgba(93, 214, 255, 0.16), rgba(21, 25, 35, 0.9));
+            border-radius: var(--radius);
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: var(--shadow);
+            animation: riseIn 700ms ease-out;
+        }
+
+        .hero h1 {
+            font-family: "Fraunces", serif;
+            font-size: 36px;
+            margin: 0 0 8px;
+        }
+
+        .hero p {
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--panel);
+            border-radius: var(--radius);
+            padding: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: var(--shadow);
+            animation: fadeIn 800ms ease-out;
+        }
+
+        .card h2 {
+            margin: 0 0 12px;
+            font-size: 18px;
+        }
+
+        .card p {
+            color: var(--muted);
+            font-size: 14px;
+            margin: 0 0 18px;
+        }
+
+        .field {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #0f131b;
+            color: var(--text);
+            padding: 12px 14px;
+            font-size: 14px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+            color: #081018;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 200ms ease, box-shadow 200ms ease;
+            box-shadow: 0 12px 30px rgba(22, 182, 255, 0.25);
+        }
+
+        .button.secondary {
+            background: linear-gradient(120deg, rgba(247, 200, 95, 0.9), rgba(247, 200, 95, 0.6));
+            box-shadow: 0 12px 30px rgba(247, 200, 95, 0.2);
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+        }
+
+        .status {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 10px;
+        }
+
+        .response {
+            min-height: 140px;
+            padding: 16px;
+            border-radius: 14px;
+            background: #0f131b;
+            border: 1px dashed rgba(255, 255, 255, 0.12);
+            white-space: pre-wrap;
+        }
+
+        .accent {
+            color: var(--accent);
+        }
+
+        @keyframes riseIn {
+            from { transform: translateY(16px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes floatIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 960px) {
+            .shell {
+                grid-template-columns: 1fr;
+            }
+            .rail {
+                position: static;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-8">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold text-center mb-8">RAG based System for Policy Query Resolution</h1>
-        
-        File Upload Section
-        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 class="text-xl font-semibold mb-4">Upload New Policy</h2>
-            <form id="uploadForm" class="space-y-4">
-                <div class="flex items-center space-x-4">
-                    <input type="file" 
-                           id="policyFile" 
-                           accept=".pdf"
-                           class="flex-1 p-2 border rounded">
-                    <button type="submit"
-                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                        Upload
-                    </button>
-                </div>
-                <div id="uploadStatus" class="text-sm"></div>
-            </form>
-        </div> 
-
-        Query Section
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">Ask a Question</h2>
-            <form id="queryForm" class="space-y-4">
-                <textarea id="query" name="query"
-                          placeholder="Enter your question here..."
-                          class="w-full p-3 border rounded-lg resize-none h-32"></textarea>
-                <button type="submit"
-                        class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
-                    Submit
-                </button>
-            </form>
-
-            Response Section
-            <div id="responseSection" class="mt-8 hidden">
-                <div class="mb-6">
-                    <h3 class="font-semibold text-gray-700 mb-2">Original Question:</h3>
-                    <div id="originalQuery" class="p-4 bg-gray-50 rounded-lg"></div>
-                </div>
-                
-                <div class="mb-6">
-                    <h3 class="font-semibold text-gray-700 mb-2">Rewritten Query:</h3>
-                    <div id="rewrittenQuery" class="p-4 bg-gray-50 rounded-lg text-gray-600 italic"></div>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="font-semibold text-gray-700 mb-2">Answer:</h3>
-                    <div id="answer" class="p-4 bg-gray-50 rounded-lg"></div>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="font-semibold text-gray-700 mb-2">Justification:</h3>
-                    <div id="justification" class="p-4 bg-gray-50 rounded-lg"></div>
-                </div>
-
-                <div>
-                    <h3 class="font-semibold text-gray-700 mb-2">Sources:</h3>
-                    <div id="sources" class="space-y-4"></div>
-                </div>
+<body>
+    <div class="shell">
+        <aside class="rail">
+            <div class="brand">PolicyOps</div>
+            <div class="tagline">AI-guided policy insight for high-trust teams. Stay compliant, stay fast.</div>
+            <div class="rail-card">
+                <div class="role-pill">{{ user.role }}</div>
+                <p class="tagline" style="margin-top: 12px;">Signed in as <strong>{{ user.username }}</strong></p>
+                <a class="logout" href="/logout">Logout</a>
             </div>
-        </div>
+            <div class="rail-card">
+                <p class="tagline">Access level: <span class="accent">{{ user.role }}</span></p>
+                <p class="tagline">Uploads restricted to administrators.</p>
+            </div>
+        </aside>
+
+        <main class="main">
+            <section class="hero">
+                <h1>Policy Intelligence Command</h1>
+                <p>Upload, query, and answer with traceable policy context. Built for enterprise teams.</p>
+            </section>
+
+            <section class="grid">
+                {% if user.role == "admin" %}
+                <div class="card">
+                    <h2>Upload New Policy</h2>
+                    <p>Add or update policy documents to keep the knowledge base current.</p>
+                    <form id="uploadForm">
+                        <input type="file" id="policyFile" accept=".pdf" class="field">
+                        <div style="margin-top: 14px;">
+                            <button type="submit" class="button">Upload Policy</button>
+                        </div>
+                        <div id="uploadStatus" class="status"></div>
+                    </form>
+                </div>
+                {% endif %}
+
+                <div class="card">
+                    <h2>Ask a Question</h2>
+                    <p>Run a policy query and receive an answer grounded in your documents.</p>
+                    <form id="queryForm">
+                        <textarea id="query" class="field" rows="6" placeholder="Example: What is the escalation timeline for data retention?"></textarea>
+                        <div style="margin-top: 14px;">
+                            <button type="submit" class="button secondary">Get Answer</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Response</h2>
+                <div id="response" class="response">Awaiting your query.</div>
+            </section>
+        </main>
     </div>
 
     <script>
-        // Function to format text with markdown-style formatting
-        function formatText(text) {
-            if (!text) return '';
-            
-            // First split the text into main content and numbered points
-            let parts = text.split(/(?=\d+\.\s)/);
-            
-            // Format the initial text (if any)
-            let formattedText = parts[0];
-            
-            // If there are numbered points, format them as a list
-            if (parts.length > 1) {
-                formattedText += '<ul class="list-none space-y-2 mt-2">';
-                for (let i = 1; i < parts.length; i++) {
-                    formattedText += `<li class="pl-4">${parts[i]}</li>`;
-                }
-                formattedText += '</ul>';
-            }
-
-            // Handle bold text (**text**)
-            formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>');
-            
-            // Handle line breaks
-            formattedText = formattedText.replace(/\n/g, '<br>');
-            
-            return formattedText;
-        }
-
-        // File Upload Handler (only attach if the upload form exists)
         const uploadForm = document.getElementById('uploadForm');
         if (uploadForm) {
             uploadForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const fileInput = document.getElementById('policyFile');
                 const statusDiv = document.getElementById('uploadStatus');
-                
                 if (!fileInput.files[0]) {
-                    statusDiv.textContent = 'Please select a file first.';
+                    statusDiv.textContent = 'Please select a PDF file.';
                     return;
                 }
-
                 const formData = new FormData();
                 formData.append('file', fileInput.files[0]);
-
                 try {
                     statusDiv.textContent = 'Uploading...';
                     const response = await fetch('/upload-policy', {
                         method: 'POST',
                         body: formData
                     });
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    if (response.status === 403) {
+                        statusDiv.textContent = 'Admin access required.';
+                        return;
+                    }
                     const data = await response.json();
                     statusDiv.textContent = data.message || data.error;
                 } catch (error) {
@@ -130,175 +329,31 @@
             });
         }
 
-        // Query Handler
         document.getElementById('queryForm').addEventListener('submit', async (e) => {
-            e.preventDefault(); // Prevent the form from submitting normally
+            e.preventDefault();
             const queryInput = document.getElementById('query');
-            const responseSection = document.getElementById('responseSection');
-            const answer = document.getElementById('answer');
-            
+            const responseDiv = document.getElementById('response');
             if (!queryInput.value.trim()) {
-                alert('Please enter a question.');
+                responseDiv.textContent = 'Please enter a question.';
                 return;
             }
-
             try {
-                // Show loading state and clear previous outputs
-                responseSection.classList.remove('hidden');
-                
-                // Clear all previous content
-                document.getElementById('originalQuery').textContent = '';
-                document.getElementById('rewrittenQuery').textContent = '';
-                document.getElementById('answer').innerHTML = '<div class="animate-pulse">Processing your question...</div>';
-                document.getElementById('justification').textContent = '';
-                document.getElementById('sources').innerHTML = '';
-
+                responseDiv.textContent = 'Processing...';
                 const formData = new FormData();
                 formData.append('query', queryInput.value);
-
-                // Set headers to indicate we want JSON response
-                const headers = new Headers();
-                headers.append('Accept', 'application/json');
-
                 const response = await fetch('/query', {
                     method: 'POST',
-                    headers: headers,
                     body: formData
                 });
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
                 const data = await response.json();
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                // Function to format text with markdown-style formatting
-                function formatText(text) {
-                    // First split the text into main content and numbered points
-                    let parts = text.split(/(?=\d+\.\s)/);
-                    
-                    // Format the initial text (if any)
-                    let formattedText = parts[0];
-                    
-                    // If there are numbered points, format them as a list
-                    if (parts.length > 1) {
-                        formattedText += '<ul class="list-none space-y-2 mt-2">';
-                        for (let i = 1; i < parts.length; i++) {
-                            formattedText += `<li class="pl-4">${parts[i]}</li>`;
-                        }
-                        formattedText += '</ul>';
-                    }
-
-                    // Handle bold text (**text**)
-                    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>');
-                    
-                    // Handle line breaks
-                    formattedText = formattedText.replace(/\n/g, '<br>');
-                    
-                    return formattedText;
-                }
-
-                // Update all sections with the response
-                document.getElementById('originalQuery').textContent = data.original_query;
-                document.getElementById('rewrittenQuery').textContent = data.rewritten_query;
-                document.getElementById('answer').innerHTML = formatText(data.answer);
-                document.getElementById('justification').innerHTML = formatText(data.justification);
-
-                // Update sources
-                const sourcesDiv = document.getElementById('sources');
-                sourcesDiv.innerHTML = ''; // Clear previous sources
-                data.sources.forEach((source, index) => {
-                    const sourceEl = document.createElement('div');
-                    sourceEl.className = 'p-4 bg-gray-50 rounded-lg border border-gray-200';
-                    sourceEl.innerHTML = `
-                        <p class="font-medium text-gray-700">Source ${index + 1}: ${source.document}</p>
-                        <p class="text-gray-600 mt-1">Section: ${source.section}</p>
-                        <p class="mt-2 text-gray-800">${source.text}</p>
-                    `;
-                    sourcesDiv.appendChild(sourceEl);
-                });
-
+                responseDiv.textContent = data.response || data.error;
             } catch (error) {
-                responseSection.classList.remove('hidden');
-                document.getElementById('answer').innerHTML = `
-                    <div class="text-red-500">
-                        Error: ${error.message}
-                    </div>
-                `;
+                responseDiv.textContent = 'Query failed: ' + error.message;
             }
-        });
-    </script>
-</body>
-</html>-->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Policy QA System</title>
-    <!-- Links to your external CSS file -->
-    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
-    <style>
-        /* Placeholder styling for consistency if style.css hasn't loaded */
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-        .query-section { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>RAG-based System for Policy Query Resolution</h1>
-        
-        <!-- Query Section using a class for styling -->
-        <div class="query-section">
-            <h2>Ask a Question</h2>
-            
-            <!-- Message Box for JS status messages -->
-            <!--<div id="messageBox" class="error hidden" role="alert"></div>-->
-
-            <form id="queryForm" action="/query" method="POST">
-                <textarea id="query" name="query"
-                          placeholder="Enter your policy question here..."
-                          rows="5"
-                          style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px;"
-                          required></textarea>
-                <div class="actions" style="text-align: right;">
-                    <button type="submit"
-                            id="submitButton"
-                            class="button">
-                        Submit Query
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        // Use a function to show temporary messages instead of alert()
-        function showMessage(message, type = 'error') {
-            const msgBox = document.getElementById('messageBox');
-            msgBox.textContent = message;
-            msgBox.className = type === 'error' ? 'error' : 'success';
-            msgBox.classList.remove('hidden');
-            
-            setTimeout(() => {
-                msgBox.classList.add('hidden');
-            }, 5000);
-        }
-
-        // Handles visual loading state before form submission (POST)
-        document.getElementById('queryForm').addEventListener('submit', function(e) {
-            const queryInput = document.getElementById('query');
-            const submitButton = document.getElementById('submitButton');
-            
-            if (!queryInput.value.trim()) {
-                e.preventDefault(); 
-                showMessage('Please enter a question before submitting.', 'error');
-                return;
-            }
-
-            // Start Loading State (disables button and adds loading style)
-            submitButton.disabled = true;
-            submitButton.textContent = 'Processing...';
-            document.body.classList.add('loading'); // Use the loading CSS class
         });
     </script>
 </body>

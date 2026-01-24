@@ -125,7 +125,7 @@ Referenced from Section: [section_heading]"""
                 return response_object
                 
             else:
-                raise Exception("Empty response from Gemini")
+                raise Exception("Empty response from Mistral")
                 
         except Exception as e:
             error_response = {

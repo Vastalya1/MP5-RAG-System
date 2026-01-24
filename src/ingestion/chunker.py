@@ -10,7 +10,7 @@ tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v
 
 # Common keywords often used as section titles in policies
 SECTION_KEYWORDS = [
-    "coverage", "exclusion", "claim", "definition", 
+    "coverage", "exclusion", "claim", "definition",
     "eligibility", "benefit", "policy", "general conditions"
 ]
 
@@ -32,7 +32,7 @@ def is_probable_heading(line: str) -> bool:
 
 
 def extract_text_from_pdf(pdf_path: str) -> str:
-    """Extract all text from a PDF file using pdfplumber"""
+    """Extract all text from a PDF file using pdfplumber."""
     text_content = []
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
@@ -40,9 +40,12 @@ def extract_text_from_pdf(pdf_path: str) -> str:
     return "\n".join(text_content)
 
 
-def chunk_document(text: str, doc_name: str,
-                   max_tokens: int = 512, overlap: float = 0.15) -> List[Dict]:
-
+def chunk_document(
+    text: str,
+    doc_name: str,
+    max_tokens: int = 512,
+    overlap: float = 0.15,
+) -> List[Dict]:
     lines = text.split("\n")
     paragraphs = []
     current_section = "General"
@@ -101,38 +104,40 @@ def chunk_document(text: str, doc_name: str,
     return chunks
 
 
+def chunk_pdf_files(file_paths: List[str], output_file: str = None) -> List[Dict]:
+    """
+    Process specific PDF files, chunk them, and return a list of chunks.
+    Optionally save them to JSON.
+    """
+    all_chunks = []
+
+    for file_path in file_paths:
+        file_name = os.path.basename(file_path)
+        if not file_name.endswith(".pdf"):
+            continue
+        print(f"Extracting text from {file_name}...")
+        text = extract_text_from_pdf(file_path)
+
+        chunks = chunk_document(text, doc_name=file_name)
+        all_chunks.extend(chunks)
+        print(f"Processed {file_name} - {len(chunks)} chunks")
+
+    if output_file:
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(all_chunks, f, indent=2, ensure_ascii=False)
+        print(f"Saved all chunks to {output_file}")
+
+    return all_chunks
+
 
 def chunk_pdfs(input_folder: str, output_file: str = None) -> List[Dict]:
     """
     Process all PDFs in a folder, chunk them, and return a list of chunks.
     Optionally save them to JSON.
     """
-    all_chunks = []
-
-    for file_name in os.listdir(input_folder):
-        if file_name.endswith(".pdf"):
-            file_path = os.path.join(input_folder, file_name)
-            print(f"📄 Extracting text from {file_name}...")
-            text = extract_text_from_pdf(file_path)
-            
-            chunks = chunk_document(text, doc_name=file_name)
-            all_chunks.extend(chunks)
-            print(f"✅ Processed {file_name} → {len(chunks)} chunks")
-
-    # Optional: save all chunks to a JSON file
-    if output_file:
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(all_chunks, f, indent=2, ensure_ascii=False)
-        print(f"📂 Saved all chunks to {output_file}")
-
-    return all_chunks
-
-
-# # -------------------
-# # Example usage
-# # -------------------
-# if __name__ == "__main__":
-#     input_folder = "data/pdfs"    # folder containing your PDFs
-#     all_chunks = chunk_pdfs(input_folder, output_file="data/processed/chunks.json")
-
-#     print(f"🔥 Total chunks created: {len(all_chunks)}")
+    file_paths = [
+        os.path.join(input_folder, file_name)
+        for file_name in os.listdir(input_folder)
+        if file_name.endswith(".pdf")
+    ]
+    return chunk_pdf_files(file_paths, output_file=output_file)

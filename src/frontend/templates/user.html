@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolicyOps Workspace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1115;
+            --panel: #151923;
+            --panel-strong: #1d2330;
+            --text: #f5f7fb;
+            --muted: #a7b0c1;
+            --accent: #5dd6ff;
+            --accent-strong: #16b6ff;
+            --gold: #f7c85f;
+            --shadow: 0 20px 50px rgba(10, 14, 24, 0.4);
+            --radius: 18px;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Space Grotesk", sans-serif;
+            background: radial-gradient(1200px 800px at 80% -10%, rgba(93, 214, 255, 0.18), transparent 60%),
+                        radial-gradient(900px 600px at -10% 20%, rgba(247, 200, 95, 0.14), transparent 60%),
+                        var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .shell {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            padding: 32px;
+        }
+
+        .rail {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius);
+            padding: 24px;
+            position: sticky;
+            top: 24px;
+            height: fit-content;
+            box-shadow: var(--shadow);
+        }
+
+        .brand {
+            font-family: "Fraunces", serif;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .tagline {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .rail-card {
+            background: var(--panel);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .role-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(93, 214, 255, 0.12);
+            color: var(--accent);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: var(--panel-strong);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .hero {
+            background: linear-gradient(120deg, rgba(247, 200, 95, 0.16), rgba(21, 25, 35, 0.9));
+            border-radius: var(--radius);
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .hero h1 {
+            font-family: "Fraunces", serif;
+            font-size: 34px;
+            margin: 0 0 8px;
+        }
+
+        .hero p {
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--panel);
+            border-radius: var(--radius);
+            padding: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: var(--shadow);
+        }
+
+        @media (max-width: 960px) {
+            .shell {
+                grid-template-columns: 1fr;
+            }
+            .rail {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <main class="main">
+            <section class="hero">
+                <div>
+                    <h1>User Module</h1>
+                    <p>Choose where to upload, ask, or browse shared policy PDFs.</p>
+                </div>
+                <a class="link" href="/logout">Logout</a>
+            </section>
+
+            <section class="grid">
+                <div class="card">
+                    <h2>Chat</h2>
+                    <p class="tagline">Upload your personal PDF, ask questions, and read responses.</p>
+                    <a class="link" href="/app/all">Open Chat</a>
+                </div>
+                <div class="card">
+                    <h2>Shared Library</h2>
+                    <p class="tagline">View shared policy documents uploaded by admins.</p>
+                    <a class="link" href="/app/shared">Open Shared Library</a>
+                </div>
+                <div class="card">
+                    <h2>Activity Log</h2>
+                    <p class="tagline">Review your recent questions and uploads.</p>
+                    <a class="link" href="/activity">View Activity</a>
+                </div>
+                {% if user.role == "admin" %}
+                <div class="card">
+                    <h2>Admin Module</h2>
+                    <p class="tagline">Switch to the admin dashboard.</p>
+                    <a class="link" href="/admin">Open Admin Module</a>
+                </div>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,2 +1,7 @@
+# Local data/cache
+chromadb/
+dataset/uploads/
+dataset/user_uploads/
 __pycache__/
-chromadb\chroma.sqlite3
+*.pyc
+.venv/
