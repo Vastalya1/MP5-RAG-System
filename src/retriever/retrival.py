@@ -1,6 +1,7 @@
+import os
+from pathlib import Path
 from sentence_transformers import SentenceTransformer
 import chromadb
-from chromadb.config import Settings
 from transformers import AutoTokenizer
 
 
@@ -8,9 +9,12 @@ class retrivalModel:
     def __init__(self):
         self.model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
-        self.client = chromadb.PersistentClient(
-                path=r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\chromadb",
-        )
+        base_dir = Path(__file__).resolve().parents[2]
+        default_dir = r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\chromadb"
+        persist_dir = Path(os.getenv("CHROMA_PERSIST_DIR", default_dir))
+        if not persist_dir.exists():
+            persist_dir = base_dir / "chromadb"
+        self.client = chromadb.PersistentClient(path=str(persist_dir))
 
 
 
