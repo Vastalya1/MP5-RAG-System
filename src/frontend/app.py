@@ -496,36 +496,60 @@ async def home(request: Request):
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard(request: Request, user: dict = Depends(_require_admin)):
-    shared_files = _list_uploaded_files("shared")
     csrf_token = _ensure_csrf_token(request)
-    recent_queries = _get_recent_queries(user["username"])
     return templates.TemplateResponse(
         "admin.html",
         {
             "request": request,
             "user": user,
-            "shared_files": shared_files,
             "csrf_token": csrf_token,
-            "recent_queries": recent_queries,
         }
+    )
+
+@app.get("/admin/all", response_class=HTMLResponse)
+async def admin_all(request: Request, user: dict = Depends(_require_admin)):
+    csrf_token = _ensure_csrf_token(request)
+    return templates.TemplateResponse(
+        "admin_all.html",
+        {"request": request, "user": user, "csrf_token": csrf_token},
+    )
+
+@app.get("/admin/shared", response_class=HTMLResponse)
+async def admin_shared(request: Request, user: dict = Depends(_require_admin)):
+    shared_files = _list_uploaded_files("shared")
+    csrf_token = _ensure_csrf_token(request)
+    return templates.TemplateResponse(
+        "shared.html",
+        {"request": request, "user": user, "shared_files": shared_files, "csrf_token": csrf_token},
     )
 
 @app.get("/app", response_class=HTMLResponse)
 async def user_dashboard(request: Request, user: dict = Depends(_require_auth)):
-    shared_files = _list_uploaded_files("shared")
-    personal_files = _list_uploaded_files("personal", user["username"])
     csrf_token = _ensure_csrf_token(request)
-    recent_queries = _get_recent_queries(user["username"])
     return templates.TemplateResponse(
         "user.html",
         {
             "request": request,
             "user": user,
-            "shared_files": shared_files,
-            "personal_files": personal_files,
             "csrf_token": csrf_token,
-            "recent_queries": recent_queries,
         }
+    )
+
+@app.get("/app/all", response_class=HTMLResponse)
+async def user_all(request: Request, user: dict = Depends(_require_auth)):
+    csrf_token = _ensure_csrf_token(request)
+    return templates.TemplateResponse(
+        "user_all.html",
+        {"request": request, "user": user, "csrf_token": csrf_token},
+    )
+
+@app.get("/app/shared", response_class=HTMLResponse)
+async def user_shared(request: Request, user: dict = Depends(_require_auth)):
+    shared_files = _list_uploaded_files("shared")
+    csrf_token = _ensure_csrf_token(request)
+    return templates.TemplateResponse(
+        "shared.html",
+        {"request": request, "user": user, "shared_files": shared_files, "csrf_token": csrf_token},
     )
 
 @app.get("/activity", response_class=HTMLResponse)
