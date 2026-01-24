@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PolicyOps Admin</title>
+    <title>PolicyOps Shared Library</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
@@ -34,7 +34,7 @@
 
         .shell {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: 280px 1fr;
             gap: 24px;
             padding: 32px;
         }
@@ -109,10 +109,6 @@
             padding: 28px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: var(--shadow);
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 16px;
         }
 
         .hero h1 {
@@ -126,18 +122,18 @@
             margin: 0;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-        }
-
         .card {
             background: var(--panel);
             border-radius: var(--radius);
             padding: 22px;
             border: 1px solid rgba(255, 255, 255, 0.06);
             box-shadow: var(--shadow);
+        }
+
+        .status {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 10px;
         }
 
         @media (max-width: 960px) {
@@ -152,36 +148,61 @@
 </head>
 <body>
     <div class="shell">
+        <aside class="rail">
+            <div class="brand">PolicyOps</div>
+            <div class="tagline">Shared policy library available to everyone.</div>
+            <div class="rail-card">
+                <div class="role-pill">{{ user.role }}</div>
+                <p class="tagline" style="margin-top: 12px;">Signed in as <strong>{{ user.username }}</strong></p>
+                <a class="link" href="/logout">Logout</a>
+            </div>
+            <div class="rail-card">
+                <p class="tagline">Back to your dashboard.</p>
+                <a class="link" href="{{ '/admin' if user.role == 'admin' else '/app' }}">Home</a>
+            </div>
+            <div class="rail-card">
+                <p class="tagline">Run an end-to-end query.</p>
+                <a class="link" href="{{ '/admin/all' if user.role == 'admin' else '/app/all' }}">Chat</a>
+            </div>
+            <div class="rail-card">
+                <p class="tagline">Review your own activity log.</p>
+                <a class="link" href="/activity">View Activity</a>
+            </div>
+        </aside>
+
         <main class="main">
             <section class="hero">
-                <div>
-                    <h1>Admin Module</h1>
-                    <p>Pick a workspace to manage policies or explore shared documents.</p>
-                </div>
-                <a class="link" href="/logout">Logout</a>
+                <h1>Shared Policy Library</h1>
+                <p>Browse, view, and download PDFs available to all users.</p>
             </section>
 
-            <section class="grid">
-                <div class="card">
-                    <h2>Chat</h2>
-                    <p class="tagline">Upload shared PDFs, ask questions, and read responses.</p>
-                    <a class="link" href="/admin/all">Open Chat</a>
-                </div>
-                <div class="card">
-                    <h2>Shared Library</h2>
-                    <p class="tagline">View and manage policy files for everyone.</p>
-                    <a class="link" href="/admin/shared">Open Shared Library</a>
-                </div>
-                <div class="card">
-                    <h2>Activity Log</h2>
-                    <p class="tagline">See your latest actions and queries.</p>
-                    <a class="link" href="/activity">View Activity</a>
-                </div>
-                <div class="card">
-                    <h2>User Module</h2>
-                    <p class="tagline">Switch to the user dashboard.</p>
-                    <a class="link" href="/app">Open User Module</a>
-                </div>
+            <section class="card">
+                <h2>Shared Files</h2>
+                <p class="tagline">Admin uploads are listed here for everyone.</p>
+                {% if shared_files %}
+                    <ul class="tagline" style="list-style: none; padding: 0; margin: 0;">
+                        {% for file in shared_files %}
+                            <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                                <span>
+                                    {{ file.filename }}<br>
+                                    <span class="tagline">Uploaded by {{ file.username or "admin" }} | {{ file.uploaded_at }} | {{ file.size_bytes or 0 }} bytes</span>
+                                </span>
+                                <span>
+                                    <a class="link" href="/files/shared/{{ file.filename|urlencode }}" target="_blank">View</a>
+                                    <a class="link" href="/files/shared/{{ file.filename|urlencode }}" download>Download</a>
+                                    {% if user.role == "admin" %}
+                                    <form class="inline-delete" method="post" action="/delete/shared/{{ file.filename|urlencode }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <button type="submit" class="link">Delete</button>
+                                    </form>
+                                    {% endif %}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="status">No shared PDFs uploaded yet.</div>
+                {% endif %}
             </section>
         </main>
     </div>
