@@ -133,6 +133,21 @@
             margin: 0;
         }
 
+        .overview {
+            background: var(--panel);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: var(--shadow);
+            animation: fadeIn 800ms ease-out;
+        }
+
+        .overview p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -258,6 +273,13 @@
             <section class="hero">
                 <h1>Policy Intelligence Command</h1>
                 <p>Upload, query, and answer with traceable policy context. Built for enterprise teams.</p>
+            </section>
+
+            <section class="overview">
+                <p>
+                    PolicyOps Intelligence centralizes policy knowledge into a secure, searchable workspace.
+                    Ask questions in natural language, get grounded answers with citations, and keep compliance teams aligned.
+                </p>
             </section>
 
             <section class="grid">
