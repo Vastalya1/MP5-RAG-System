@@ -61,6 +61,7 @@ LOCKOUT_MINUTES = int(os.getenv("LOCKOUT_MINUTES", "15"))
 PASSWORD_MIN_LENGTH = int(os.getenv("PASSWORD_MIN_LENGTH", "8"))
 PWD_CONTEXT = CryptContext(schemes=["argon2"], deprecated="auto")
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+DISABLE_CSRF = os.getenv("DISABLE_CSRF", "false").lower() in {"1", "true", "yes"}
 
 _retriever_instance: retrivalModel | None = None
 _rewriter_instance: QueryRewriter | None = None
@@ -229,7 +230,11 @@ def _ensure_csrf_token(request: Request) -> str:
         request.session["csrf_token"] = token
     return token
 
-def _require_csrf(request: Request, csrf_token: str) -> None:
+def _require_csrf(request: Request, csrf_token: str | None) -> None:
+    if DISABLE_CSRF:
+        return
+    if not csrf_token:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid CSRF token")
     session_token = request.session.get("csrf_token")
     if not session_token or not hmac.compare_digest(session_token, csrf_token):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid CSRF token")
@@ -578,7 +583,7 @@ async def login(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
-    csrf_token: str = Form(...),
+    csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
     username = username.strip()
@@ -649,7 +654,7 @@ async def register(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
-    csrf_token: str = Form(...),
+    csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
     username = username.strip()
@@ -686,7 +691,7 @@ async def upload_policy(
     request: Request,
     file: UploadFile = File(...),
     user: dict = Depends(_require_admin),
-    csrf_token: str = Form(...),
+    csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
     try:
@@ -722,7 +727,7 @@ async def upload_personal(
     request: Request,
     file: UploadFile = File(...),
     user: dict = Depends(_require_auth),
-    csrf_token: str = Form(...),
+    csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
     try:
@@ -774,7 +779,7 @@ async def delete_shared_file(
     request: Request,
     filename: str,
     user: dict = Depends(_require_admin),
-    csrf_token: str = Form(...),
+    csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
     file_path = _safe_file_path(UPLOAD_DIR, filename)
@@ -796,7 +801,7 @@ async def delete_personal_file(
     request: Request,
     filename: str,
     user: dict = Depends(_require_auth),
-    csrf_token: str = Form(...),
+    csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
     user_dir = PERSONAL_UPLOAD_DIR / user["username"]
@@ -820,7 +825,7 @@ async def query(
     query: str = Form(...),
     scope: str = Form("shared"),
     user: dict = Depends(_require_auth),
-    csrf_token: str = Form(...),
+    csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
     try:
