@@ -126,6 +126,20 @@
             margin: 0;
         }
 
+        .overview {
+            background: var(--panel);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: var(--shadow);
+        }
+
+        .overview p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -138,6 +152,21 @@
             padding: 22px;
             border: 1px solid rgba(255, 255, 255, 0.06);
             box-shadow: var(--shadow);
+        }
+
+        .card-desc {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0 0 8px;
+        }
+
+        .card-subdesc {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 0 0 16px;
+            opacity: 0.85;
         }
 
         @media (max-width: 960px) {
@@ -161,25 +190,37 @@
                 <a class="link" href="/logout">Logout</a>
             </section>
 
+            <section class="overview">
+                <p>
+                    PolicyOps Intelligence centralizes policy knowledge for administrators, combining secure uploads,
+                    shared libraries, and activity tracking in one dashboard. Use this space to keep guidance current
+                    and deliver trusted, citation-backed answers across teams.
+                </p>
+            </section>
+
             <section class="grid">
                 <div class="card">
                     <h2>Chat</h2>
-                    <p class="tagline">Upload shared PDFs, ask questions, and read responses.</p>
+                    <p class="card-desc">Upload shared PDFs, ask questions, and read responses.</p>
+                    <p class="card-subdesc">Keep answers grounded with citations so teams can trust every reply.</p>
                     <a class="link" href="/admin/all">Open Chat</a>
                 </div>
                 <div class="card">
                     <h2>Shared Library</h2>
-                    <p class="tagline">View and manage policy files for everyone.</p>
+                    <p class="card-desc">View and manage policy files for everyone.</p>
+                    <p class="card-subdesc">Control what is published, updated, or retired across departments.</p>
                     <a class="link" href="/admin/shared">Open Shared Library</a>
                 </div>
                 <div class="card">
                     <h2>Activity Log</h2>
-                    <p class="tagline">See your latest actions and queries.</p>
+                    <p class="card-desc">See your latest actions and queries.</p>
+                    <p class="card-subdesc">Audit uploads, changes, and question history in one timeline.</p>
                     <a class="link" href="/activity">View Activity</a>
                 </div>
                 <div class="card">
                     <h2>User Module</h2>
-                    <p class="tagline">Switch to the user dashboard.</p>
+                    <p class="card-desc">Switch to the user dashboard.</p>
+                    <p class="card-subdesc">Experience the same tools from the employee perspective.</p>
                     <a class="link" href="/app">Open User Module</a>
                 </div>
             </section>
