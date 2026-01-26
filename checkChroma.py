@@ -1,8 +1,12 @@
+import os
 import chromadb
 
 # Connect to your persistent Chroma DB
-client = chromadb.PersistentClient(path=r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\chromadb")
-
+client = chromadb.CloudClient(
+  api_key=os.getenv("CHROMA_CLOUD_API_KEY"),
+  tenant='a92961b0-ea65-4a82-a7ad-321a4baaaa60',
+  database='Major-Project'
+)
 # # Replace 'my_collection' with the name of your collection
 # collection = client.get_collection("policy_documentSs")
 

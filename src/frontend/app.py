@@ -16,6 +16,8 @@ import secrets
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 from queryRewriter.rewriting import QueryRewriter
 from retriever.retrival import retrivalModel
 from retriever.reranking_mistral import ChunkReranker
@@ -575,12 +577,7 @@ async def login_page(request: Request):
         return RedirectResponse(url="/app", status_code=status.HTTP_302_FOUND)
     return templates.TemplateResponse(
         "login.html",
-        {
-            "request": request,
-            "csrf_token": _ensure_csrf_token(request),
-            "login_username": "",
-            "register_username": "",
-        }
+        {"request": request, "csrf_token": _ensure_csrf_token(request)}
     )
 
 @app.post("/login")
@@ -602,16 +599,11 @@ async def login(
                 request,
                 metadata={"locked_until": record["locked_until"].isoformat()},
             )
-        return templates.TemplateResponse(
-            "login.html",
-            {
-                "request": request,
-                "error": "Account is temporarily locked. Try again later.",
-                "login_username": username,
-                "register_username": "",
-            },
-            status_code=status.HTTP_403_FORBIDDEN,
-        )
+            return templates.TemplateResponse(
+                "login.html",
+                {"request": request, "error": "Account is temporarily locked. Try again later."},
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
 
     user = _verify_user(username, password)
     if not user:
@@ -639,12 +631,7 @@ async def login(
             )
         return templates.TemplateResponse(
             "login.html",
-            {
-                "request": request,
-                "error": "Invalid username or password.",
-                "login_username": username,
-                "register_username": "",
-            },
+            {"request": request, "error": "Invalid username or password."},
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
     with _db_conn() as conn:
@@ -676,35 +663,20 @@ async def register(
     if not username or not password:
         return templates.TemplateResponse(
             "login.html",
-            {
-                "request": request,
-                "register_error": "Username and password are required.",
-                "login_username": "",
-                "register_username": username,
-            },
+            {"request": request, "register_error": "Username and password are required."},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     ok, message = _create_user(username, password)
     if not ok:
         return templates.TemplateResponse(
             "login.html",
-            {
-                "request": request,
-                "register_error": message,
-                "login_username": "",
-                "register_username": username,
-            },
+            {"request": request, "register_error": message},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     _record_audit_event(username, "user", "REGISTER", request)
     return templates.TemplateResponse(
         "login.html",
-        {
-            "request": request,
-            "register_success": message,
-            "login_username": "",
-            "register_username": "",
-        },
+        {"request": request, "register_success": message},
         status_code=status.HTTP_201_CREATED,
     )
 

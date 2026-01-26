@@ -11,7 +11,7 @@ class QueryRewriter:
             api_key: Mistral API key
         """
         self.client = Mistral(api_key=api_key)
-        self.model = "mistral-small"  # Fastest model in Mistral's lineup
+        self.model = "mistral-tiny"  # Fastest model in Mistral's lineup
         
         # The prompt template for query rewriting
         self.REWRITE_PROMPT = """You are a specialized medical insurance query reformulation expert. Your task is to rewrite user questions into clear, factual queries using proper insurance terminology.
