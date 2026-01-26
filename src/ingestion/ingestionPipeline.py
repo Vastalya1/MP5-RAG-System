@@ -70,7 +70,7 @@ class IngestionPipeline:
 
 if __name__ == "__main__":
     # Example usage
-    dataset_dir = r"C:\Users\kunji\OneDrive\Pictures\Desktop\Major_Project\MP5-RAG-System\dataset"
+    dataset_dir = r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\dataset"
     pipeline = IngestionPipeline(
         dataset_dir=dataset_dir,
         collection_name="policy_documents",
