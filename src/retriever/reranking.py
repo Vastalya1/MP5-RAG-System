@@ -118,7 +118,7 @@ in order of relevance. Format: 0,1,2,3,4 (just the numbers, comma-separated)."""
                     indices = [int(idx.strip()) for idx in response.text.split(',')][:top_k]
                     # Get chunks in the order specified by LLM
                     reranked_chunks = [chunks[idx] for idx in indices if idx < len(chunks)]
-                    print(f"✨ Completed LLM reranking, selected {len(reranked_chunks)} chunks")
+                    print(f"Completed LLM reranking, selected {len(reranked_chunks)} chunks")
                     return reranked_chunks
                 except Exception as e:
                     print(f"Error parsing LLM response: {str(e)}")
