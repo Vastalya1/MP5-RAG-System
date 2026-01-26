@@ -337,6 +337,27 @@ def _init_db() -> None:
                 )
                 """
             )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS query_history (
+                    id BIGSERIAL PRIMARY KEY,
+                    username TEXT NOT NULL,
+                    role TEXT,
+                    scope TEXT,
+                    question TEXT NOT NULL,
+                    answer TEXT,
+                    justification TEXT,
+                    sources JSONB,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS query_history_user_idx
+                ON query_history (username, created_at DESC)
+                """
+            )
             for username, password in ADMIN_PASSWORDS.items():
                 salt = f"{username}-salt"
                 password_hash = _hash_password_strong(password)
@@ -489,6 +510,60 @@ def _get_recent_queries(username: str, limit: int = 5) -> list[dict]:
             rows = cursor.fetchall()
             return [
                 {"metadata": row[0] or {}, "created_at": row[1]}
+                for row in rows
+            ]
+
+def _save_query_history(
+    username: str,
+    role: str | None,
+    scope: str,
+    question: str,
+    answer: str | None,
+    justification: str | None,
+    sources: list[dict] | None,
+) -> None:
+    with _db_conn() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO query_history (username, role, scope, question, answer, justification, sources)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    username,
+                    role,
+                    scope,
+                    question,
+                    answer,
+                    justification,
+                    psycopg2.extras.Json(sources or []),
+                ),
+            )
+
+def _get_query_history(username: str, limit: int = 50) -> list[dict]:
+    with _db_conn() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id, scope, question, answer, justification, sources, created_at
+                FROM query_history
+                WHERE username = %s
+                ORDER BY created_at DESC
+                LIMIT %s
+                """,
+                (username, limit),
+            )
+            rows = cursor.fetchall()
+            return [
+                {
+                    "id": row[0],
+                    "scope": row[1],
+                    "question": row[2],
+                    "answer": row[3],
+                    "justification": row[4],
+                    "sources": row[5] or [],
+                    "created_at": row[6],
+                }
                 for row in rows
             ]
 
@@ -861,17 +936,47 @@ async def query(
             return {"error": f"Unknown scope: {scope}"}
 
         if not chunks:
-            return {"response": "No relevant policy content found for this question."}
+            response_text = "No relevant policy content found for this question."
+            _save_query_history(
+                user.get("username"),
+                user.get("role"),
+                scope,
+                query,
+                response_text,
+                None,
+                [],
+            )
+            return {"response": response_text}
 
         reranker = _get_reranker()
         answer_generator = _get_answer_generator()
         reranked = await reranker.rerank_chunks(rewritten_query, chunks, top_k=5)
         answer = await answer_generator.generate_answer(rewritten_query, reranked)
+        response_text = answer.get("answer", "")
+        justification_text = answer.get("justification")
+        sources = answer.get("source_chunks", [])
+
+        _save_query_history(
+            user.get("username"),
+            user.get("role"),
+            scope,
+            query,
+            response_text,
+            justification_text,
+            sources,
+        )
 
         return {
-            "response": answer.get("answer", ""),
-            "justification": answer.get("justification"),
-            "sources": answer.get("source_chunks", []),
+            "response": response_text,
+            "justification": justification_text,
+            "sources": sources,
         }
     except Exception as e:
         return {"error": str(e)}
+
+@app.get("/history")
+async def history(
+    user: dict = Depends(_require_auth),
+    limit: int = 50,
+):
+    return {"items": _get_query_history(user.get("username"), limit=limit)}

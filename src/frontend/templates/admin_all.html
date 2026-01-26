@@ -34,7 +34,7 @@
 
         .shell {
             display: grid;
-            grid-template-columns: 280px 1fr;
+            grid-template-columns: 280px 1fr 320px;
             gap: 24px;
             padding: 32px;
         }
@@ -101,6 +101,50 @@
             display: flex;
             flex-direction: column;
             gap: 24px;
+        }
+
+        .history {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius);
+            padding: 20px;
+            height: fit-content;
+            box-shadow: var(--shadow);
+        }
+
+        .history h2 {
+            margin: 0 0 12px;
+            font-size: 18px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--panel);
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .history-item strong {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .history-item span {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
         }
 
         .hero {
@@ -179,6 +223,10 @@
             white-space: pre-wrap;
         }
 
+        .response.secondary {
+            min-height: 120px;
+        }
+
         @media (max-width: 960px) {
             .shell {
                 grid-template-columns: 1fr;
@@ -251,7 +299,19 @@
                 <h2>Response</h2>
                 <div id="response" class="response">Awaiting your query.</div>
             </section>
+
+            <section class="card">
+                <h2>Justification</h2>
+                <div id="justification" class="response secondary">Justification will appear here.</div>
+            </section>
         </main>
+
+        <aside class="history">
+            <h2>History</h2>
+            <div id="historyList" class="history-list">
+                <div class="status">No history yet.</div>
+            </div>
+        </aside>
     </div>
 
     <div id="toast" class="status" style="position: fixed; bottom: 24px; right: 24px; background: #1d2330; padding: 12px 16px; border-radius: 10px; display: none;"></div>
@@ -298,16 +358,66 @@
             }
         });
 
+        const setHistory = (items) => {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            if (!items.length) {
+                list.innerHTML = '<div class="status">No history yet.</div>';
+                return;
+            }
+            items.forEach((item) => {
+                const btn = document.createElement('button');
+                btn.className = 'history-item';
+                btn.type = 'button';
+                btn.dataset.item = JSON.stringify(item);
+                btn.innerHTML = `<strong>${item.question}</strong><span>${new Date(item.created_at).toLocaleString()}</span>`;
+                list.appendChild(btn);
+            });
+        };
+
+        const loadHistory = async () => {
+            try {
+                const response = await fetch('/history');
+                if (!response.ok) return;
+                const data = await response.json();
+                setHistory(data.items || []);
+            } catch (error) {
+                // Ignore history errors
+            }
+        };
+
+        document.getElementById('historyList').addEventListener('click', (e) => {
+            const target = e.target.closest('.history-item');
+            if (!target) return;
+            const item = JSON.parse(target.dataset.item);
+            const responseDiv = document.getElementById('response');
+            const justificationDiv = document.getElementById('justification');
+            responseDiv.textContent = item.answer || 'No answer returned.';
+            let justificationText = item.justification || '';
+            if (item.sources && item.sources.length) {
+                const sourcesText = item.sources.map((entry) =>
+                    `- ${entry.document} :: ${entry.section}`
+                ).join('\n');
+                justificationText = justificationText
+                    ? `${justificationText}\n\nSources:\n${sourcesText}`
+                    : `Sources:\n${sourcesText}`;
+            }
+            justificationDiv.textContent = justificationText || 'No justification returned.';
+        });
+
         document.getElementById('queryForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const queryInput = document.getElementById('query');
             const responseDiv = document.getElementById('response');
+            const justificationDiv = document.getElementById('justification');
             if (!queryInput.value.trim()) {
                 responseDiv.textContent = 'Please enter a question.';
+                justificationDiv.textContent = 'Justification will appear here.';
                 return;
             }
             try {
                 responseDiv.textContent = 'Processing...';
+                justificationDiv.textContent = 'Processing...';
                 const formData = new FormData();
                 formData.append('query', queryInput.value);
                 formData.append('scope', 'shared');
@@ -323,26 +433,32 @@
                 const data = await response.json();
                 if (data.error) {
                     responseDiv.textContent = data.error;
+                    justificationDiv.textContent = 'Justification will appear here.';
                     return;
                 }
-                let output = data.response || '';
-                if (data.justification) {
-                    output += `\n\nJustification:\n${data.justification}`;
-                }
+                const answerText = data.response || '';
+                let justificationText = data.justification || '';
                 if (data.sources && data.sources.length) {
                     const sourcesText = data.sources.map((item) =>
                         `- ${item.document} :: ${item.section}`
                     ).join('\n');
-                    output += `\n\nSources:\n${sourcesText}`;
+                    justificationText = justificationText
+                        ? `${justificationText}\n\nSources:\n${sourcesText}`
+                        : `Sources:\n${sourcesText}`;
                 }
-                responseDiv.textContent = output;
+                responseDiv.textContent = answerText || 'No answer returned.';
+                justificationDiv.textContent = justificationText || 'No justification returned.';
                 if (data.response) {
                     toast('Answer ready');
                 }
+                loadHistory();
             } catch (error) {
                 responseDiv.textContent = 'Query failed: ' + error.message;
+                justificationDiv.textContent = 'Justification will appear here.';
             }
         });
+
+        loadHistory();
     </script>
 </body>
 </html>
