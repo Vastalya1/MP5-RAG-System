@@ -161,7 +161,7 @@
                 <form method="post" action="/login">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <label for="username">Username</label>
-                    <input id="username" name="username" type="text" required>
+                    <input id="username" name="username" type="text" value="{{ login_username }}" required>
                     <label for="password">Password</label>
                     <input id="password" name="password" type="password" required>
                     {% if error %}
@@ -176,7 +176,7 @@
                 <form method="post" action="/register">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <label for="new-username">Username</label>
-                    <input id="new-username" name="username" type="text" required>
+                    <input id="new-username" name="username" type="text" value="{{ register_username }}" required>
                     <label for="new-password">Password</label>
                     <input id="new-password" name="password" type="password" required>
                     {% if register_error %}

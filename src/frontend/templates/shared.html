@@ -130,6 +130,30 @@
             box-shadow: var(--shadow);
         }
 
+        .field {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #0f131b;
+            color: var(--text);
+            padding: 12px 14px;
+            font-size: 14px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+            color: #081018;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         .status {
             font-size: 13px;
             color: var(--muted);
@@ -176,6 +200,21 @@
                 <p>Browse, view, and download PDFs available to all users.</p>
             </section>
 
+            {% if user.role == "admin" %}
+            <section class="card">
+                <h2>Upload Shared Policy</h2>
+                <p class="tagline">These documents are visible to all users.</p>
+                <form id="sharedUploadForm">
+                    <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+                    <input type="file" id="sharedPolicyFile" accept=".pdf" class="field">
+                    <div style="margin-top: 14px;">
+                        <button type="submit" class="button">Upload to Shared Library</button>
+                    </div>
+                    <div id="sharedUploadStatus" class="status"></div>
+                </form>
+            </section>
+            {% endif %}
+
             <section class="card">
                 <h2>Shared Files</h2>
                 <p class="tagline">Admin uploads are listed here for everyone.</p>
@@ -206,5 +245,44 @@
             </section>
         </main>
     </div>
+
+    {% if user.role == "admin" %}
+    <script>
+        document.getElementById('sharedUploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('sharedPolicyFile');
+            const statusDiv = document.getElementById('sharedUploadStatus');
+            if (!fileInput.files[0]) {
+                statusDiv.textContent = 'Please select a PDF file.';
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('csrf_token', document.getElementById('csrfToken').value);
+            try {
+                statusDiv.textContent = 'Uploading and processing...';
+                const response = await fetch('/upload-policy', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                if (response.status === 403) {
+                    statusDiv.textContent = 'Admin access required.';
+                    return;
+                }
+                const data = await response.json();
+                statusDiv.textContent = data.message || data.error;
+                if (data.message) {
+                    window.location.reload();
+                }
+            } catch (error) {
+                statusDiv.textContent = 'Upload failed: ' + error.message;
+            }
+        });
+    </script>
+    {% endif %}
 </body>
 </html>
