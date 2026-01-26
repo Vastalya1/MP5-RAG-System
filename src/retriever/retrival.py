@@ -14,7 +14,11 @@ class retrivalModel:
         persist_dir = Path(os.getenv("CHROMA_PERSIST_DIR", default_dir))
         if not persist_dir.exists():
             persist_dir = base_dir / "chromadb"
-        self.client = chromadb.PersistentClient(path=str(persist_dir))
+        self.client = chromadb.CloudClient(
+            api_key=os.getenv("CHROMA_CLOUD_API_KEY"),
+            tenant='a92961b0-ea65-4a82-a7ad-321a4baaaa60',
+            database='Major-Project'
+            )
 
 
 
@@ -57,7 +61,7 @@ class retrivalModel:
                 
                 # Sort chunks by distance (most relevant first)
                 chunks = sorted(chunks, key=lambda x: x['distance'])
-                print(f"✨ Retrieved {len(chunks)} relevant chunks")
+                print(f" Retrieved {len(chunks)} relevant chunks")
             
             return chunks
 
