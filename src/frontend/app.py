@@ -16,6 +16,8 @@ import secrets
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 from queryRewriter.rewriting import QueryRewriter
 from retriever.retrival import retrivalModel
 from retriever.reranking_mistral import ChunkReranker
