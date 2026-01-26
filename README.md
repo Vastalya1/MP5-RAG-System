@@ -35,7 +35,7 @@ Create `.env`  and set your keys:
 
 Minimum env values:
 
-DATABASE_URL=postgresql://mp5_user:your_password@localhost:5432/mp5_rag
+DATABASE_URL=your_url
 
 
 SESSION_SECRET=change_me
