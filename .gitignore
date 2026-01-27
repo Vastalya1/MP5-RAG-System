@@ -4,4 +4,6 @@ dataset/uploads/
 dataset/user_uploads/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 .venv/
