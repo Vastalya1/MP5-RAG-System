@@ -1,0 +1,78 @@
+ORCHESTRATION MODULE - LangGraph-based Agentic Flow
+===================================================
+
+This module implements an agentic orchestration system using LangGraph
+for intelligent query routing in the RAG system.
+
+Architecture Overview:
+---------------------
+The orchestration uses a StateGraph with the following components:
+
+1. CLASSIFIER NODE (Entry Point)
+   - Purpose: Classify queries BEFORE any rewriting
+   - Logic: Uses small LLM (mistral-tiny) to determine if query needs:
+     * RAG processing (medical/insurance document lookup)
+     * Direct LLM response (greetings, general questions)
+   - Location: classifier.py
+
+2. DIRECT LLM NODE
+   - Purpose: Handle general queries without document lookup
+   - Use cases:
+     * Greetings and casual conversation
+     * General explanations not requiring policy specifics
+     * Meta questions (what can you do?)
+   - Location: nodes.py -> DirectLLMNode
+
+3. RAG PROCESS NODE
+   - Purpose: Full RAG pipeline for document-based answers
+   - Pipeline:
+     1. Query Rewriting (medical/insurance terminology)
+     2. Document Retrieval (ChromaDB)
+     3. Chunk Reranking (semantic + metadata)
+     4. Answer Generation (with justification)
+   - Location: nodes.py -> RAGProcessNode
+
+4. WEB SCRAPING NODE (Placeholder - Not Connected)
+   - Purpose: Handle low similarity score scenarios
+   - Trigger: When top chunk distance > 0.5 threshold
+   - Status: Defined but not connected in graph edges
+   - Location: nodes.py -> WebScrapingNode
+
+Graph Structure:
+---------------
+           START
+             |
+             v
+     [classifier_node]
+             |
+    +--------+--------+
+    |                 |
+    v                 v
+(route=direct)   (route=rag)
+    |                 |
+    v                 v
+[direct_llm]      [rag_node]
+    |                 |
+    +--------+--------+
+             |
+             v
+            END
+
+Configuration:
+-------------
+- USE_ORCHESTRATION: Environment variable to enable/disable (default: true)
+- MISTRAL_API_KEY: Required for LLM-based classification and processing
+
+Future Enhancements:
+-------------------
+1. Connect web_scraping_node after rag_node for low similarity scenarios
+2. Add memory/context for multi-turn conversations
+3. Implement actual web scraping with Serper/Tavily APIs
+4. Add streaming support for real-time responses
+
+Files:
+------
+- __init__.py: Module exports
+- classifier.py: QueryClassifier for routing decisions
+- nodes.py: Node implementations (DirectLLM, RAG, WebScraping)
+- orchestrator.py: Main QueryOrchestrator with LangGraph integration

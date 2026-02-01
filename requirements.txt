@@ -16,3 +16,5 @@ pdfplumber
 pillow
 reportlab
 mistralai
+langgraph
+langchain-core
