@@ -390,8 +390,12 @@
             const target = e.target.closest('.history-item');
             if (!target) return;
             const item = JSON.parse(target.dataset.item);
+            const queryInput = document.getElementById('query');
             const responseDiv = document.getElementById('response');
             const justificationDiv = document.getElementById('justification');
+            if (queryInput) {
+                queryInput.value = item.question || '';
+            }
             responseDiv.textContent = item.answer || 'No answer returned.';
             let justificationText = item.justification || '';
             if (item.sources && item.sources.length) {

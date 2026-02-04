@@ -173,22 +173,71 @@
 
             <div class="card" style="margin-top: 18px;">
                 <h2 style="margin: 0 0 12px;">Create Account</h2>
-                <form method="post" action="/register">
+                <form id="registerForm" method="post" action="/register">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <label for="new-username">Username</label>
                     <input id="new-username" name="username" type="text" value="{{ register_username }}" required>
                     <label for="new-password">Password</label>
                     <input id="new-password" name="password" type="password" required>
-                    {% if register_error %}
-                        <div class="error">{{ register_error }}</div>
-                    {% endif %}
-                    {% if register_success %}
-                        <div class="success">{{ register_success }}</div>
-                    {% endif %}
+                    <div id="registerError" class="error" {% if not register_error %}style="display: none;"{% endif %}>{{ register_error }}</div>
+                    <div id="registerSuccess" class="success" {% if not register_success %}style="display: none;"{% endif %}>{{ register_success }}</div>
                     <button type="submit" class="button secondary">Create Account</button>
                 </form>
             </div>
         </section>
     </div>
+    <script>
+        const registerForm = document.getElementById('registerForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const errorEl = document.getElementById('registerError');
+                const successEl = document.getElementById('registerSuccess');
+                const passwordInput = document.getElementById('new-password');
+                if (errorEl) {
+                    errorEl.textContent = '';
+                    errorEl.style.display = 'none';
+                }
+                if (successEl) {
+                    successEl.textContent = '';
+                    successEl.style.display = 'none';
+                }
+                try {
+                    const formData = new FormData(registerForm);
+                    const response = await fetch('/register', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await response.json();
+                    if (!data.ok) {
+                        if (errorEl) {
+                            errorEl.textContent = data.message || 'Registration failed.';
+                            errorEl.style.display = 'block';
+                        }
+                        if (data.error_code === 'password_invalid' && passwordInput) {
+                            passwordInput.value = '';
+                        }
+                        return;
+                    }
+                    if (successEl) {
+                        successEl.textContent = data.message || 'Account created.';
+                        successEl.style.display = 'block';
+                    }
+                    if (passwordInput) {
+                        passwordInput.value = '';
+                    }
+                } catch (error) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Registration failed: ' + error.message;
+                        errorEl.style.display = 'block';
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>
