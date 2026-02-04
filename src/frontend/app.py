@@ -23,6 +23,9 @@ from retriever.retrival import retrivalModel
 from retriever.reranking_mistral import ChunkReranker
 from output.answerGeneration_mistral import AnswerGenerator
 
+# Import LangGraph orchestrator
+from orchestration.orchestrator import QueryOrchestrator, create_orchestrator
+
 # Import your ingestion pipeline and other necessary components
 from ingestion.ingestionPipeline import IngestionPipeline
 
@@ -69,6 +72,10 @@ _retriever_instance: retrivalModel | None = None
 _rewriter_instance: QueryRewriter | None = None
 _reranker_instance: ChunkReranker | None = None
 _answer_generator_instance: AnswerGenerator | None = None
+_orchestrator_instance: QueryOrchestrator | None = None
+
+# Flag to enable/disable orchestration (set to True to use LangGraph orchestration)
+USE_ORCHESTRATION = os.getenv("USE_ORCHESTRATION", "true").lower() in {"1", "true", "yes"}
 
 def _get_retriever() -> retrivalModel:
     global _retriever_instance
@@ -99,6 +106,21 @@ def _get_answer_generator() -> AnswerGenerator:
     if _answer_generator_instance is None:
         _answer_generator_instance = AnswerGenerator(MISTRAL_API_KEY)
     return _answer_generator_instance
+
+def _get_orchestrator() -> QueryOrchestrator:
+    """Get or create the LangGraph query orchestrator instance."""
+    global _orchestrator_instance
+    if not MISTRAL_API_KEY:
+        raise RuntimeError("MISTRAL_API_KEY is required for orchestration.")
+    if _orchestrator_instance is None:
+        _orchestrator_instance = create_orchestrator(
+            api_key=MISTRAL_API_KEY,
+            rewriter=_get_rewriter(),
+            retriever=_get_retriever(),
+            reranker=_get_reranker(),
+            answer_generator=_get_answer_generator()
+        )
+    return _orchestrator_instance
 
 def _hash_password(password: str, salt: str) -> str:
     return hashlib.pbkdf2_hmac(
@@ -913,64 +935,100 @@ async def query(
             request,
             metadata={"scope": scope, "query_length": len(query)},
         )
-        rewritten_query = query
-        rewriter = _get_rewriter()
-        rewritten_query = await rewriter.rewrite_query(query) or query
-
-        retriever = _get_retriever()
-        chunks: list[dict] = []
-        if scope == "shared":
-            chunks = retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
-        elif scope == "personal":
-            chunks = retriever.retrive_Chunks(
-                rewritten_query,
-                collection_name=f"user_{user['username']}_documents",
+        
+        if USE_ORCHESTRATION:
+            # Use LangGraph orchestration for intelligent routing
+            orchestrator = _get_orchestrator()
+            result = await orchestrator.process_query(
+                query=query,
+                scope=scope,
+                username=user.get("username")
             )
-        elif scope == "combined":
-            chunks = retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
-            chunks += retriever.retrive_Chunks(
-                rewritten_query,
-                collection_name=f"user_{user['username']}_documents",
-            )
-        else:
-            return {"error": f"Unknown scope: {scope}"}
-
-        if not chunks:
-            response_text = "No relevant policy content found for this question."
+            
+            response_text = result.get("response", "")
+            justification_text = result.get("justification")
+            sources = result.get("sources", [])
+            route_taken = result.get("route_taken", "unknown")
+            
+            # Log the route taken for debugging
+            print(f"[Query] Route taken: {route_taken}")
+            
             _save_query_history(
                 user.get("username"),
                 user.get("role"),
                 scope,
                 query,
                 response_text,
-                None,
-                [],
+                justification_text,
+                sources,
             )
-            return {"response": response_text}
 
-        reranker = _get_reranker()
-        answer_generator = _get_answer_generator()
-        reranked = await reranker.rerank_chunks(rewritten_query, chunks, top_k=5)
-        answer = await answer_generator.generate_answer(rewritten_query, reranked)
-        response_text = answer.get("answer", "")
-        justification_text = answer.get("justification")
-        sources = answer.get("source_chunks", [])
+            return {
+                "response": response_text,
+                "justification": justification_text,
+                "sources": sources,
+                "route_taken": route_taken,  # Include route info in response
+            }
+        else:
+            # Legacy path: Direct RAG processing without orchestration
+            rewritten_query = query
+            rewriter = _get_rewriter()
+            rewritten_query = await rewriter.rewrite_query(query) or query
 
-        _save_query_history(
-            user.get("username"),
-            user.get("role"),
-            scope,
-            query,
-            response_text,
-            justification_text,
-            sources,
-        )
+            retriever = _get_retriever()
+            chunks: list[dict] = []
+            if scope == "shared":
+                chunks = retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+            elif scope == "personal":
+                chunks = retriever.retrive_Chunks(
+                    rewritten_query,
+                    collection_name=f"user_{user['username']}_documents",
+                )
+            elif scope == "combined":
+                chunks = retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+                chunks += retriever.retrive_Chunks(
+                    rewritten_query,
+                    collection_name=f"user_{user['username']}_documents",
+                )
+            else:
+                return {"error": f"Unknown scope: {scope}"}
 
-        return {
-            "response": response_text,
-            "justification": justification_text,
-            "sources": sources,
-        }
+            if not chunks:
+                response_text = "No relevant policy content found for this question."
+                _save_query_history(
+                    user.get("username"),
+                    user.get("role"),
+                    scope,
+                    query,
+                    response_text,
+                    None,
+                    [],
+                )
+                return {"response": response_text}
+
+            reranker = _get_reranker()
+            answer_generator = _get_answer_generator()
+            reranked = await reranker.rerank_chunks(rewritten_query, chunks, top_k=5)
+            answer = await answer_generator.generate_answer(rewritten_query, reranked)
+            response_text = answer.get("answer", "")
+            justification_text = answer.get("justification")
+            sources = answer.get("source_chunks", [])
+
+            _save_query_history(
+                user.get("username"),
+                user.get("role"),
+                scope,
+                query,
+                response_text,
+                justification_text,
+                sources,
+            )
+
+            return {
+                "response": response_text,
+                "justification": justification_text,
+                "sources": sources,
+            }
     except Exception as e:
         return {"error": str(e)}
 
