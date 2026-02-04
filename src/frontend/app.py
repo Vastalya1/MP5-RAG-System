@@ -756,21 +756,31 @@ async def register(
     csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
+    accept = request.headers.get("accept", "")
+    is_fetch = request.headers.get("x-requested-with") == "fetch" or "application/json" in accept
     username = username.strip()
     if not username or not password:
+        message = "Username and password are required."
+        if is_fetch:
+            return {"ok": False, "message": message, "error_code": "missing_fields"}
         return templates.TemplateResponse(
             "login.html",
-            {"request": request, "register_error": "Username and password are required."},
+            {"request": request, "register_error": message},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     ok, message = _create_user(username, password)
     if not ok:
+        error_code = "password_invalid" if message.startswith("Password") else "register_failed"
+        if is_fetch:
+            return {"ok": False, "message": message, "error_code": error_code}
         return templates.TemplateResponse(
             "login.html",
             {"request": request, "register_error": message},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     _record_audit_event(username, "user", "REGISTER", request)
+    if is_fetch:
+        return {"ok": True, "message": message}
     return templates.TemplateResponse(
         "login.html",
         {"request": request, "register_success": message},
