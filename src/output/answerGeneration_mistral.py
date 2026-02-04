@@ -19,25 +19,32 @@ Below are the most relevant document chunks from the insurance policy, along wit
 
 Instructions:
 
-Carefully read all the provided chunks. Focus on the top 5 most relevant chunks if there are many.
+1. Carefully read all the provided chunks. Focus on the top 5 most relevant chunks if there are many.
 
-Provide a clear, concise, and easy-to-understand answer for a common user, avoiding unnecessary technical terms.
+2. Provide a clear, concise, and easy-to-understand answer for a common user, avoiding unnecessary technical terms.
 
-Use medical and insurance terminology only when needed, and explain it in simple words if you do.
+3. Use medical and insurance terminology only when needed, and explain it in simple words if you do.
 
-Justify your answer by referencing the chunk(s) used and their section headings.
+4. Justify your answer by referencing the chunk(s) used and their section headings.
 
-If information is missing or unclear, explicitly say that instead of guessing.
+5. If information is missing or unclear, explicitly say that instead of guessing.
 
-Do not hallucinarte.
+6. Do not hallucinate.
+
+7. IMPORTANT: Return PLAIN TEXT only. Do NOT use any markdown formatting such as:
+   - No asterisks for bold (**text**)
+   - No underscores for italics
+   - No hash symbols for headings
+   - No bullet points with dashes or asterisks
+   - No horizontal rules (---)
+   Just use plain sentences and paragraphs.
 
 Present your answer in this format:
 
 Answer:
-[Your answer here, simple and readable]
+[Your plain text answer here, simple and readable]
 
 Justification:
-
 Referenced from Section: [section_heading]"""
 
     def _format_chunks_for_prompt(self, chunks: List[Dict]) -> str:
