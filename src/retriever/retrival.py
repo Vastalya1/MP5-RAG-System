@@ -22,7 +22,7 @@ class retrivalModel:
 
 
 
-    def retrive_Chunks(self, rewritten_query: str, collection_name: str="policy_documents", top_k: int =15):
+    def retrive_Chunks(self, rewritten_query: str, collection_name: str="dataset", top_k: int =15):
         """Retrieve relevant document chunks from ChromaDB based on the rewritten query.
 
         Args:
