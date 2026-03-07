@@ -12,6 +12,8 @@ transformers
 torch
 scikit-learn
 scipy
+pandas
+openpyxl
 pdfplumber
 pillow
 reportlab

@@ -812,7 +812,7 @@ async def upload_policy(
         # Process the new policy
         pipeline = IngestionPipeline(
             dataset_dir=str(UPLOAD_DIR),
-            collection_name="policy_documents",
+            collection_name="dataset",
             file_paths=[str(file_path)],
         )
         pipeline.run()
@@ -988,14 +988,14 @@ async def query(
             retriever = _get_retriever()
             chunks: list[dict] = []
             if scope == "shared":
-                chunks = retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+                chunks = retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
             elif scope == "personal":
                 chunks = retriever.retrive_Chunks(
                     rewritten_query,
                     collection_name=f"user_{user['username']}_documents",
                 )
             elif scope == "combined":
-                chunks = retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+                chunks = retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
                 chunks += retriever.retrive_Chunks(
                     rewritten_query,
                     collection_name=f"user_{user['username']}_documents",
