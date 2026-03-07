@@ -22,13 +22,14 @@ class retrivalModel:
 
 
 
-    def retrive_Chunks(self, rewritten_query: str, collection_name: str="dataset", top_k: int =15):
+    def retrive_Chunks(self, rewritten_query: str, collection_name: str="dataset", top_k: int =15, document_filter: str = None):
         """Retrieve relevant document chunks from ChromaDB based on the rewritten query.
 
         Args:
             rewritten_query (str): The query rewritten with medical insurance terminology.
             collection_name (str): The name of the ChromaDB collection to query.
             top_k (int): The number of top relevant chunks to retrieve.
+            document_filter (str): Optional document name to filter results by (metadata filtering).
 
         Returns:
             List[Dict]: List of dictionaries containing chunks and their metadata, sorted by relevance
@@ -40,12 +41,20 @@ class retrivalModel:
             # Generate embedding for the query
             query_embedding = self.model.encode([rewritten_query]).tolist()
 
+            # Build query parameters
+            query_params = {
+                "query_embeddings": query_embedding,
+                "n_results": top_k,
+                "include": ["metadatas", "documents", "distances"]
+            }
+            
+            # Add metadata filter if document_filter is provided
+            if document_filter:
+                query_params["where"] = {"document_name": document_filter}
+                print(f" Filtering by document: {document_filter}")
+
             # Query using HNSW index (ChromaDB uses HNSW by default)
-            results = collection.query(
-                query_embeddings=query_embedding,
-                n_results=top_k,
-                include=["metadatas", "documents", "distances"]
-            )
+            results = collection.query(**query_params)
 
             # Format results into a more usable structure
             chunks = []

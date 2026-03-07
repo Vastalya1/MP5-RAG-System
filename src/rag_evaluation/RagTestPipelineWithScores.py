@@ -1,8 +1,8 @@
 """
-RAG Test Pipeline
+RAG Test Pipeline with Similarity Scores
 
 This script reads questions from golden_dataset.xlsx and runs them through 
-the RAG pipeline, storing results in a JSON file.
+the RAG pipeline, storing results in a JSON file including chunk similarity scores.
 """
 
 import asyncio
@@ -28,9 +28,10 @@ from retriever.reranking_mistral import ChunkReranker
 from output.answerGeneration_mistral import AnswerGenerator
 
 
-class RAGTestPipeline:
+class RAGTestPipelineWithScores:
     """
     Test pipeline to evaluate RAG system performance using a golden dataset.
+    Outputs similarity/distance scores for each chunk.
     """
     
     def __init__(self, api_key: str):
@@ -43,12 +44,12 @@ class RAGTestPipeline:
         self.api_key = api_key
         
         # Initialize pipeline components
-        print("[RAGTestPipeline] Initializing components...")
+        print("[RAGTestPipelineWithScores] Initializing components...")
         self.rewriter = QueryRewriter(api_key)
         self.retriever = retrivalModel()
         self.reranker = ChunkReranker(api_key)
         self.answer_generator = AnswerGenerator(api_key)
-        print("[RAGTestPipeline] All components initialized successfully")
+        print("[RAGTestPipelineWithScores] All components initialized successfully")
     
     async def process_question(
         self, 
@@ -67,7 +68,7 @@ class RAGTestPipeline:
             policy_id: The policy document name to filter retrieval by
             
         Returns:
-            Dict containing the results
+            Dict containing the results with similarity scores
         """
         try:
             print(f"\n[Processing Q{question_id}] {question[:50]}...")
@@ -91,10 +92,13 @@ class RAGTestPipeline:
                 return {
                     "question_id": question_id,
                     "question": question,
+                    "rewritten_query": rewritten_query,
                     "answer": "No relevant policy content found for this question.",
                     "policy_id": [],
                     "chunk_id": [],
-                    "chunk_content": []
+                    "chunk_content": [],
+                    "chunk_distance": [],
+                    "chunk_similarity": []
                 }
             
             # Step 3: Reranking
@@ -105,14 +109,28 @@ class RAGTestPipeline:
             print(f"  Step 4: Generating answer...")
             answer_result = await self.answer_generator.generate_answer(rewritten_query, reranked_chunks)
             
-            # Extract chunk information
+            # Extract chunk information with scores
             chunk_ids = []
             chunk_contents = []
+            chunk_distances = []
+            chunk_similarities = []
             policy_ids = set()
             
             for chunk in reranked_chunks:
                 chunk_ids.append(chunk.get('chunk_id', ''))
                 chunk_contents.append(chunk.get('text', ''))
+                
+                # Get distance score (ChromaDB returns cosine distance: 0 = identical, 2 = opposite)
+                distance = chunk.get('distance', None)
+                chunk_distances.append(distance)
+                
+                # Convert distance to similarity score (1 - distance/2 for cosine distance)
+                # This gives a 0-1 similarity where 1 = identical
+                if distance is not None:
+                    similarity = 1 - (distance / 2)
+                    chunk_similarities.append(round(similarity, 4))
+                else:
+                    chunk_similarities.append(None)
                 
                 # Extract policy_id from metadata
                 metadata = chunk.get('metadata', {})
@@ -123,10 +141,13 @@ class RAGTestPipeline:
             return {
                 "question_id": question_id,
                 "question": question,
+                "rewritten_query": rewritten_query,
                 "answer": answer_result.get("answer", ""),
                 "policy_id": list(policy_ids),
                 "chunk_id": chunk_ids,
-                "chunk_content": chunk_contents
+                "chunk_content": chunk_contents,
+                "chunk_distance": chunk_distances,
+                "chunk_similarity": chunk_similarities
             }
             
         except Exception as e:
@@ -134,10 +155,13 @@ class RAGTestPipeline:
             return {
                 "question_id": question_id,
                 "question": question,
+                "rewritten_query": "",
                 "answer": f"Error: {str(e)}",
                 "policy_id": [],
                 "chunk_id": [],
-                "chunk_content": []
+                "chunk_content": [],
+                "chunk_distance": [],
+                "chunk_similarity": []
             }
     
     async def run_pipeline(
@@ -160,7 +184,7 @@ class RAGTestPipeline:
             List of result dictionaries
         """
         # Read the Excel file
-        print(f"\n[RAGTestPipeline] Reading questions from {excel_path}...")
+        print(f"\n[RAGTestPipelineWithScores] Reading questions from {excel_path}...")
         df = pd.read_excel(excel_path, sheet_name=sheet_name)
         
         # Check for question column (common column names)
@@ -173,7 +197,7 @@ class RAGTestPipeline:
         if question_col is None:
             # If no standard column name, use the first column
             question_col = df.columns[0]
-            print(f"[RAGTestPipeline] Using column '{question_col}' as question column")
+            print(f"[RAGTestPipelineWithScores] Using column '{question_col}' as question column")
         
         # Check for question_id column
         id_col = None
@@ -184,7 +208,7 @@ class RAGTestPipeline:
         
         questions = df[question_col].tolist()
         num_questions = len(questions)
-        print(f"[RAGTestPipeline] Found {num_questions} questions to process")
+        print(f"[RAGTestPipelineWithScores] Found {num_questions} questions to process")
         
         # Check for policy_id column for metadata filtering
         policy_col = None
@@ -194,7 +218,7 @@ class RAGTestPipeline:
                 break
         
         if policy_col:
-            print(f"[RAGTestPipeline] Using '{policy_col}' column for metadata filtering")
+            print(f"[RAGTestPipelineWithScores] Using '{policy_col}' column for metadata filtering")
         
         # Process each question
         results = []
@@ -218,17 +242,17 @@ class RAGTestPipeline:
         if output_path is None:
             output_dir = Path(__file__).resolve().parent
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = output_dir / f"rag_results_{timestamp}.json"
+            output_path = output_dir / f"rag_results_with_scores_{timestamp}.json"
         
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(results, f, indent=2, ensure_ascii=False)
         
-        print(f"\n[RAGTestPipeline] Results saved to {output_path}")
+        print(f"\n[RAGTestPipelineWithScores] Results saved to {output_path}")
         return results
 
 
 async def main():
-    """Main entry point for the RAG test pipeline."""
+    """Main entry point for the RAG test pipeline with scores."""
     # Get API key from environment
     api_key = os.getenv("MISTRAL_API_KEY")
     if not api_key:
@@ -237,10 +261,10 @@ async def main():
     # Set up paths
     base_dir = Path(__file__).resolve().parent
     excel_path = base_dir / "golden_dataset.xlsx"
-    output_path = base_dir / "rag_evaluation_results.json"
+    output_path = base_dir / "rag_evaluation_results_with_scores.json"
     
     # Initialize and run pipeline
-    pipeline = RAGTestPipeline(api_key)
+    pipeline = RAGTestPipelineWithScores(api_key)
     results = await pipeline.run_pipeline(
         excel_path=str(excel_path),
         sheet_name="dataset",
@@ -248,8 +272,8 @@ async def main():
         collection_name="dataset"
     )
     
-    print(f"\n[RAGTestPipeline] Processed {len(results)} questions")
-    print(f"[RAGTestPipeline] Results saved to {output_path}")
+    print(f"\n[RAGTestPipelineWithScores] Processed {len(results)} questions")
+    print(f"[RAGTestPipelineWithScores] Results saved to {output_path}")
 
 
 if __name__ == "__main__":
