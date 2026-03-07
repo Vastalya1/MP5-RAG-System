@@ -236,20 +236,20 @@ class RAGProcessNode:
         
         chunks = []
         if scope == "shared":
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
         elif scope == "personal" and username:
             chunks = self.retriever.retrive_Chunks(
                 rewritten_query,
                 collection_name=f"user_{username}_documents"
             )
         elif scope == "combined" and username:
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
             chunks += self.retriever.retrive_Chunks(
                 rewritten_query,
                 collection_name=f"user_{username}_documents"
             )
         else:
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
         
         return chunks
 
