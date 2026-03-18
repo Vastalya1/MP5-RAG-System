@@ -1,0 +1,39 @@
+[
+  {
+    "page_number": 13,
+    "table_index": 1,
+    "num_rows": 15,
+    "num_cols": 7,
+    "heading": "TABLE OF BENEFITS FOR DOMESTIC COVER",
+    "spans_pages": false,
+    "markdown": "| COVER                                                        | IMPERIAL PLAN     | IMPERIAL PLAN     | IMPERIAL PLAN     | IMPERIAL PLUS PLAN |                   |                   |\n| ------------------------------------------------------------ | ----------------- | ----------------- | ----------------- | ------------------ | ----------------- | ----------------- |\n| In-patient Hospitalization Treatment Limits                  | INR 3,750,000     | INR 5,600,000     | INR 7,500,000     | INR 11,200,000     | INR 18,750,000    | INR 37,500,000    |\n| In-patient Hospitalization Treatment                         | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |\n| Hospital accommodation (Room rent and ICU)                   | At Actual         | At Actual         | At Actual         | At Actual          | At Actual         | At Actual         |\n| Pre-hospitalisation                                          | 60 days           | 60 days           | 60 days           | 60 days            | 60 days           | 60 days           |\n| Post-hospitalisation                                         | 180 days          | 180 days          | 180 days          | 180 days           | 180 days          | 180 days          |\n| Local (Road) Ambulance                                       | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |\n| Day Care Procedures                                          | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |\n| Living Donor Medical Costs                                   | INR 500,000       | INR 500,000       | INR 500,000       | INR 500,000        | INR 500,000       | INR 500,000       |\n| Annual Preventive Health Check- up (only offered at renewal) | INR 5,000         | INR 5,000         | INR 5,000         | INR 5,000          | INR 5,000         | INR 5,000         |\n| Ayurvedic / Homeopathic Hospitalization Expenses             | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |\n| Air Ambulance                                                | INR 500,000       | INR 675,000       | INR 750,000       | INR 750,000        | INR 750,000       | INR 750,000       |\n| Mental Illness Treatment                                     | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |\n| Rehabilitation                                               | INR 50,000        | INR 50,000        | INR 50,000        | INR 50,000         | INR 50,000        | INR 50,000        |\n| Modern Treatment Methods and Advancement in Technologies     | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |",
+    "nl_sentences": [
+      "The In-patient Hospitalization Treatment Limits is INR 3,750,000 under IMPERIAL PLAN, INR 5,600,000 under IMPERIAL PLAN, INR 7,500,000 under IMPERIAL PLAN, INR 11,200,000 under IMPERIAL PLUS PLAN, INR 18,750,000 under IMPERIAL PLUS PLAN, and INR 37,500,000 under IMPERIAL PLUS PLAN.",
+      "The In-patient Hospitalization Treatment is Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, and Up to Sum Insured under IMPERIAL PLUS PLAN.",
+      "The Hospital accommodation (Room rent and ICU) is At Actual under IMPERIAL PLAN, At Actual under IMPERIAL PLAN, At Actual under IMPERIAL PLAN, At Actual under IMPERIAL PLUS PLAN, At Actual under IMPERIAL PLUS PLAN, and At Actual under IMPERIAL PLUS PLAN.",
+      "The Pre-hospitalisation is 60 days under IMPERIAL PLAN, 60 days under IMPERIAL PLAN, 60 days under IMPERIAL PLAN, 60 days under IMPERIAL PLUS PLAN, 60 days under IMPERIAL PLUS PLAN, and 60 days under IMPERIAL PLUS PLAN.",
+      "The Post-hospitalisation is 180 days under IMPERIAL PLAN, 180 days under IMPERIAL PLAN, 180 days under IMPERIAL PLAN, 180 days under IMPERIAL PLUS PLAN, 180 days under IMPERIAL PLUS PLAN, and 180 days under IMPERIAL PLUS PLAN.",
+      "The Local (Road) Ambulance is Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, and Up to Sum Insured under IMPERIAL PLUS PLAN.",
+      "The Day Care Procedures is Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, and Up to Sum Insured under IMPERIAL PLUS PLAN.",
+      "The Living Donor Medical Costs is INR 500,000 under IMPERIAL PLAN, INR 500,000 under IMPERIAL PLAN, INR 500,000 under IMPERIAL PLAN, INR 500,000 under IMPERIAL PLUS PLAN, INR 500,000 under IMPERIAL PLUS PLAN, and INR 500,000 under IMPERIAL PLUS PLAN.",
+      "The Annual Preventive Health Check- up (only offered at renewal) is INR 5,000 under IMPERIAL PLAN, INR 5,000 under IMPERIAL PLAN, INR 5,000 under IMPERIAL PLAN, INR 5,000 under IMPERIAL PLUS PLAN, INR 5,000 under IMPERIAL PLUS PLAN, and INR 5,000 under IMPERIAL PLUS PLAN.",
+      "The Ayurvedic / Homeopathic Hospitalization Expenses is Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, and Up to Sum Insured under IMPERIAL PLUS PLAN.",
+      "The Air Ambulance is INR 500,000 under IMPERIAL PLAN, INR 675,000 under IMPERIAL PLAN, INR 750,000 under IMPERIAL PLAN, INR 750,000 under IMPERIAL PLUS PLAN, INR 750,000 under IMPERIAL PLUS PLAN, and INR 750,000 under IMPERIAL PLUS PLAN.",
+      "The Mental Illness Treatment is Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, and Up to Sum Insured under IMPERIAL PLUS PLAN.",
+      "The Rehabilitation is INR 50,000 under IMPERIAL PLAN, INR 50,000 under IMPERIAL PLAN, INR 50,000 under IMPERIAL PLAN, INR 50,000 under IMPERIAL PLUS PLAN, INR 50,000 under IMPERIAL PLUS PLAN, and INR 50,000 under IMPERIAL PLUS PLAN.",
+      "The Modern Treatment Methods and Advancement in Technologies is Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, Up to Sum Insured under IMPERIAL PLUS PLAN, and Up to Sum Insured under IMPERIAL PLUS PLAN."
+    ],
+    "nl_status": "ok",
+    "nl_expected_rows": 14,
+    "nl_generated_rows": 14,
+    "nl_headers": [
+      "COVER",
+      "IMPERIAL PLAN",
+      "IMPERIAL PLAN",
+      "IMPERIAL PLAN",
+      "IMPERIAL PLUS PLAN",
+      "",
+      ""
+    ]
+  }
+]
