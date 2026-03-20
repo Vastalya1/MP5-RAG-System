@@ -15,19 +15,19 @@ from datetime import datetime, timedelta, timezone
 import secrets
 from passlib.context import CryptContext
 from dotenv import load_dotenv
-
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from queryRewriter.rewriting import QueryRewriter
 from retriever.retrival import retrivalModel
 from retriever.reranking_mistral import ChunkReranker
 from output.answerGeneration_mistral import AnswerGenerator
-
 # Import LangGraph orchestrator
 from orchestration.orchestrator import QueryOrchestrator, create_orchestrator
-
 # Import your ingestion pipeline and other necessary components
 from ingestion.ingestionPipeline import IngestionPipeline
+from tavily_fallback.tavily_client import TavilySearchClient
+from tavily_fallback.tavily_service import TavilyService
+
 
 # Load environment variables from .env (if present)
 load_dotenv()
@@ -928,6 +928,16 @@ async def delete_personal_file(
     )
     return {"message": f"Deleted {filename}"}
 
+_tavily_service: TavilyService | None = None
+
+def _get_tavily_service() -> TavilyService:
+    global _tavily_service
+    if _tavily_service is None:
+        client = TavilySearchClient()
+        _tavily_service = TavilyService(client)
+    return _tavily_service
+
+
 @app.post("/query")
 async def query(
     request: Request,
@@ -1003,18 +1013,35 @@ async def query(
             else:
                 return {"error": f"Unknown scope: {scope}"}
 
-            if not chunks:
-                response_text = "No relevant policy content found for this question."
-                _save_query_history(
-                    user.get("username"),
-                    user.get("role"),
-                    scope,
-                    query,
-                    response_text,
-                    None,
-                    [],
-                )
-                return {"response": response_text}
+            # if not chunks:
+            #     if not chunks:
+            #         tavily = _get_tavily_service()
+            #         tavily_result = tavily.get_answer(query)
+
+            #         _record_audit_event(
+            #             user.get("username"),
+            #             user.get("role"),
+            #             "QUERY_EXTERNAL",
+            #             request,
+            #             metadata={"provider": "tavily"}
+            #         )
+
+            #         _save_query_history(
+            #             user.get("username"),
+            #             user.get("role"),
+            #             "external",
+            #             query,
+            #             tavily_result["answer"],
+            #             "Answer generated using Tavily web search",
+            #             tavily_result["sources"],
+            #         )
+
+            #         return {
+            #             "response": tavily_result["answer"],
+            #             "sources": tavily_result["sources"],
+            #             "route_taken": "tavily_fallback"
+            #         }
+
 
             reranker = _get_reranker()
             answer_generator = _get_answer_generator()
@@ -1048,3 +1075,5 @@ async def history(
     limit: int = 50,
 ):
     return {"items": _get_query_history(user.get("username"), limit=limit)}
+
+

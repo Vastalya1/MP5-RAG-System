@@ -14,8 +14,8 @@ class DocumentEmbedder:
         self.model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
         base_dir = Path(__file__).resolve().parents[2]
-        persist_dir = Path(os.getenv("CHROMA_PERSIST_DIR", str(base_dir / "chromadb")))
-        persist_dir.mkdir(parents=True, exist_ok=True)
+        persist_dir = Path(os.getenv("CHROMA_PERSIST_DIR", str(base_dir / "chromadb"))) #is this req now ?
+        persist_dir.mkdir(parents=True, exist_ok=True) #this too ?
 
         # New Chroma client API (PersistentClient).
         self.client = chromadb.CloudClient(

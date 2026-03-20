@@ -19,7 +19,7 @@ def is_probable_heading(line: str) -> bool:
     if not line:
         return False
     if len(line.split()) <= 12 and not line.endswith("."):
-        return True
+        return True  
     if re.match(r"^(\d+[\.\)]|[IVX]+\.)", line):
         return True
     if line.isupper():
