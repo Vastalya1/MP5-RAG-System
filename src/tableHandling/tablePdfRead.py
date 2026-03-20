@@ -755,6 +755,26 @@ def _resolve_merged_cells(
             if not non_empty_indices:
                 continue
 
+            # Fill trailing blanks to the right when a row clearly has a merged span.
+            # This handles headers/value bands like: "IMPERIAL PLUS PLAN |  |  "
+            # and section rows like: "Out-patient benefits |  |  | ...".
+            last_non_empty_idx = non_empty_indices[-1]
+            has_trailing_blanks = last_non_empty_idx < (num_cols - 1)
+            if has_trailing_blanks:
+                likely_merged_row = (
+                    num_cols > 2
+                    and (
+                        row_idx == 0
+                        or (non_empty_indices[0] == 0 and len(non_empty_indices) >= 2)
+                    )
+                )
+                if likely_merged_row:
+                    anchor_val = row[last_non_empty_idx]
+                    if anchor_val.strip():
+                        for c in range(last_non_empty_idx + 1, num_cols):
+                            if not resolved[row_idx][c].strip():
+                                resolved[row_idx][c] = anchor_val
+
             # Pattern: descriptor in first column + one text value anchor in value area.
             # Example: "Bronchical Thermoplasty | Up to Sum Insured | ...blank..."
             if len(non_empty_indices) == 2 and non_empty_indices[0] == 0:

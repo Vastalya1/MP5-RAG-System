@@ -23,10 +23,13 @@ Strict Constraints:
 1. One Row, One Sentence: Each row in the table must correspond to exactly one full sentence.
 2. Strictly generate only the sentences and nothing else.
 3. Zero Hallucination/Summarization: Do not add information not present in the table.
-4. Explicit Header References: Explicitly mention the table headers in every sentence.
+4. Reference headers naturally. Avoid repeating identical values across headers.
 5. Maintain Terminology: Use the exact technical terms for covers and values as written in the markdown.
 6. Handling Multiple Values: If a header has multiple values, include all values.
 7. Preserve row order from top to bottom.
+8. Use natural, concise phrasing
+9. Every sentence must preserve a clear mapping between values and their corresponding plans. Do not merge or generalize values unless all columns have identical values.
+10. Do NOT merge rows or infer relationships not directly present.
 
 Validation Requirements:
 - The table has exactly {expected_rows} data rows (excluding header and separator).
@@ -361,7 +364,7 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=str,
-        default=str(Path(__file__).resolve().with_name("extracted_tables_nl.json")),
+        default=str(Path(__file__).resolve().with_name("extracted_tables_nl3.json")),
         help="Path to output JSON file.",
     )
     parser.add_argument(
