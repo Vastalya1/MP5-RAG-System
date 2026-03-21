@@ -251,6 +251,83 @@ def save_json(path: Path, data: List[Dict[str, Any]]) -> None:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
+def create_mistral_client() -> Mistral:
+    """Create a Mistral client using the repo .env configuration."""
+    repo_root = Path(__file__).resolve().parents[2]
+    load_dotenv(repo_root / ".env")
+    api_key = os.getenv("MISTRAL_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("MISTRAL_API_KEY is missing. Set it in .env or environment variables.")
+    return Mistral(api_key=api_key)
+
+
+def enrich_tables_with_sentences(
+    tables: List[Dict[str, Any]],
+    client: Optional[Mistral] = None,
+    model: str = "mistral-medium-latest",
+    sleep_seconds: float = 0.2,
+) -> List[Dict[str, Any]]:
+    """Generate natural-language table sentences for an in-memory list of extracted tables."""
+    active_client = client or create_mistral_client()
+    enriched: List[Dict[str, Any]] = []
+    total = len(tables)
+
+    for idx, item in enumerate(tables, start=1):
+        markdown = str(item.get("markdown", "") or "")
+        heading = str(item.get("heading", "") or "").strip() or None
+        headers, data_rows = parse_markdown_table(markdown)
+        expected_rows = len(data_rows)
+        error_type: Optional[str] = None
+        error_detail: Optional[str] = None
+
+        print(f"[{idx}/{total}] page={item.get('page_number')} rows={expected_rows} -> generating...")
+        sentences, status, error_type, error_detail = generate_sentences_for_table(
+            client=active_client,
+            model=model,
+            markdown=markdown,
+            expected_rows=expected_rows,
+            heading=heading,
+        )
+
+        if status in {"mismatch", "error"} and expected_rows > 0:
+            print(f"[{idx}/{total}] {status} detected -> chunked fallback...")
+            chunked_sentences, chunked_status, chunked_error_type, chunked_error_detail = generate_sentences_chunked(
+                client=active_client,
+                model=model,
+                headers=headers,
+                data_rows=data_rows,
+                heading=heading,
+            )
+            if chunked_status in {"ok", "ok_chunked"}:
+                sentences = chunked_sentences
+                status = "ok_chunked"
+                error_type = None
+                error_detail = None
+            else:
+                sentences = chunked_sentences
+                status = "error"
+                error_type = chunked_error_type or "chunked_generation_failed"
+                error_detail = chunked_error_detail or "Chunked fallback failed."
+
+        if status == "error" and error_type:
+            print(f"[{idx}/{total}] error_type={error_type} detail={error_detail}")
+
+        enriched_item = dict(item)
+        enriched_item["nl_sentences"] = sentences
+        enriched_item["nl_status"] = status
+        enriched_item["nl_error_type"] = error_type
+        enriched_item["nl_error_detail"] = error_detail
+        enriched_item["nl_expected_rows"] = expected_rows
+        enriched_item["nl_generated_rows"] = len(sentences)
+        enriched_item["nl_headers"] = headers
+        enriched.append(enriched_item)
+
+        if sleep_seconds > 0:
+            time.sleep(sleep_seconds)
+
+    return enriched
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Convert markdown tables to one-row-one-sentence NL form using Mistral."
@@ -287,12 +364,6 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parents[2]
-    load_dotenv(repo_root / ".env")
-    api_key = os.getenv("MISTRAL_API_KEY", "").strip()
-    if not api_key:
-        raise RuntimeError("MISTRAL_API_KEY is missing. Set it in .env or environment variables.")
-
     input_path = Path(args.input).resolve()
     output_path = Path(args.output).resolve()
     tables = load_json(input_path)
@@ -300,62 +371,13 @@ def main() -> None:
     if args.limit is not None:
         tables = tables[: args.limit]
 
-    client = Mistral(api_key=api_key)
-    enriched: List[Dict[str, Any]] = []
-
-    total = len(tables)
-    for idx, item in enumerate(tables, start=1):
-        markdown = str(item.get("markdown", "") or "")
-        heading = str(item.get("heading", "") or "").strip() or None
-        headers, data_rows = parse_markdown_table(markdown)
-        expected_rows = len(data_rows)
-        error_type: Optional[str] = None
-        error_detail: Optional[str] = None
-
-        print(f"[{idx}/{total}] page={item.get('page_number')} rows={expected_rows} -> generating...")
-        sentences, status, error_type, error_detail = generate_sentences_for_table(
-            client=client,
-            model=args.model,
-            markdown=markdown,
-            expected_rows=expected_rows,
-            heading=heading,
-        )
-
-        if status in {"mismatch", "error"} and expected_rows > 0:
-            print(f"[{idx}/{total}] {status} detected -> chunked fallback...")
-            chunked_sentences, chunked_status, chunked_error_type, chunked_error_detail = generate_sentences_chunked(
-                client=client,
-                model=args.model,
-                headers=headers,
-                data_rows=data_rows,
-                heading=heading,
-            )
-            if chunked_status in {"ok", "ok_chunked"}:
-                sentences = chunked_sentences
-                status = "ok_chunked"
-                error_type = None
-                error_detail = None
-            else:
-                sentences = chunked_sentences
-                status = "error"
-                error_type = chunked_error_type or "chunked_generation_failed"
-                error_detail = chunked_error_detail or "Chunked fallback failed."
-
-        if status == "error" and error_type:
-            print(f"[{idx}/{total}] error_type={error_type} detail={error_detail}")
-
-        enriched_item = dict(item)
-        enriched_item["nl_sentences"] = sentences
-        enriched_item["nl_status"] = status
-        enriched_item["nl_error_type"] = error_type
-        enriched_item["nl_error_detail"] = error_detail
-        enriched_item["nl_expected_rows"] = expected_rows
-        enriched_item["nl_generated_rows"] = len(sentences)
-        enriched_item["nl_headers"] = headers
-        enriched.append(enriched_item)
-
-        if args.sleep_seconds > 0:
-            time.sleep(args.sleep_seconds)
+    client = create_mistral_client()
+    enriched = enrich_tables_with_sentences(
+        tables=tables,
+        client=client,
+        model=args.model,
+        sleep_seconds=args.sleep_seconds,
+    )
 
     save_json(output_path, enriched)
     ok_count = sum(1 for entry in enriched if entry.get("nl_status") == "ok")

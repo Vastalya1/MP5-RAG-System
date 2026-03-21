@@ -1,4 +1,5 @@
 import os
+from threading import Lock
 from pathlib import Path
 from typing import Any, List, Dict
 
@@ -16,6 +17,7 @@ class DocumentEmbedder:
         load_dotenv(env_path)
 
         self.model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        self._embed_lock = Lock()
 
         api_key = os.getenv("CHROMA_CLOUD_API_KEY")
         if not api_key:
@@ -54,15 +56,15 @@ class DocumentEmbedder:
             cleaned["clause_id"] = ""
         return cleaned
 
-    def _prepare_chunks(self, chunks: List[Dict]) -> List[Dict]:
+    def _prepare_records(self, records: List[Dict]) -> List[Dict]:
         prepared: List[Dict] = []
-        for chunk in chunks:
-            text = str(chunk.get("text", "")).strip()
-            chunk_id = str(chunk.get("chunk_id", "")).strip()
+        for record in records:
+            text = str(record.get("text", "")).strip()
+            chunk_id = str(record.get("chunk_id", "")).strip()
             if not text or not chunk_id:
                 continue
 
-            metadata = chunk.get("metadata") or {}
+            metadata = record.get("metadata") or {}
             prepared.append(
                 {
                     "chunk_id": chunk_id,
@@ -72,30 +74,36 @@ class DocumentEmbedder:
             )
         return prepared
 
-    def embed_documents(self, chunks: List[Dict], batch_size: int = 300) -> None:
-        """Embed document chunks and store them in ChromaDB in batches to avoid quota errors."""
-        prepared_chunks = self._prepare_chunks(chunks)
-        total = len(prepared_chunks)
+    def embed_records(self, records: List[Dict], batch_size: int = 300) -> None:
+        """Embed arbitrary text records and store them in ChromaDB in batches."""
+        prepared_records = self._prepare_records(records)
+        total = len(prepared_records)
         if total == 0:
             print("No valid chunks to embed.")
             return
 
         for i in range(0, total, batch_size):
-            batch = prepared_chunks[i:i + batch_size]
-            texts = [chunk["text"] for chunk in batch]
-            ids = [chunk["chunk_id"] for chunk in batch]
-            metadatas = [chunk["metadata"] for chunk in batch]
-            embeddings = self.model.encode(texts)
+            batch = prepared_records[i:i + batch_size]
+            texts = [record["text"] for record in batch]
+            ids = [record["chunk_id"] for record in batch]
+            metadatas = [record["metadata"] for record in batch]
 
-            # upsert avoids duplicate-id failures on re-ingestion of the same file.
-            self.collection.upsert(
-                documents=texts,
-                ids=ids,
-                embeddings=embeddings.tolist(),
-                metadatas=metadatas,
-            )
+            with self._embed_lock:
+                embeddings = self.model.encode(texts)
+
+                # upsert avoids duplicate-id failures on re-ingestion of the same file.
+                self.collection.upsert(
+                    documents=texts,
+                    ids=ids,
+                    embeddings=embeddings.tolist(),
+                    metadatas=metadatas,
+                )
             print(f"Embedded and stored batch {i // batch_size + 1} ({len(batch)} chunks) in ChromaDB")
         print(f"Successfully embedded and stored {total} chunks in ChromaDB (in batches)")
+
+    def embed_documents(self, chunks: List[Dict], batch_size: int = 300) -> None:
+        """Embed document chunks and store them in ChromaDB in batches to avoid quota errors."""
+        self.embed_records(chunks, batch_size=batch_size)
 
     def process_pdf_folder(self, input_folder: str) -> None:
         """Process PDFs in a folder, embed them, and store in ChromaDB."""
