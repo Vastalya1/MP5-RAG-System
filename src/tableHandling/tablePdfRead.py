@@ -12,7 +12,9 @@ Features:
 """
 
 import re
+import sys
 import json
+import os
 import pdfplumber
 from pathlib import Path
 from typing import List, Dict, Any, Set, Optional, Tuple
@@ -20,16 +22,15 @@ from collections import Counter
 from statistics import mean, pstdev
 
 
+SRC_DIR = Path(__file__).resolve().parents[1]
+if str(SRC_DIR) not in sys.path:
+    sys.path.append(str(SRC_DIR))
+
+from shared.heading_detection import normalize_line as _normalize_line
+
+
 # Regex for page numbers (from chunker.py)
 PAGE_NUMBER_RE = re.compile(r"^(?:page\s*)?\d+(?:\s*of\s*\d+)?$", re.IGNORECASE)
-
-# Regex patterns for heading detection
-HEADING_PATTERNS = [
-    re.compile(r"^(?:table|schedule|annexure|appendix)\s*[:\-]?\s*\d*\s*[:\-]?\s*(.+)", re.IGNORECASE),
-    re.compile(r"^\d+\.?\d*\.?\s+(.+)", re.IGNORECASE),  # Numbered headings
-    re.compile(r"^[A-Z][A-Z\s]+:?\s*$"),  # ALL CAPS headings
-    re.compile(r"^[IVX]+\.\s*(.+)", re.IGNORECASE),  # Roman numeral headings
-]
 
 # Patterns indicating table continuation
 CONTINUATION_PATTERNS = [
@@ -85,13 +86,6 @@ ROW_STOPWORDS = {
     "is", "are", "as", "at", "be", "this", "that", "from", "an", "a",
     "will", "shall", "under", "within", "into", "which", "where", "when",
 }
-
-
-def _normalize_line(line: str) -> str:
-    """Normalize whitespace in a line (from chunker.py)."""
-    return re.sub(r"\s+", " ", line).strip()
-
-
 def _clamp(value: float, lower: float = 0.0, upper: float = 1.0) -> float:
     """Clamp value to [lower, upper]."""
     return max(lower, min(value, upper))
@@ -128,6 +122,49 @@ def _trim_empty_edges(table: List[List]) -> List[List[str]]:
 
     compact_rows = [[row[col_idx] for col_idx in non_empty_cols] for row in padded_rows]
     return compact_rows
+
+
+def _markdown_row_counts(markdown: str) -> Tuple[int, int]:
+    """
+    Return (table_lines, data_rows) for rendered markdown.
+
+    - table_lines counts all lines that look like markdown rows, including the
+      header row and the separator row.
+    - data_rows counts body rows only, excluding header and separator.
+    """
+    lines = [line.strip() for line in markdown.splitlines() if line.strip()]
+    table_lines = [line for line in lines if line.startswith("|") and line.endswith("|")]
+    if len(table_lines) < 2:
+        return len(table_lines), 0
+    data_rows = max(0, len(table_lines) - 2)
+    return len(table_lines), data_rows
+
+
+def _debug_row_count_summary(
+    page_num: int,
+    table_index: int,
+    raw_table: List[List],
+    non_boilerplate_table: List[List],
+    trimmed_table: List[List[str]],
+    markdown: str,
+) -> None:
+    """
+    Optional debug print for tracing how num_rows is derived.
+
+    Enable with TABLE_DEBUG_ROWS=1 in the environment.
+    """
+    if os.getenv("TABLE_DEBUG_ROWS", "").strip().lower() not in {"1", "true", "yes", "on"}:
+        return
+
+    markdown_lines, markdown_data_rows = _markdown_row_counts(markdown)
+    print(
+        f"  -> Row count debug [page {page_num} table {table_index}]: "
+        f"raw_extracted_rows={len(raw_table)}, "
+        f"after_boilerplate_filter={len(non_boilerplate_table)}, "
+        f"after_trim_empty_edges={len(trimmed_table)} (= num_rows), "
+        f"markdown_table_lines={markdown_lines}, "
+        f"markdown_data_rows={markdown_data_rows}"
+    )
 
 
 def _table_quality_score(table: List[List], min_rows: int = 2, min_cols: int = 2) -> Tuple[float, Dict[str, float]]:
@@ -394,18 +431,18 @@ def _deduplicate_table_candidates(candidates: List[Dict[str, Any]], overlap_thre
     return sorted(selected, key=lambda c: (c["bbox"][1], c["bbox"][0]))
 
 
-def _extract_heading_from_text(
+def _extract_immediate_heading_from_text(
     text_before_table: str, 
     boilerplate: Set[str],
-    max_lines_to_check: int = 5
+    max_blocks_to_check: int = 8
 ) -> Optional[str]:
     """
-    Extract the most likely heading for a table from text appearing before it.
+    Find the nearest same-page line/block that introduces the table.
     
     Args:
         text_before_table: Text content appearing before the table
         boilerplate: Set of boilerplate lines to ignore
-        max_lines_to_check: Number of lines to examine for heading
+        max_blocks_to_check: Number of nearby text blocks to examine
     
     Returns:
         The detected heading or None
@@ -422,31 +459,377 @@ def _extract_heading_from_text(
     if not lines:
         return None
     
-    # Check the last few lines before the table (most likely candidates)
-    candidates = lines[-max_lines_to_check:] if len(lines) > max_lines_to_check else lines
-    
-    for line in reversed(candidates):
-        # Skip very short lines
-        if len(line) < 3:
+    blocks = _build_context_blocks(lines)
+    if not blocks:
+        return None
+
+    candidates = blocks[-max_blocks_to_check:] if len(blocks) > max_blocks_to_check else blocks
+    fallback_heading = None
+    encountered_table_content = False
+    nearest_intro: Optional[Tuple[str, int]] = None
+    nearest_heading: Optional[Tuple[str, int]] = None
+    valid_rank = 0
+
+    for block in reversed(candidates):
+        normalized = block.strip()
+        if not normalized:
             continue
-        
-        # Check against heading patterns
-        for pattern in HEADING_PATTERNS:
-            if pattern.match(line):
-                return line
-        
-        # Check if line ends with colon (often indicates a heading)
-        if line.endswith(':') and len(line) < 100:
-            return line
-        
-        # Check for title case or starting with capital (potential heading)
-        if len(line) < 80 and line[0].isupper():
-            # Avoid sentences (which typically have periods)
-            if not line.endswith('.') or line.count('.') == 1:
-                return line
-    
-    # Return the last non-empty line as a fallback
-    return candidates[-1] if candidates else None
+
+        if _looks_like_table_rowish_block(normalized):
+            encountered_table_content = True
+            continue
+
+        if _looks_like_introductory_block(normalized):
+            if nearest_intro is None:
+                nearest_intro = (normalized, valid_rank)
+            valid_rank += 1
+            continue
+
+        if _looks_like_structural_heading(normalized):
+            if not encountered_table_content and nearest_heading is None:
+                nearest_heading = (normalized, valid_rank)
+            if fallback_heading is None and not _is_weak_table_header(normalized):
+                fallback_heading = normalized
+            valid_rank += 1
+            continue
+
+        valid_rank += 1
+
+    if nearest_intro and nearest_heading:
+        intro_text, intro_rank = nearest_intro
+        heading_text, heading_rank = nearest_heading
+        if heading_rank < intro_rank:
+            return heading_text
+        if (
+            heading_rank - intro_rank <= 2
+            and _is_generic_explanatory_sentence(intro_text)
+        ):
+            return heading_text
+
+    if nearest_intro:
+        return nearest_intro[0]
+
+    if nearest_heading:
+        return nearest_heading[0]
+
+    return fallback_heading
+
+
+def _looks_like_table_item_line(line: str) -> bool:
+    """
+    Reject likely row/list content that happens to resemble a heading.
+
+    Examples:
+    - "203 US + coeliac node biopsy"
+    - "19 MEDICAL CERTIFICATE"
+    - "A. Uterine Artery Embolization and HIFU"
+    """
+    lower = line.lower()
+
+    bullet_prefix = re.match(r"^(?:[a-z]|[ivxlcdm]+)[\)\.]\s+", lower)
+    if bullet_prefix:
+        if ":" in line or line.endswith(".") or " below" in lower or " as under" in lower:
+            return False
+        return True
+
+    upper_bullet_prefix = re.match(r"^[A-Z]\.\s+", line)
+    if upper_bullet_prefix:
+        if ":" in line or line.endswith(".") or " below" in lower or " as under" in lower:
+            return False
+        return True
+
+    if re.match(r"^\d+\s+[A-Za-z]", line):
+        return "code" not in lower and ":" not in line and ")" not in line
+
+    if re.match(r"^\d+\.\s+[A-Za-z]", line):
+        return len(line.split()) > 3 and "code" not in lower and ":" not in line
+
+    return False
+
+
+def _looks_like_table_rowish_line(line: str) -> bool:
+    """Detect lines that look like table rows or in-table headers."""
+    normalized = line.strip()
+    if not normalized:
+        return False
+
+    if _looks_like_reference_line(normalized):
+        return True
+
+    lower = normalized.lower()
+    words = normalized.split()
+    digit_groups = re.findall(r"\d+(?:\.\d+)?", normalized)
+
+    if re.match(r"^\d+(?:\.\d+){0,2}[\)\.]\s+.+", normalized):
+        return False
+
+    if re.search(r"[:\-]", normalized) and len(words) <= 12 and not digit_groups:
+        return False
+
+    if normalized.isupper() and 2 <= len(words) <= 12 and not digit_groups:
+        return False
+
+    if len(words) <= 5 and normalized == normalized.title() and not digit_groups:
+        return False
+
+    if len(digit_groups) >= 2:
+        return True
+
+    if re.search(r"\b\d+(?:\.\d+)?\s*%", normalized):
+        return True
+
+    if re.match(r"^\d+\s+[A-Za-z]", normalized) and ":" not in normalized and len(words) <= 10:
+        return True
+
+    if normalized.isupper() and len(words) >= 5:
+        return True
+
+    if len(words) >= 6 and len(digit_groups) >= 1:
+        short_ratio = sum(1 for word in words if len(word) <= 4) / len(words)
+        if short_ratio >= 0.7 and not normalized.endswith((".", ":")):
+            return True
+
+    if _looks_like_table_item_line(normalized) and ":" not in normalized and " below" not in lower:
+        return True
+
+    return False
+
+
+def _looks_like_table_rowish_block(block: str) -> bool:
+    """Detect table content blocks that should not become table headings."""
+    normalized = block.strip()
+    if not normalized:
+        return False
+
+    if _looks_like_reference_line(normalized):
+        return True
+
+    if _looks_like_table_rowish_line(normalized):
+        return True
+
+    lines = [part.strip() for part in normalized.split(" | ") if part.strip()]
+    if lines and all(_looks_like_table_rowish_line(part) for part in lines):
+        return True
+
+    numeric_spans = re.findall(r"\d+(?:\.\d+)?", normalized)
+    if len(numeric_spans) >= 4:
+        return True
+
+    return False
+
+
+def _looks_like_structural_heading(line: str) -> bool:
+    """Detect standalone title-like lines that label the table's section."""
+    raw = line.strip()
+    normalized = raw.rstrip(":")
+    if not normalized:
+        return False
+
+    if normalized.startswith("*"):
+        return False
+
+    if _looks_like_table_rowish_block(normalized):
+        return False
+
+    words = normalized.split()
+    if len(words) < 2 or len(words) > 16:
+        return False
+
+    if normalized.endswith((".", ",", ";")):
+        return False
+
+    lower = normalized.lower()
+    if lower.startswith("note:"):
+        return False
+
+    if re.match(r"^(?:[a-z]|[ivxlcdm]+)[\)\.]\s+", lower):
+        return False
+
+    if re.match(r"^\d+(?:\.\d+){0,2}[\)\.]\s+.+", normalized):
+        return True
+
+    digit_groups = re.findall(r"\d+(?:\.\d+)?", normalized)
+    if digit_groups and not re.search(r"[:\-]", raw):
+        return False
+
+    if (":" in raw or "-" in raw) and len(words) <= 12:
+        return True
+
+    if normalized.isupper() and 1 < len(words) <= 12:
+        return True
+
+    if len(words) <= 5 and normalized == normalized.title() and not normalized.endswith("."):
+        return True
+    return False
+
+
+def _looks_like_introductory_block(line: str) -> bool:
+    """Detect the nearest same-page sentence that introduces the table."""
+    normalized = line.strip()
+    if not normalized:
+        return False
+
+    if normalized.startswith("*"):
+        return False
+
+    if _looks_like_table_rowish_block(normalized):
+        return False
+
+    lower = normalized.lower()
+    if lower.startswith("note:"):
+        return False
+
+    words = normalized.split()
+    if len(words) < 4 or len(words) > 40:
+        return False
+
+    if _looks_like_structural_heading(normalized):
+        return False
+
+    if re.search(r"[,;]", normalized):
+        return True
+
+    if normalized.endswith((".", ":")):
+        return True
+
+    if " below" in lower or " as under" in lower or " as below" in lower:
+        return True
+
+    if re.match(r"^(?:[a-z]|[ivxlcdm]+)[\)\.]\s+", lower):
+        return len(words) >= 6
+
+    lowercase_words = sum(1 for word in words if re.search(r"[a-z]", word))
+    return lowercase_words >= max(3, len(words) // 2)
+
+
+def _is_weak_table_header(line: str) -> bool:
+    """Short title-like lines often come from the table header itself."""
+    normalized = line.strip().rstrip(":")
+    if not normalized:
+        return False
+
+    words = normalized.split()
+    if len(words) < 2 or len(words) > 8:
+        return False
+
+    if re.match(r"^\d+(?:\.\d+){0,2}[\)\.]?\s+.+", normalized):
+        return False
+
+    if ":" in normalized:
+        return False
+
+    if normalized.isupper():
+        return True
+
+    return normalized == normalized.title()
+
+
+def _is_generic_explanatory_sentence(line: str) -> bool:
+    """
+    Detect nearby prose that explains the section but does not directly label
+    the table itself. These should not outrank a strong title immediately above.
+    """
+    normalized = line.strip()
+    if not normalized:
+        return False
+
+    lower = normalized.lower()
+    words = normalized.split()
+
+    if len(words) < 6:
+        return False
+
+    if normalized.endswith(":"):
+        return False
+
+    if " below" in lower or " as under" in lower or " as below" in lower:
+        return False
+
+    if re.match(r"^(?:[a-z]|[ivxlcdm]+)[\)\.]\s+", lower):
+        return False
+
+    return normalized.endswith(".")
+
+
+def _looks_like_reference_line(line: str) -> bool:
+    """Reject footer/reference lines that are not semantic headings."""
+    lower = line.lower()
+
+    if re.search(r"\bpage\s*\d+\b", line, re.IGNORECASE):
+        return True
+
+    if "@" in line or "www." in lower or "http" in lower:
+        return True
+
+    if re.match(r"^(?:tel|telephone|phone|mobile|fax|email)\b", lower):
+        return True
+
+    digit_count = sum(1 for ch in line if ch.isdigit())
+    if digit_count >= 6 and ("/" in line or "-" in line):
+        return True
+
+    return False
+
+
+def _extract_last_heading_from_lines(lines: List[str], boilerplate: Set[str]) -> Optional[str]:
+    """Track the most recent active heading across page boundaries."""
+    filtered_lines = [
+        _normalize_line(line)
+        for line in lines
+        if _normalize_line(line)
+        and _normalize_line(line) not in boilerplate
+        and not PAGE_NUMBER_RE.match(_normalize_line(line))
+    ]
+
+    for line in reversed(filtered_lines):
+        normalized = line.strip()
+        if _looks_like_structural_heading(normalized):
+            return normalized
+
+    return None
+
+
+def _build_context_blocks(lines: List[str]) -> List[str]:
+    """
+    Merge wrapped lines into local context blocks while keeping headings,
+    table rows, and table-intro lines separated.
+    """
+    if not lines:
+        return []
+
+    blocks: List[str] = []
+    current: List[str] = []
+
+    for line in lines:
+        normalized = line.strip()
+        if not normalized:
+            continue
+
+        if not current:
+            current = [normalized]
+            continue
+
+        previous = current[-1]
+        starts_new_block = (
+            _looks_like_structural_heading(previous)
+            or _looks_like_structural_heading(normalized)
+            or _looks_like_table_rowish_line(previous)
+            or _looks_like_table_rowish_line(normalized)
+            or _looks_like_introductory_block(normalized)
+            or previous.endswith((".", ":", ";"))
+            or _looks_like_reference_line(previous)
+        )
+
+        if starts_new_block:
+            blocks.append(" ".join(current).strip())
+            current = [normalized]
+        else:
+            current.append(normalized)
+
+    if current:
+        blocks.append(" ".join(current).strip())
+
+    return blocks
 
 
 def _get_table_bounding_box(table_obj) -> Tuple[float, float, float, float]:
@@ -844,6 +1227,7 @@ def extract_tables_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
     tables_data = []
     pending_table = None  # Table data being accumulated across pages
     pending_info = None   # Metadata for pending table
+    active_heading = None
     
     with pdfplumber.open(pdf_path) as pdf:
         print(f"Total pages: {len(pdf.pages)}")
@@ -851,6 +1235,7 @@ def extract_tables_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
         for page_num, page in enumerate(pdf.pages, start=1):
             page_text = page.extract_text() or ""
             page_lines = [_normalize_line(line) for line in page_text.splitlines() if _normalize_line(line)]
+            page_last_heading = _extract_last_heading_from_lines(page_lines, boilerplate)
             
             if _looks_like_toc_page(page_lines):
                 print(f"Page {page_num}: Skipped (Table of Contents)")
@@ -872,13 +1257,13 @@ def extract_tables_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
                         continue
 
                     # Filter boilerplate rows
-                    filtered_table = []
+                    non_boilerplate_table = []
                     for row in table:
                         row_text = " ".join(str(cell) if cell else "" for cell in row)
                         if not _is_boilerplate(row_text, boilerplate):
-                            filtered_table.append(row)
+                            non_boilerplate_table.append(row)
 
-                    filtered_table = _trim_empty_edges(filtered_table)
+                    filtered_table = _trim_empty_edges(non_boilerplate_table)
                     if not filtered_table:
                         continue
 
@@ -892,6 +1277,8 @@ def extract_tables_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
                         "strategy": strategy_name,
                         "score": score,
                         "bbox": table_bbox,
+                        "raw_table": table,
+                        "non_boilerplate_table": non_boilerplate_table,
                         "table": filtered_table,
                         "num_rows": int(metrics.get("rows", len(filtered_table))),
                         "num_cols": int(metrics.get("cols", max(len(row) for row in filtered_table))),
@@ -914,6 +1301,8 @@ def extract_tables_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
             table_count = 0
             for candidate in selected_candidates:
                 filtered_table = candidate["table"]
+                raw_table = candidate.get("raw_table", filtered_table)
+                non_boilerplate_table = candidate.get("non_boilerplate_table", filtered_table)
                 table_count += 1
                 table_bbox = candidate["bbox"]
                 page_height = page.height
@@ -946,7 +1335,13 @@ def extract_tables_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
                 
                 # Extract heading for this table
                 text_above = _extract_text_above_table(page, table_bbox)
-                heading = _extract_heading_from_text(text_above, boilerplate)
+                immediate_heading = _extract_immediate_heading_from_text(text_above, boilerplate)
+
+                if immediate_heading:
+                    heading = immediate_heading
+                else:
+                    relative_top = table_bbox[1] / page_height if page_height > 0 else 0
+                    heading = active_heading if relative_top < 0.20 else None
                 
                 # Start new table
                 table_info = {
@@ -958,6 +1353,14 @@ def extract_tables_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
                     "spans_pages": False,
                     "markdown": _table_to_markdown_resolved(filtered_table),
                 }
+                _debug_row_count_summary(
+                    page_num=page_num,
+                    table_index=table_count,
+                    raw_table=raw_table,
+                    non_boilerplate_table=non_boilerplate_table,
+                    trimmed_table=filtered_table,
+                    markdown=table_info["markdown"],
+                )
                 
                 # Check if table might continue to next page
                 # Using relative position - table ends in bottom 15% of page
@@ -981,6 +1384,8 @@ def extract_tables_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
                     )
                     if heading:
                         print(f"  -> Heading: {heading[:60]}...")
+            if page_last_heading:
+                active_heading = page_last_heading
         
         # Finalize any remaining pending table
         if pending_table is not None:
@@ -1002,8 +1407,8 @@ def save_tables_to_json(tables_data: List[Dict], output_path: str):
 def main():
     """Main entry point."""
     base_dir = Path(__file__).resolve().parent
-    pdf_path = base_dir / "test.pdf"
-    output_path = base_dir / "extracted_tables.json"
+    pdf_path = base_dir / "test2.pdf"
+    output_path = base_dir / "extracted_tables2.json"
     
     if not pdf_path.exists():
         print(f"Error: PDF not found at {pdf_path}")

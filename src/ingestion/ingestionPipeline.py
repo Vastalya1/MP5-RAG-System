@@ -8,7 +8,7 @@ class IngestionPipeline:
     def __init__(
         self,
         dataset_dir: str,
-        collection_name: str = "dataset",
+        collection_name: str = "temp_dataset",
         chunk_output_dir: Optional[str] = None,
         file_paths: Optional[List[str]] = None,
     ):
@@ -93,10 +93,10 @@ class IngestionPipeline:
 
 if __name__ == "__main__":
     # Example usage
-    dataset_dir = r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\dataset"
+    dataset_dir = r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\src\ingestion\temp_dataset"
     pipeline = IngestionPipeline(
         dataset_dir=dataset_dir,
-        collection_name="dataset",
+        collection_name="temp_dataset",
         chunk_output_dir=None,
     )
     pipeline.run()

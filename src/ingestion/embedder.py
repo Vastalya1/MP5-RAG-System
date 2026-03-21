@@ -3,23 +3,26 @@ from pathlib import Path
 from typing import Any, List, Dict
 
 import chromadb
+from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 
 from .chunker import chunk_pdfs
 
 
 class DocumentEmbedder:
-    def __init__(self, collection_name: str = "dataset"):
+    def __init__(self, collection_name: str = "temp_dataset"):
         """Initialize the embedder with SBERT model and ChromaDB."""
+        env_path = Path(__file__).resolve().parents[2] / ".env"
+        load_dotenv(env_path)
+
         self.model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
-        base_dir = Path(__file__).resolve().parents[2]
-        persist_dir = Path(os.getenv("CHROMA_PERSIST_DIR", str(base_dir / "chromadb")))
-        persist_dir.mkdir(parents=True, exist_ok=True)
+        api_key = os.getenv("CHROMA_CLOUD_API_KEY")
+        if not api_key:
+            raise ValueError(f"CHROMA_CLOUD_API_KEY is missing. Check {env_path}.")
 
-        # New Chroma client API (PersistentClient).
         self.client = chromadb.CloudClient(
-            api_key=os.getenv("CHROMA_CLOUD_API_KEY"),
+            api_key=api_key,
             tenant='a92961b0-ea65-4a82-a7ad-321a4baaaa60',
             database='Major-Project'
             )

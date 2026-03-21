@@ -6,6 +6,11 @@ from typing import List, Dict, Optional, Tuple
 import pdfplumber
 from transformers import AutoTokenizer
 
+try:
+    from shared.heading_detection import normalize_line as _normalize_line, is_probable_heading
+except ImportError:
+    from src.shared.heading_detection import normalize_line as _normalize_line, is_probable_heading
+
 # Load tokenizer (match your embedding model)
 tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
 
@@ -13,24 +18,8 @@ tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v
 DEFAULT_MAX_TOKENS = 240
 DEFAULT_OVERLAP = 0.15
 
-# Common keywords often used as section titles in policies.
-SECTION_KEYWORDS = [
-    "coverage", "exclusion", "exclusions", "claim", "claims",
-    "definition", "definitions", "eligibility", "benefit", "benefits",
-    "policy", "conditions", "waiting period", "preamble"
-]
-
 PAGE_NUMBER_RE = re.compile(r"^(?:page\s*)?\d+(?:\s*of\s*\d+)?$", re.IGNORECASE)
-STRUCTURED_HEADING_RE = re.compile(
-    r"^(?:section|clause|part|chapter)\s+[A-Za-z0-9IVXLCM\.]+(?:[\)\.\:-])?\s+.+$",
-    re.IGNORECASE,
-)
-NUMERIC_HEADING_RE = re.compile(r"^(?:def\.\s*)?\d+(?:\.\d+){0,3}[\)\.\:-]?\s+.+$", re.IGNORECASE)
 CLAUSE_ID_RE = re.compile(r"^(?:def\.\s*)?(?P<id>\d+(?:\.\d+){0,3})[\)\.\:-]?", re.IGNORECASE)
-
-
-def _normalize_line(line: str) -> str:
-    return re.sub(r"\s+", " ", line).strip()
 
 
 def _looks_like_toc_page(lines: List[str]) -> bool:
@@ -84,39 +73,6 @@ def _remove_repeated_boilerplate(page_lines: List[List[str]]) -> List[List[str]]
         ]
         cleaned_pages.append(filtered)
     return cleaned_pages
-
-
-def is_probable_heading(line: str) -> bool:
-    line = _normalize_line(line)
-    if not line:
-        return False
-
-    words = line.split()
-    lower = line.lower()
-
-    # Ignore long lines. In these policy PDFs, long lines are usually content, not headings.
-    if len(words) > 14 or len(line) > 140:
-        return False
-
-    # Bullet/list items are usually not section headings.
-    if re.match(r"^(?:[a-z]|[ivxlcdm]+)[\)\.]\s+", lower):
-        return False
-
-    if STRUCTURED_HEADING_RE.match(line):
-        return True
-    if NUMERIC_HEADING_RE.match(line):
-        return True
-    if line.endswith(":") and len(words) <= 12:
-        return True
-    if line.isupper() and 1 < len(words) <= 10:
-        return True
-    if line.istitle() and len(words) <= 8 and not line.endswith("."):
-        return True
-    if any(keyword in lower for keyword in SECTION_KEYWORDS) and len(words) <= 10:
-        return True
-    return False
-
-
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extract text and remove repeated boilerplate lines and TOC-like pages."""
     page_lines = _extract_pdf_pages(pdf_path)

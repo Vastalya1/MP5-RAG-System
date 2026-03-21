@@ -1,21 +1,23 @@
 import os
 from pathlib import Path
-from sentence_transformers import SentenceTransformer
+
 import chromadb
-from transformers import AutoTokenizer
+from dotenv import load_dotenv
+from sentence_transformers import SentenceTransformer
 
 
 class retrivalModel:
     def __init__(self):
-        self.model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        env_path = Path(__file__).resolve().parents[2] / ".env"
+        load_dotenv(env_path)
 
-        base_dir = Path(__file__).resolve().parents[2]
-        default_dir = r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\chromadb"
-        persist_dir = Path(os.getenv("CHROMA_PERSIST_DIR", default_dir))
-        if not persist_dir.exists():
-            persist_dir = base_dir / "chromadb"
+        self.model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        api_key = os.getenv("CHROMA_CLOUD_API_KEY")
+        if not api_key:
+            raise ValueError(f"CHROMA_CLOUD_API_KEY is missing. Check {env_path}.")
+
         self.client = chromadb.CloudClient(
-            api_key=os.getenv("CHROMA_CLOUD_API_KEY"),
+            api_key=api_key,
             tenant='a92961b0-ea65-4a82-a7ad-321a4baaaa60',
             database='Major-Project'
             )
