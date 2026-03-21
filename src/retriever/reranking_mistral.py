@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from mistralai import Mistral
+from mistralai.client import Mistral
 
 class ChunkReranker:
     def __init__(self, api_key: str):

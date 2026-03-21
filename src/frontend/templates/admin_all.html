@@ -190,6 +190,23 @@
             font-size: 14px;
         }
 
+        .query-layout {
+            display: grid;
+            grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+            gap: 14px;
+            align-items: stretch;
+        }
+
+        .query-select {
+            height: 100%;
+            min-height: 160px;
+        }
+
+        .query-input {
+            min-height: 160px;
+            resize: vertical;
+        }
+
         .button {
             display: inline-flex;
             align-items: center;
@@ -233,6 +250,15 @@
             }
             .rail {
                 position: static;
+            }
+            .query-layout {
+                grid-template-columns: 1fr;
+            }
+            .query-select {
+                min-height: 48px;
+            }
+            .query-input {
+                min-height: 140px;
             }
         }
     </style>
@@ -287,7 +313,14 @@
                     <form id="queryForm">
                         <input type="hidden" name="scope" value="shared">
                         <input type="hidden" id="csrfTokenQuery" value="{{ csrf_token }}">
-                        <textarea id="query" class="field" rows="6" placeholder="Ask about company policy..."></textarea>
+                        <div class="query-layout">
+                            <select id="selectedDocument" class="field query-select">
+                                {% for option in document_options %}
+                                <option value="{{ option.value }}">{{ option.label }}</option>
+                                {% endfor %}
+                            </select>
+                            <textarea id="query" class="field query-input" rows="6" placeholder="Ask about company policy..."></textarea>
+                        </div>
                         <div style="margin-top: 14px;">
                             <button type="submit" class="button secondary">Get Answer</button>
                         </div>
@@ -352,6 +385,7 @@
                 statusDiv.textContent = data.message || data.error;
                 if (data.message) {
                     toast(data.message);
+                    setTimeout(() => { window.location.reload(); }, 700);
                 }
             } catch (error) {
                 statusDiv.textContent = 'Upload failed: ' + error.message;
@@ -425,6 +459,7 @@
                 const formData = new FormData();
                 formData.append('query', queryInput.value);
                 formData.append('scope', 'shared');
+                formData.append('selected_document', document.getElementById('selectedDocument').value);
                 formData.append('csrf_token', document.getElementById('csrfTokenQuery').value);
                 const response = await fetch('/query', {
                     method: 'POST',
