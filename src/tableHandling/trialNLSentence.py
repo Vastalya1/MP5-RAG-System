@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 from mistralai import Mistral
 
 
+GenerationResult = Tuple[List[str], str, Optional[str], Optional[str]]
+
+
 SYSTEM_PROMPT = (
     "You are a data extraction specialist focused on high-accuracy insurance documentation."
 )
@@ -34,6 +37,9 @@ Validation Requirements:
 - The table has exactly {expected_rows} data rows (excluding header and separator).
 - Return exactly {expected_rows} sentences. One row data equals one sentence Only.
 - One sentence per line.
+- Do not Halucinate or summarize. Use only the information in the table.
+- If the table is empty, return an empty list.
+- Do Not add reasoning steps, explanations, or any text other than the sentences themselves.
 - This is a strict formatting task. Any deviation from the required format is incorrect.
 Table Heading: {heading_context}, Markdown Input:
 {markdown}
@@ -117,46 +123,12 @@ def build_heading_context(heading: Optional[str]) -> str:
     return f"Table Heading Context:\n{normalized}\n\n"
 
 
-def _row_has_alpha(text: str) -> bool:
-    return bool(re.search(r"[A-Za-z]", text or ""))
-
-
-def is_header_like_row(row: List[str]) -> bool:
-    """Detect repeated in-table header rows that models often skip or merge."""
-    non_empty = [cell.strip() for cell in row if cell and cell.strip()]
-    if len(non_empty) < 2:
-        return False
-
-    if non_empty[0].upper() == "COVER":
-        return True
-
-    if all(cell == cell.upper() for cell in non_empty if _row_has_alpha(cell)):
-        unique_values = {cell for cell in non_empty}
-        if len(unique_values) <= max(3, len(non_empty) // 2):
-            return True
-
-    return False
-
-
-def is_section_divider_row(row: List[str]) -> bool:
-    """Detect section-label rows such as 'Dental plan benefits (optional)'."""
-    non_empty = [cell.strip() for cell in row if cell and cell.strip()]
-    if len(non_empty) != 1:
-        return False
-
-    text = non_empty[0]
-    if not _row_has_alpha(text):
-        return False
-
-    return len(text.split()) >= 2
-
-
-def table_requires_rowwise_generation(data_rows: List[List[str]]) -> bool:
-    """
-    Row-wise generation is more reliable for tables containing internal header
-    bands or divider rows, where whole-table prompting often merges rows.
-    """
-    return any(is_header_like_row(row) or is_section_divider_row(row) for row in data_rows)
+def describe_exception(exc: Exception) -> str:
+    """Return compact exception text for error reporting."""
+    message = str(exc).strip()
+    if message:
+        return f"{type(exc).__name__}: {message}"
+    return type(exc).__name__
 
 
 def generate_sentences_for_table(
@@ -167,13 +139,13 @@ def generate_sentences_for_table(
     heading: Optional[str] = None,
     max_tokens: int = 12000,
     max_attempts: int = 3,
-) -> Tuple[List[str], str]:
+) -> GenerationResult:
     """
     Generate one sentence per row from a markdown table.
-    Returns (sentences, status) where status in {"ok", "mismatch", "error"}.
+    Returns (sentences, status, error_type, error_detail).
     """
     if not markdown.strip() or expected_rows <= 0:
-        return [], "ok"
+        return [], "ok", None, None
 
     heading_context = build_heading_context(heading)
     prompt = USER_PROMPT_TEMPLATE.format(
@@ -182,6 +154,8 @@ def generate_sentences_for_table(
         markdown=markdown,
     )
     last_sentences: List[str] = []
+    last_error_type: Optional[str] = None
+    last_error_detail: Optional[str] = None
 
     for attempt in range(1, max_attempts + 1):
         try:
@@ -195,21 +169,33 @@ def generate_sentences_for_table(
                 top_p=1.0,
                 max_tokens=max_tokens,
             )
-        except Exception:
+        except Exception as exc:
+            last_error_type = "api_exception"
+            last_error_detail = f"attempt {attempt}: {describe_exception(exc)}"
             continue
 
-        if not response or not response.choices:
+        if not response:
+            last_error_type = "empty_response"
+            last_error_detail = f"attempt {attempt}: API returned no response object."
+            continue
+
+        if not response.choices:
+            last_error_type = "empty_choices"
+            last_error_detail = f"attempt {attempt}: API response had no choices."
             continue
 
         content = (response.choices[0].message.content or "").strip()
         sentences = normalize_sentence_lines(content)
         last_sentences = sentences
         if sentences:
-            return sentences, "ok"
+            return sentences, "ok", None, None
+
+        last_error_type = "empty_parsed_output"
+        last_error_detail = f"attempt {attempt}: model output could not be parsed into sentences."
 
     if last_sentences:
-        return last_sentences, "ok"
-    return [], "error"
+        return last_sentences, "ok", None, None
+    return [], "error", last_error_type or "unknown_generation_failure", last_error_detail
 
 
 def generate_sentences_chunked(
@@ -219,18 +205,18 @@ def generate_sentences_chunked(
     data_rows: List[List[str]],
     heading: Optional[str] = None,
     chunk_size: int = 25,
-) -> Tuple[List[str], str]:
+) -> GenerationResult:
     """Fallback path: split large table into row chunks and process each chunk."""
     if not data_rows:
-        return [], "ok"
+        return [], "ok", None, None
     if not headers:
-        return [], "error"
+        return [], "error", "missing_headers", "Chunked generation requires parsed table headers."
 
     all_sentences: List[str] = []
     for start in range(0, len(data_rows), chunk_size):
         chunk_rows = data_rows[start : start + chunk_size]
         markdown_chunk = rows_to_markdown(headers, chunk_rows)
-        chunk_sentences, chunk_status = generate_sentences_for_table(
+        chunk_sentences, chunk_status, chunk_error_type, chunk_error_detail = generate_sentences_for_table(
             client=client,
             model=model,
             markdown=markdown_chunk,
@@ -240,90 +226,14 @@ def generate_sentences_chunked(
             max_attempts=3,
         )
 
-        if chunk_status == "mismatch":
-            chunk_sentences, chunk_status = generate_sentences_rowwise(
-                client=client,
-                model=model,
-                headers=headers,
-                data_rows=chunk_rows,
-                heading=heading,
-                max_tokens=500,
-                max_attempts=4,
-            )
-
-        if chunk_status not in {"ok", "ok_rowwise"}:
-            return all_sentences, "error"
+        if chunk_status != "ok":
+            chunk_label = f"chunk rows {start + 1}-{start + len(chunk_rows)}"
+            detail = chunk_error_detail or f"{chunk_label} failed."
+            return all_sentences, "error", chunk_error_type or "chunk_generation_failed", f"{chunk_label}: {detail}"
 
         all_sentences.extend(chunk_sentences)
 
-    return all_sentences, "ok_chunked"
-
-
-def generate_sentences_rowwise(
-    client: Mistral,
-    model: str,
-    headers: List[str],
-    data_rows: List[List[str]],
-    heading: Optional[str] = None,
-    max_tokens: int = 500,
-    max_attempts: int = 3,
-) -> Tuple[List[str], str]:
-    """Fallback path: generate one sentence per row with per-row API calls."""
-    sentences: List[str] = []
-    if not data_rows:
-        return sentences, "ok"
-
-    header_text = " | ".join(headers)
-    heading_context = build_heading_context(heading)
-    for row_idx, row in enumerate(data_rows, start=1):
-        row_text = " | ".join(row)
-        prompt = f"""Role: You are a data extraction specialist focused on high-accuracy insurance documentation.
-
-Task: Convert one table row into exactly one full natural-language sentence.
-
-Strict Constraints:
-1. Output exactly one sentence.
-2. Output only that sentence.
-3. Do not hallucinate or summarize.
-4. Explicitly reference relevant headers from this table in the sentence.
-5. Preserve exact technical terms and values.
-6. Even if the row is a section label or repeated table header, still return exactly one faithful sentence for that row only.
-
-{heading_context}Headers:
-{header_text}
-
-Row {row_idx}:
-{row_text}
-"""
-
-        sentence: Optional[str] = None
-        for _ in range(max_attempts):
-            try:
-                response = client.chat.complete(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": prompt},
-                    ],
-                    temperature=0.0,
-                    top_p=1.0,
-                    max_tokens=max_tokens,
-                )
-                if response and response.choices:
-                    content = (response.choices[0].message.content or "").strip()
-                    parsed = normalize_sentence_lines(content)
-                    if parsed:
-                        sentence = " ".join(parsed).strip()
-                        break
-            except Exception:
-                time.sleep(0.5)
-                continue
-
-        if sentence is None:
-            return sentences, "error"
-        sentences.append(sentence)
-
-    return sentences, "ok_rowwise"
+    return all_sentences, "ok_chunked", None, None
 
 
 def load_json(path: Path) -> List[Dict[str, Any]]:
@@ -399,30 +309,21 @@ def main() -> None:
         heading = str(item.get("heading", "") or "").strip() or None
         headers, data_rows = parse_markdown_table(markdown)
         expected_rows = len(data_rows)
-        force_rowwise = table_requires_rowwise_generation(data_rows)
+        error_type: Optional[str] = None
+        error_detail: Optional[str] = None
 
         print(f"[{idx}/{total}] page={item.get('page_number')} rows={expected_rows} -> generating...")
-        if force_rowwise and expected_rows > 0:
-            print(f"[{idx}/{total}] complex table structure detected -> row-wise generation...")
-            sentences, status = generate_sentences_rowwise(
-                client=client,
-                model=args.model,
-                headers=headers,
-                data_rows=data_rows,
-                heading=heading,
-            )
-        else:
-            sentences, status = generate_sentences_for_table(
-                client=client,
-                model=args.model,
-                markdown=markdown,
-                expected_rows=expected_rows,
-                heading=heading,
-            )
+        sentences, status, error_type, error_detail = generate_sentences_for_table(
+            client=client,
+            model=args.model,
+            markdown=markdown,
+            expected_rows=expected_rows,
+            heading=heading,
+        )
 
         if status in {"mismatch", "error"} and expected_rows > 0:
             print(f"[{idx}/{total}] {status} detected -> chunked fallback...")
-            chunked_sentences, chunked_status = generate_sentences_chunked(
+            chunked_sentences, chunked_status, chunked_error_type, chunked_error_detail = generate_sentences_chunked(
                 client=client,
                 model=args.model,
                 headers=headers,
@@ -432,25 +333,22 @@ def main() -> None:
             if chunked_status in {"ok", "ok_chunked"}:
                 sentences = chunked_sentences
                 status = "ok_chunked"
+                error_type = None
+                error_detail = None
             else:
-                print(f"[{idx}/{total}] chunked fallback failed -> row-wise fallback...")
-                rowwise_sentences, rowwise_status = generate_sentences_rowwise(
-                    client=client,
-                    model=args.model,
-                    headers=headers,
-                    data_rows=data_rows,
-                    heading=heading,
-                )
-                if rowwise_status in {"ok", "ok_rowwise"}:
-                    sentences = rowwise_sentences
-                    status = "ok_rowwise"
-                else:
-                    sentences = rowwise_sentences if rowwise_sentences else chunked_sentences
-                    status = "error"
+                sentences = chunked_sentences
+                status = "error"
+                error_type = chunked_error_type or "chunked_generation_failed"
+                error_detail = chunked_error_detail or "Chunked fallback failed."
+
+        if status == "error" and error_type:
+            print(f"[{idx}/{total}] error_type={error_type} detail={error_detail}")
 
         enriched_item = dict(item)
         enriched_item["nl_sentences"] = sentences
         enriched_item["nl_status"] = status
+        enriched_item["nl_error_type"] = error_type
+        enriched_item["nl_error_detail"] = error_detail
         enriched_item["nl_expected_rows"] = expected_rows
         enriched_item["nl_generated_rows"] = len(sentences)
         enriched_item["nl_headers"] = headers
