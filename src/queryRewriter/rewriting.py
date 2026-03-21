@@ -1,5 +1,5 @@
 from typing import Optional
-from mistralai import Mistral
+from mistralai.client import Mistral
 # from mistralai.models.chat_completion import ChatMessage
 
 class QueryRewriter:

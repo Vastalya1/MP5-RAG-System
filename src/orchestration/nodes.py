@@ -15,7 +15,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from mistralai import Mistral
+from mistralai.client import Mistral
 from queryRewriter.rewriting import QueryRewriter
 from retriever.retrival import retrivalModel
 from retriever.reranking_mistral import ChunkReranker
@@ -115,7 +115,7 @@ class RAGProcessNode:
     # Threshold for triggering web scraping (when distance is too high, meaning low similarity)
     # ChromaDB uses cosine distance: 0 = identical, 2 = opposite
     # Distance > 1.2 indicates poor similarity (less than ~40% similar)
-    DISTANCE_THRESHOLD = 1.2
+    DISTANCE_THRESHOLD = 1.3
     
     def __init__(
         self,
@@ -239,20 +239,20 @@ class RAGProcessNode:
         
         chunks = []
         if scope == "shared":
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
         elif scope == "personal" and username:
             chunks = self.retriever.retrive_Chunks(
                 rewritten_query,
                 collection_name=f"user_{username}_documents"
             )
         elif scope == "combined" and username:
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
             chunks += self.retriever.retrive_Chunks(
                 rewritten_query,
                 collection_name=f"user_{username}_documents"
             )
         else:
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="policy_documents")
+            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
         
         return chunks
 

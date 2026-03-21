@@ -66,3 +66,7 @@ Open `http://127.0.0.1:8000`.
 - Shared uploads: `dataset/uploads`
 - Personal uploads: `dataset/user_uploads/<username>`
 - Chroma store: `chromadb` (or `CHROMA_PERSIST_DIR`)
+
+## To run the page 
+
+- execute the following : uvicorn src.frontend.app:app --reload

@@ -1,6 +1,6 @@
 from typing import Optional, List
 from pathlib import Path
-from .chunker import chunk_pdfs, chunk_pdf_files
+from .chunker import chunk_pdfs, chunk_pdf_files, DEFAULT_MAX_TOKENS, DEFAULT_OVERLAP
 from .embedder import DocumentEmbedder
 
 
@@ -8,7 +8,7 @@ class IngestionPipeline:
     def __init__(
         self,
         dataset_dir: str,
-        collection_name: str = "policy_documents",
+        collection_name: str = "dataset",
         chunk_output_dir: Optional[str] = None,
         file_paths: Optional[List[str]] = None,
     ):
@@ -28,6 +28,19 @@ class IngestionPipeline:
 
         self.embedder = DocumentEmbedder(collection_name=collection_name)
 
+    def _validated_file_paths(self) -> List[str]:
+        valid_paths: List[str] = []
+        for file_path in self.file_paths or []:
+            path = Path(file_path)
+            if not path.exists():
+                print(f"Skipping missing file: {file_path}")
+                continue
+            if path.suffix.lower() != ".pdf":
+                print(f"Skipping non-PDF file: {file_path}")
+                continue
+            valid_paths.append(str(path))
+        return valid_paths
+
     def run(self) -> None:
         """
         Run the complete ingestion pipeline:
@@ -39,6 +52,9 @@ class IngestionPipeline:
             print(f"Processing PDFs: {len(self.file_paths)} file(s)")
         else:
             print(f"Processing PDFs from: {self.dataset_dir}")
+        print(
+            f"Chunking config - max_tokens: {DEFAULT_MAX_TOKENS}, overlap: {int(DEFAULT_OVERLAP * 100)}%"
+        )
 
         chunk_output_file = None
         if self.chunk_output_dir:
@@ -48,8 +64,12 @@ class IngestionPipeline:
         try:
             print("Step 1: Chunking PDFs...")
             if self.file_paths:
+                valid_file_paths = self._validated_file_paths()
+                if not valid_file_paths:
+                    print("No valid PDF files to process.")
+                    return
                 chunks = chunk_pdf_files(
-                    file_paths=self.file_paths,
+                    file_paths=valid_file_paths,
                     output_file=chunk_output_file,
                 )
             else:
@@ -58,6 +78,9 @@ class IngestionPipeline:
                     output_file=chunk_output_file,
                 )
             print(f"Chunking complete - Created {len(chunks)} chunks")
+            if not chunks:
+                print("No chunks generated. Skipping embedding step.")
+                return
 
             print("Step 2: Creating embeddings and storing in ChromaDB...")
             self.embedder.embed_documents(chunks)
@@ -73,7 +96,7 @@ if __name__ == "__main__":
     dataset_dir = r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\dataset"
     pipeline = IngestionPipeline(
         dataset_dir=dataset_dir,
-        collection_name="policy_documents",
+        collection_name="dataset",
         chunk_output_dir=None,
     )
     pipeline.run()

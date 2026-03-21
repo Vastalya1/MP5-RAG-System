@@ -9,8 +9,8 @@ class TavilyService:
             "answer": response.get("answer", ""),
             "sources": [
                 {
-                    "url": r.get("url"),
-                    "title": r.get("title", "")
+                    "document": r.get("title", "Web Source"),
+                    "section": r.get("url", "")
                 }
                 for r in response.get("results", [])
             ]
