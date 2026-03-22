@@ -459,6 +459,52 @@ def _list_uploaded_files(scope: str, username: str | None = None) -> list[dict]:
                 for row in cursor.fetchall()
             ]
 
+def _get_document_options(user: dict) -> list[dict]:
+    options = [{"value": "", "label": "All policy documents"}]
+    seen: set[tuple[str, str]] = set()
+
+    for item in _list_uploaded_files("shared"):
+        filename = item["filename"]
+        key = ("shared", filename)
+        if key in seen:
+            continue
+        seen.add(key)
+        options.append(
+            {
+                "value": f"shared::{filename}",
+                "label": f"{filename} (Shared)",
+            }
+        )
+
+    personal_files = _list_uploaded_files("personal", user.get("username"))
+    for item in personal_files:
+        filename = item["filename"]
+        key = ("personal", filename)
+        if key in seen:
+            continue
+        seen.add(key)
+        options.append(
+            {
+                "value": f"personal::{filename}",
+                "label": f"{filename} (Personal)",
+            }
+        )
+
+    return options
+
+def _parse_document_selection(selected_document: str | None) -> tuple[str | None, str | None]:
+    if not selected_document:
+        return None, None
+    try:
+        document_scope, document_name = selected_document.split("::", 1)
+    except ValueError:
+        return None, None
+    document_scope = document_scope.strip().lower()
+    document_name = document_name.strip()
+    if document_scope not in {"shared", "personal"} or not document_name:
+        return None, None
+    return document_scope, document_name
+
 def _add_uploaded_file(scope: str, filename: str, username: str | None, size_bytes: int | None) -> None:
     with _db_conn() as conn:
         with conn.cursor() as cursor:
@@ -615,7 +661,12 @@ async def admin_all(request: Request, user: dict = Depends(_require_admin)):
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
         "admin_all.html",
-        {"request": request, "user": user, "csrf_token": csrf_token},
+        {
+            "request": request,
+            "user": user,
+            "csrf_token": csrf_token,
+            "document_options": _get_document_options(user),
+        },
     )
 
 @app.get("/admin/shared", response_class=HTMLResponse)
@@ -644,7 +695,12 @@ async def user_all(request: Request, user: dict = Depends(_require_auth)):
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
         "user_all.html",
-        {"request": request, "user": user, "csrf_token": csrf_token},
+        {
+            "request": request,
+            "user": user,
+            "csrf_token": csrf_token,
+            "document_options": _get_document_options(user),
+        },
     )
 
 @app.get("/app/shared", response_class=HTMLResponse)
@@ -933,17 +989,32 @@ async def query(
     request: Request,
     query: str = Form(...),
     scope: str = Form("shared"),
+    selected_document: str = Form(""),
     user: dict = Depends(_require_auth),
     csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
     try:
+        selected_scope, document_filter = _parse_document_selection(selected_document)
+        effective_scope = scope
+        collection_name = None
+        if selected_scope == "shared":
+            effective_scope = "shared"
+            collection_name = "dataset"
+        elif selected_scope == "personal":
+            effective_scope = "personal"
+            collection_name = f"user_{user['username']}_documents"
+
         _record_audit_event(
             user.get("username"),
             user.get("role"),
             "QUERY",
             request,
-            metadata={"scope": scope, "query_length": len(query)},
+            metadata={
+                "scope": effective_scope,
+                "query_length": len(query),
+                "selected_document": document_filter,
+            },
         )
         
         if USE_ORCHESTRATION:
@@ -951,8 +1022,10 @@ async def query(
             orchestrator = _get_orchestrator()
             result = await orchestrator.process_query(
                 query=query,
-                scope=scope,
-                username=user.get("username")
+                scope=effective_scope,
+                username=user.get("username"),
+                collection_name=collection_name,
+                document_filter=document_filter,
             )
             
             response_text = result.get("response", "")
@@ -966,7 +1039,7 @@ async def query(
             _save_query_history(
                 user.get("username"),
                 user.get("role"),
-                scope,
+                effective_scope,
                 query,
                 response_text,
                 justification_text,
@@ -987,18 +1060,28 @@ async def query(
 
             retriever = _get_retriever()
             chunks: list[dict] = []
-            if scope == "shared":
-                chunks = retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
-            elif scope == "personal":
+            if effective_scope == "shared":
+                chunks = retriever.retrive_Chunks(
+                    rewritten_query,
+                    collection_name="dataset",
+                    document_filter=document_filter,
+                )
+            elif effective_scope == "personal":
                 chunks = retriever.retrive_Chunks(
                     rewritten_query,
                     collection_name=f"user_{user['username']}_documents",
+                    document_filter=document_filter,
                 )
-            elif scope == "combined":
-                chunks = retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
+            elif effective_scope == "combined":
+                chunks = retriever.retrive_Chunks(
+                    rewritten_query,
+                    collection_name="dataset",
+                    document_filter=document_filter,
+                )
                 chunks += retriever.retrive_Chunks(
                     rewritten_query,
                     collection_name=f"user_{user['username']}_documents",
+                    document_filter=document_filter,
                 )
             else:
                 return {"error": f"Unknown scope: {scope}"}
@@ -1008,7 +1091,7 @@ async def query(
                 _save_query_history(
                     user.get("username"),
                     user.get("role"),
-                    scope,
+                    effective_scope,
                     query,
                     response_text,
                     None,
@@ -1027,7 +1110,7 @@ async def query(
             _save_query_history(
                 user.get("username"),
                 user.get("role"),
-                scope,
+                effective_scope,
                 query,
                 response_text,
                 justification_text,

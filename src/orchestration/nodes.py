@@ -15,7 +15,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from mistralai import Mistral
+from mistralai.client import Mistral
 from queryRewriter.rewriting import QueryRewriter
 from retriever.retrival import retrivalModel
 from retriever.reranking_mistral import ChunkReranker
@@ -143,7 +143,8 @@ class RAGProcessNode:
         query: str,
         scope: str = "shared",
         username: Optional[str] = None,
-        collection_name: Optional[str] = None
+        collection_name: Optional[str] = None,
+        document_filter: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Process a query through the full RAG pipeline.
@@ -153,6 +154,7 @@ class RAGProcessNode:
             scope: The search scope ("shared", "personal", "combined")
             username: Username for personal document access
             collection_name: Optional specific collection name
+            document_filter: Optional document name to filter within a collection
             
         Returns:
             Dict containing the answer, justification, sources, and metadata
@@ -167,7 +169,13 @@ class RAGProcessNode:
             
             # Step 2: Retrieval
             print(f"[RAGProcessNode] Step 2: Retrieving chunks...")
-            chunks = self._retrieve_chunks(rewritten_query, scope, username, collection_name)
+            chunks = self._retrieve_chunks(
+                rewritten_query,
+                scope,
+                username,
+                collection_name,
+                document_filter,
+            )
             
             if not chunks:
                 return {
@@ -226,30 +234,49 @@ class RAGProcessNode:
         rewritten_query: str,
         scope: str,
         username: Optional[str],
-        collection_name: Optional[str]
+        collection_name: Optional[str],
+        document_filter: Optional[str]
     ) -> List[Dict]:
         """
         Retrieve chunks based on scope and collection settings.
         """
         if collection_name:
-            return self.retriever.retrive_Chunks(rewritten_query, collection_name=collection_name)
+            return self.retriever.retrive_Chunks(
+                rewritten_query,
+                collection_name=collection_name,
+                document_filter=document_filter,
+            )
         
         chunks = []
         if scope == "shared":
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
+            chunks = self.retriever.retrive_Chunks(
+                rewritten_query,
+                collection_name="dataset",
+                document_filter=document_filter,
+            )
         elif scope == "personal" and username:
             chunks = self.retriever.retrive_Chunks(
                 rewritten_query,
-                collection_name=f"user_{username}_documents"
+                collection_name=f"user_{username}_documents",
+                document_filter=document_filter,
             )
         elif scope == "combined" and username:
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
+            chunks = self.retriever.retrive_Chunks(
+                rewritten_query,
+                collection_name="dataset",
+                document_filter=document_filter,
+            )
             chunks += self.retriever.retrive_Chunks(
                 rewritten_query,
-                collection_name=f"user_{username}_documents"
+                collection_name=f"user_{username}_documents",
+                document_filter=document_filter,
             )
         else:
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
+            chunks = self.retriever.retrive_Chunks(
+                rewritten_query,
+                collection_name="dataset",
+                document_filter=document_filter,
+            )
         
         return chunks
 
@@ -341,7 +368,8 @@ async def rag_process_node(
         state["query"],
         scope=state.get("scope", "shared"),
         username=state.get("username"),
-        collection_name=state.get("collection_name")
+        collection_name=state.get("collection_name"),
+        document_filter=state.get("document_filter"),
     )
     return {**state, "result": result}
 
