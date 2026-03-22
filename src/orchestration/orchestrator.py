@@ -50,6 +50,7 @@ class GraphState(TypedDict):
     scope: str
     username: Optional[str]
     collection_name: Optional[str]
+    document_filter: Optional[str]
     route: Optional[Literal["rag", "direct"]]
     answer: Optional[str]
     justification: Optional[str]
@@ -209,6 +210,7 @@ class QueryOrchestrator:
         scope = state.get("scope", "shared")
         username = state.get("username")
         collection_name = state.get("collection_name")
+        document_filter = state.get("document_filter")
         
         print(f"[Orchestrator] Processing via RAG pipeline...")
         
@@ -216,7 +218,8 @@ class QueryOrchestrator:
             query=query,
             scope=scope,
             username=username,
-            collection_name=collection_name
+            collection_name=collection_name,
+            document_filter=document_filter,
         )
         
         return {
@@ -278,7 +281,8 @@ class QueryOrchestrator:
         query: str,
         scope: str = "shared",
         username: Optional[str] = None,
-        collection_name: Optional[str] = None
+        collection_name: Optional[str] = None,
+        document_filter: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Process a query through the orchestration graph.
@@ -288,6 +292,7 @@ class QueryOrchestrator:
             scope: Search scope (shared, personal, combined)
             username: Username for personal document access
             collection_name: Optional specific collection name
+            document_filter: Optional document name to filter within a collection
             
         Returns:
             Dict containing the answer, justification, sources, and metadata
@@ -299,6 +304,7 @@ class QueryOrchestrator:
             "scope": scope,
             "username": username,
             "collection_name": collection_name,
+            "document_filter": document_filter,
             "route": None,
             "answer": None,
             "justification": None,
