@@ -648,20 +648,22 @@ async def home(request: Request):
 async def admin_dashboard(request: Request, user: dict = Depends(_require_admin)):
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "admin.html",
-        {
+        request=request,
+        name="admin.html",
+        context={
             "request": request,
             "user": user,
             "csrf_token": csrf_token,
-        }
+        },
     )
 
 @app.get("/admin/all", response_class=HTMLResponse)
 async def admin_all(request: Request, user: dict = Depends(_require_admin)):
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "admin_all.html",
-        {
+        request=request,
+        name="admin_all.html",
+        context={
             "request": request,
             "user": user,
             "csrf_token": csrf_token,
@@ -674,28 +676,31 @@ async def admin_shared(request: Request, user: dict = Depends(_require_admin)):
     shared_files = _list_uploaded_files("shared")
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "shared.html",
-        {"request": request, "user": user, "shared_files": shared_files, "csrf_token": csrf_token},
+        request=request,
+        name="shared.html",
+        context={"request": request, "user": user, "shared_files": shared_files, "csrf_token": csrf_token},
     )
 
 @app.get("/app", response_class=HTMLResponse)
 async def user_dashboard(request: Request, user: dict = Depends(_require_auth)):
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "user.html",
-        {
+        request=request,
+        name="user.html",
+        context={
             "request": request,
             "user": user,
             "csrf_token": csrf_token,
-        }
+        },
     )
 
 @app.get("/app/all", response_class=HTMLResponse)
 async def user_all(request: Request, user: dict = Depends(_require_auth)):
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "user_all.html",
-        {
+        request=request,
+        name="user_all.html",
+        context={
             "request": request,
             "user": user,
             "csrf_token": csrf_token,
@@ -708,8 +713,9 @@ async def user_shared(request: Request, user: dict = Depends(_require_auth)):
     shared_files = _list_uploaded_files("shared")
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "shared.html",
-        {"request": request, "user": user, "shared_files": shared_files, "csrf_token": csrf_token},
+        request=request,
+        name="shared.html",
+        context={"request": request, "user": user, "shared_files": shared_files, "csrf_token": csrf_token},
     )
 
 @app.get("/activity", response_class=HTMLResponse)
@@ -717,8 +723,9 @@ async def activity_page(request: Request, user: dict = Depends(_require_auth)):
     events = _get_user_activity(user["username"])
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "activity.html",
-        {"request": request, "user": user, "events": events, "csrf_token": csrf_token},
+        request=request,
+        name="activity.html",
+        context={"request": request, "user": user, "events": events, "csrf_token": csrf_token},
     )
 
 @app.get("/login", response_class=HTMLResponse)
@@ -729,8 +736,9 @@ async def login_page(request: Request):
             return RedirectResponse(url="/admin", status_code=status.HTTP_302_FOUND)
         return RedirectResponse(url="/app", status_code=status.HTTP_302_FOUND)
     return templates.TemplateResponse(
-        "login.html",
-        {"request": request, "csrf_token": _ensure_csrf_token(request)}
+        request=request,
+        name="login.html",
+        context={"request": request, "csrf_token": _ensure_csrf_token(request)},
     )
 
 @app.post("/login")
@@ -753,8 +761,9 @@ async def login(
                 metadata={"locked_until": record["locked_until"].isoformat()},
             )
             return templates.TemplateResponse(
-                "login.html",
-                {"request": request, "error": "Account is temporarily locked. Try again later."},
+                request=request,
+                name="login.html",
+                context={"request": request, "error": "Account is temporarily locked. Try again later."},
                 status_code=status.HTTP_403_FORBIDDEN,
             )
 
@@ -783,8 +792,9 @@ async def login(
                 request,
             )
         return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "error": "Invalid username or password."},
+            request=request,
+            name="login.html",
+            context={"request": request, "error": "Invalid username or password."},
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
     with _db_conn() as conn:
@@ -820,8 +830,9 @@ async def register(
         if is_fetch:
             return {"ok": False, "message": message, "error_code": "missing_fields"}
         return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "register_error": message},
+            request=request,
+            name="login.html",
+            context={"request": request, "register_error": message},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     ok, message = _create_user(username, password)
@@ -830,16 +841,18 @@ async def register(
         if is_fetch:
             return {"ok": False, "message": message, "error_code": error_code}
         return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "register_error": message},
+            request=request,
+            name="login.html",
+            context={"request": request, "register_error": message},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     _record_audit_event(username, "user", "REGISTER", request)
     if is_fetch:
         return {"ok": True, "message": message}
     return templates.TemplateResponse(
-        "login.html",
-        {"request": request, "register_success": message},
+        request=request,
+        name="login.html",
+        context={"request": request, "register_success": message},
         status_code=status.HTTP_201_CREATED,
     )
 

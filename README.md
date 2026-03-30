@@ -21,38 +21,80 @@ The main objective of this project is to leverage current technology by developi
 
 ## Setup
 
-python -m venv .venv
+This repo currently contains two local virtual environments:
 
+- `.venv` (Python 3.8.10)
+- `.venv313` (Python 3.13.7)
 
+Activate whichever one you are using on your machine.
+
+For the existing Python 3.13 environment:
+
+```powershell
+.\.venv313\Scripts\Activate.ps1
+```
+
+For the existing Python 3.8 environment:
+
+```powershell
 .\.venv\Scripts\Activate.ps1
+```
 
+If you need to install packages into the active environment:
 
+```powershell
 pip install -r requirements.txt
+```
 
+## Environment
 
-Create `.env`  and set your keys:
+The app loads settings from `.env`.
 
+If `.env` does not exist yet, create it from `.env.example`:
 
-Minimum env values:
+```powershell
+Copy-Item .env.example .env
+```
 
-DATABASE_URL=your_url
+Required values:
 
-
+```env
+DATABASE_URL=your_database_url
 SESSION_SECRET=change_me
-
-
 MISTRAL_API_KEY=your_key_here
-
-
 CHROMA_PERSIST_DIR=chromadb
+```
 
+Additional flags currently supported by the app:
+
+```env
+DISABLE_CSRF=false
+USE_ORCHESTRATION=true
+TAVILY_API_KEY=your_tavily_key
+CHROMA_CLOUD_API_KEY=your_chroma_cloud_key
+```
 
 ## Run
 
-python src\run_server.py
+From the project root, use either:
 
+```powershell
+python .\run_server.py
+```
+
+or:
+
+```powershell
+uvicorn src.frontend.app:app --reload
+```
 
 Open `http://127.0.0.1:8000`.
+
+Notes:
+
+- PostgreSQL must be reachable through `DATABASE_URL`.
+- The app initializes database tables on startup.
+- Voice input in the UI works in supported browsers such as Chrome or Edge.
 
 ## Default Admin Accounts
 
@@ -66,7 +108,3 @@ Open `http://127.0.0.1:8000`.
 - Shared uploads: `dataset/uploads`
 - Personal uploads: `dataset/user_uploads/<username>`
 - Chroma store: `chromadb` (or `CHROMA_PERSIST_DIR`)
-
-## To run the page 
-
-- execute the following : uvicorn src.frontend.app:app --reload

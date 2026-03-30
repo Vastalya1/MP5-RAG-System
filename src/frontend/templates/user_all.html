@@ -207,6 +207,14 @@
             resize: vertical;
         }
 
+        .query-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
         .button {
             display: inline-flex;
             align-items: center;
@@ -223,6 +231,17 @@
 
         .button.secondary {
             background: linear-gradient(120deg, rgba(247, 200, 95, 0.9), rgba(247, 200, 95, 0.6));
+        }
+
+        .button.ghost {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+        }
+
+        .button.is-listening {
+            background: linear-gradient(120deg, rgba(247, 200, 95, 0.95), rgba(255, 130, 130, 0.9));
+            color: #081018;
         }
 
         .status {
@@ -327,9 +346,11 @@
                             </select>
                             <textarea id="query" class="field query-input" rows="6" placeholder="Ask about policy details..."></textarea>
                         </div>
-                        <div style="margin-top: 14px;">
+                        <div class="query-actions">
+                            <button type="button" id="voiceButton" class="button ghost">Start Voice Input</button>
                             <button type="submit" class="button secondary">Get Answer</button>
                         </div>
+                        <div id="voiceStatus" class="status">Voice input uses your browser microphone and converts speech to text before submission.</div>
                     </form>
                 </div>
             </section>
@@ -361,6 +382,84 @@
             el.style.display = 'block';
             setTimeout(() => { el.style.display = 'none'; }, 2000);
         };
+
+        const queryInput = document.getElementById('query');
+        const voiceButton = document.getElementById('voiceButton');
+        const voiceStatus = document.getElementById('voiceStatus');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isListening = false;
+
+        const setVoiceState = (listening, message) => {
+            isListening = listening;
+            if (voiceButton) {
+                voiceButton.classList.toggle('is-listening', listening);
+                voiceButton.textContent = listening ? 'Stop Voice Input' : 'Start Voice Input';
+            }
+            if (voiceStatus && message) {
+                voiceStatus.textContent = message;
+            }
+        };
+
+        if (voiceButton) {
+            if (!SpeechRecognition) {
+                voiceButton.disabled = true;
+                voiceStatus.textContent = 'Voice input is not supported in this browser. Use Chrome or Edge.';
+            } else {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.interimResults = true;
+                recognition.continuous = false;
+
+                recognition.onstart = () => {
+                    setVoiceState(true, 'Listening... speak your question clearly.');
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = Array.from(event.results)
+                        .map((result) => result[0].transcript)
+                        .join(' ')
+                        .trim();
+                    if (transcript) {
+                        queryInput.value = transcript;
+                    }
+                    const lastResult = event.results[event.results.length - 1];
+                    if (lastResult && lastResult.isFinal) {
+                        setVoiceState(true, 'Voice captured. Review the text, then submit.');
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    let message = 'Voice input failed. Please try again.';
+                    if (event.error === 'not-allowed') {
+                        message = 'Microphone access was blocked. Allow microphone permission and retry.';
+                    } else if (event.error === 'no-speech') {
+                        message = 'No speech detected. Try again and speak a little closer to the microphone.';
+                    } else if (event.error === 'audio-capture') {
+                        message = 'No microphone was detected on this device.';
+                    }
+                    setVoiceState(false, message);
+                };
+
+                recognition.onend = () => {
+                    if (isListening) {
+                        setVoiceState(false, queryInput.value.trim() ? 'Voice captured. You can edit the text or submit it now.' : 'Voice input stopped.');
+                    }
+                };
+
+                voiceButton.addEventListener('click', () => {
+                    if (!recognition) {
+                        return;
+                    }
+                    if (isListening) {
+                        recognition.stop();
+                        return;
+                    }
+                    queryInput.focus();
+                    recognition.start();
+                });
+            }
+        }
 
         document.getElementById('uploadPersonalForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -426,7 +525,6 @@
             const target = e.target.closest('.history-item');
             if (!target) return;
             const item = JSON.parse(target.dataset.item);
-            const queryInput = document.getElementById('query');
             const responseDiv = document.getElementById('response');
             const justificationDiv = document.getElementById('justification');
             if (queryInput) {
@@ -447,7 +545,6 @@
 
         document.getElementById('queryForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const queryInput = document.getElementById('query');
             const responseDiv = document.getElementById('response');
             const justificationDiv = document.getElementById('justification');
             if (!queryInput.value.trim()) {
