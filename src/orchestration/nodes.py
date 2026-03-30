@@ -24,6 +24,38 @@ from tavily_fallback.tavily_client import TavilySearchClient
 from tavily_fallback.tavily_service import TavilyService
 
 
+def _build_retrieval_debug(chunks: List[Dict]) -> Dict[str, Any]:
+    source_counts = {"semantic": 0, "keyword": 0, "both": 0}
+    top_chunks: List[Dict[str, Any]] = []
+
+    for chunk in (chunks or [])[:5]:
+        matched_by = chunk.get("matched_by", []) or []
+        matched_set = set(matched_by)
+        if matched_set == {"semantic"}:
+            source_counts["semantic"] += 1
+        elif matched_set == {"keyword"}:
+            source_counts["keyword"] += 1
+        elif matched_set:
+            source_counts["both"] += 1
+
+        metadata = chunk.get("metadata", {}) or {}
+        top_chunks.append(
+            {
+                "document": metadata.get("document_name", "unknown_document"),
+                "section": metadata.get("section_heading", "General"),
+                "matched_by": sorted(matched_set),
+                "hybrid_score": chunk.get("hybrid_score"),
+                "semantic_score": chunk.get("semantic_score"),
+                "keyword_score": chunk.get("keyword_score"),
+            }
+        )
+
+    return {
+        "top_chunk_count": len((chunks or [])[:5]),
+        "source_counts": source_counts,
+        "top_chunks": top_chunks,
+    }
+
 
 class DirectLLMNode:
     """
@@ -217,7 +249,8 @@ class RAGProcessNode:
                 "rewritten_query": rewritten_query,
                 "success": True,
                 "needs_web_scraping": needs_web_scraping,
-                "top_chunk_distance": top_chunk_distance  # Raw distance from ChromaDB
+                "top_chunk_distance": top_chunk_distance,  # Raw distance from ChromaDB
+                "retrieval_debug": _build_retrieval_debug(reranked_chunks),
             }
             
         except Exception as e:

@@ -1007,6 +1007,40 @@ def _get_tavily_service() -> TavilyService:
     return _tavily_service
 
 
+def _build_retrieval_debug(chunks: list[dict] | None) -> dict:
+    chunks = chunks or []
+    source_counts = {"semantic": 0, "keyword": 0, "both": 0}
+    top_chunks: list[dict] = []
+
+    for chunk in chunks[:5]:
+        matched_by = chunk.get("matched_by", []) or []
+        matched_set = set(matched_by)
+        if matched_set == {"semantic"}:
+            source_counts["semantic"] += 1
+        elif matched_set == {"keyword"}:
+            source_counts["keyword"] += 1
+        elif matched_set:
+            source_counts["both"] += 1
+
+        metadata = chunk.get("metadata", {}) or {}
+        top_chunks.append(
+            {
+                "document": metadata.get("document_name", "unknown_document"),
+                "section": metadata.get("section_heading", "General"),
+                "matched_by": sorted(matched_set),
+                "hybrid_score": chunk.get("hybrid_score"),
+                "semantic_score": chunk.get("semantic_score"),
+                "keyword_score": chunk.get("keyword_score"),
+            }
+        )
+
+    return {
+        "top_chunk_count": len(chunks[:5]),
+        "source_counts": source_counts,
+        "top_chunks": top_chunks,
+    }
+
+
 @app.post("/query")
 async def query(
     request: Request,
@@ -1055,6 +1089,7 @@ async def query(
             justification_text = result.get("justification")
             sources = result.get("sources", [])
             route_taken = result.get("route_taken", "unknown")
+            retrieval_debug = result.get("retrieval_debug")
             
             # Log the route taken for debugging
             print(f"[Query] Route taken: {route_taken}")
@@ -1074,6 +1109,7 @@ async def query(
                 "justification": justification_text,
                 "sources": sources,
                 "route_taken": route_taken,  # Include route info in response
+                "retrieval_debug": retrieval_debug,
             }
         else:
             # Legacy path: Direct RAG processing without orchestration
@@ -1146,6 +1182,7 @@ async def query(
             response_text = answer.get("answer", "")
             justification_text = answer.get("justification")
             sources = answer.get("source_chunks", [])
+            retrieval_debug = _build_retrieval_debug(reranked)
 
             _save_query_history(
                 user.get("username"),
@@ -1161,6 +1198,7 @@ async def query(
                 "response": response_text,
                 "justification": justification_text,
                 "sources": sources,
+                "retrieval_debug": retrieval_debug,
             }
     except Exception as e:
         return {"error": str(e)}

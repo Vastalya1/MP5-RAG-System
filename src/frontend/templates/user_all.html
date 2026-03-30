@@ -383,6 +383,19 @@
             setTimeout(() => { el.style.display = 'none'; }, 2000);
         };
 
+        const formatRetrievalDebug = (debug) => {
+            if (!debug || !debug.top_chunks || !debug.top_chunks.length) {
+                return '';
+            }
+            const counts = debug.source_counts || {};
+            const summary = `Retrieval Debug:\nsemantic=${counts.semantic || 0}, keyword=${counts.keyword || 0}, both=${counts.both || 0}`;
+            const topChunks = debug.top_chunks.map((chunk, index) => {
+                const matchedBy = (chunk.matched_by || []).join('+') || 'unknown';
+                return `${index + 1}. ${chunk.document} :: ${chunk.section} [${matchedBy}]`;
+            }).join('\n');
+            return `${summary}\n\nTop Chunks:\n${topChunks}`;
+        };
+
         const queryInput = document.getElementById('query');
         const voiceButton = document.getElementById('voiceButton');
         const voiceStatus = document.getElementById('voiceStatus');
@@ -583,6 +596,12 @@
                     justificationText = justificationText
                         ? `${justificationText}\n\nSources:\n${sourcesText}`
                         : `Sources:\n${sourcesText}`;
+                }
+                const retrievalDebugText = formatRetrievalDebug(data.retrieval_debug);
+                if (retrievalDebugText) {
+                    justificationText = justificationText
+                        ? `${justificationText}\n\n${retrievalDebugText}`
+                        : retrievalDebugText;
                 }
                 responseDiv.textContent = answerText || 'No answer returned.';
                 justificationDiv.textContent = justificationText || 'No justification returned.';

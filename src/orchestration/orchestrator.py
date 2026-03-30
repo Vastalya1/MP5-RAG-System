@@ -230,6 +230,7 @@ class QueryOrchestrator:
             "route_taken": "rag",
             "rewritten_query": result.get("rewritten_query"),
             "needs_web_scraping": result.get("needs_web_scraping", False),
+            "retrieval_debug": result.get("retrieval_debug"),
             "error": result.get("error"),
             "metadata": {
                 **state.get("metadata", {}),
@@ -329,6 +330,7 @@ class QueryOrchestrator:
                 "sources": result.get("sources", []),
                 "route_taken": result.get("route_taken"),
                 "rewritten_query": result.get("rewritten_query"),
+                "retrieval_debug": result.get("retrieval_debug"),
                 "success": result.get("success", False),
                 "needs_web_scraping": result.get("needs_web_scraping", False),
                 "metadata": result.get("metadata", {})
