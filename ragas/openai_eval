@@ -1,0 +1,286 @@
+"""
+RAGAS Evaluation Pipeline — OpenAI
+====================================
+Loads evaluation data from a JSON file in the same folder.
+
+Folder structure expected:
+    ragas_eval/
+    ├── ragas_openai_eval.py   ← this script
+    └── your_data.json         ← your JSON file
+
+Requirements:
+    pip install ragas langchain-openai openai datasets
+"""
+
+import os
+import json
+from pathlib import Path
+from dotenv import load_dotenv
+from datasets import Dataset
+from ragas import evaluate
+from ragas.metrics import (
+    faithfulness,
+    answer_relevancy,
+    context_precision,
+    context_recall,
+)
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+import pandas as pd
+
+
+# ──────────────────────────────────────────────
+# 1. CONFIGURATION
+# ──────────────────────────────────────────────
+load_dotenv()  # Load environment variables from .env file
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    api_key=OPENAI_API_KEY,
+)
+
+embeddings = OpenAIEmbeddings(
+    model="text-embedding-3-small",
+    api_key=OPENAI_API_KEY,
+)
+
+
+# ──────────────────────────────────────────────
+# 2. LOAD JSON FROM THE SAME FOLDER
+# ──────────────────────────────────────────────
+# Path is built relative to where this script lives.
+# Just change "your_data.json" to your actual filename.
+
+JSON_FILE = "combined_evaluation_dataset.json"
+
+# Get path of current script
+json_path = Path(__file__).parent / JSON_FILE
+
+# Load JSON
+with open(json_path, "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+print("Loaded successfully")
+
+with open(json_path, "r", encoding="utf-8") as f:
+    raw_data = json.load(f)
+
+# Handle both formats:
+#   Format A — a list directly:   [ { "question_id": ... }, ... ]
+#   Format B — a dict with a key: { "questions": [ { ... }, ... ] }
+if isinstance(raw_data, dict):
+    # Try common wrapper keys
+    for key in ("questions", "data", "records", "items", "results"):
+        if key in raw_data:
+            raw_data = raw_data[key]
+            print(f"Detected wrapper key '{key}' — using that list.")
+            break
+    else:
+        raise ValueError(
+            "JSON is a dict but no known wrapper key found. "
+            "Expected a list or a dict with key 'questions', 'data', 'records', etc."
+        )
+
+print(f"Records loaded: {len(raw_data)}\n")
+
+
+# ──────────────────────────────────────────────
+# 3. TRANSFORM TO RAGAS FORMAT
+# ──────────────────────────────────────────────
+#
+# Your field           ->  RAGAS field
+# ─────────────────────────────────────
+# user_input           ->  question
+# response             ->  answer
+# retrieved_contexts   ->  contexts
+# reference            ->  ground_truth
+
+def transform_to_ragas(records: list) -> Dataset:
+    ragas_records = []
+    for rec in records:
+        ragas_records.append({
+            "question_id":           rec["question_id"],
+            "question":              rec["user_input"],
+            "answer":                rec["response"],
+            "contexts":              rec["retrieved_contexts"],
+            "ground_truth":          rec["reference"],
+            # Extra fields for chunk-level analysis (not used by RAGAS)
+            "reference_contexts":    rec.get("reference_contexts", []),
+            "retrieved_context_ids": rec.get("retrieved_context_ids", []),
+            "reference_context_ids": rec.get("reference_context_ids", []),
+        })
+    return Dataset.from_list(ragas_records)
+
+
+dataset = transform_to_ragas(raw_data)
+
+print("Dataset ready:")
+print(dataset)
+print(f"\nFirst question : {dataset[0]['question']}")
+print(f"Contexts count : {len(dataset[0]['contexts'])} chunks")
+print(f"Reference      : {dataset[0]['ground_truth']}\n")
+
+
+# ──────────────────────────────────────────────
+# 4. RUN RAGAS EVALUATION
+# ──────────────────────────────────────────────
+
+metrics = [
+    faithfulness,
+    answer_relevancy,
+    context_precision,
+    context_recall,
+]
+
+print("Running RAGAS evaluation with OpenAI...\n")
+
+results = evaluate(
+    dataset=dataset,
+    metrics=metrics,
+    llm=llm,
+    embeddings=embeddings,
+)
+
+print("Evaluation complete!\n")
+
+
+# ──────────────────────────────────────────────
+# 5. DISPLAY RESULTS
+# ──────────────────────────────────────────────
+
+scores_df = results.to_pandas()
+metric_cols = ["faithfulness", "answer_relevancy", "context_precision", "context_recall"]
+
+print("=" * 55)
+print("RAGAS SCORES — Policy RAG System (OpenAI)")
+print("=" * 55)
+metric_summary = []
+for metric in metric_cols:
+    if metric in scores_df.columns:
+        avg = scores_df[metric].mean()
+        valid_count = int(scores_df[metric].notna().sum())
+        total_count = len(scores_df)
+        coverage_pct = (valid_count / total_count * 100) if total_count else 0.0
+
+        if pd.isna(avg):
+            print(f"  {metric:<25} {'N/A':<7}  (valid: {valid_count}/{total_count}, coverage: {coverage_pct:.1f}%)")
+            metric_summary.append({
+                "metric": metric,
+                "average": None,
+                "valid_rows": valid_count,
+                "total_rows": total_count,
+                "coverage_pct": round(coverage_pct, 2),
+                "interpretation": "Not computed",
+            })
+        else:
+            bar = "█" * int(avg * 20)
+            print(f"  {metric:<25} {avg:.4f}  {bar} (valid: {valid_count}/{total_count})")
+
+            if avg >= 0.85:
+                interpretation = "Excellent"
+            elif avg >= 0.70:
+                interpretation = "Good"
+            elif avg >= 0.50:
+                interpretation = "Fair"
+            else:
+                interpretation = "Poor"
+
+            metric_summary.append({
+                "metric": metric,
+                "average": float(avg),
+                "valid_rows": valid_count,
+                "total_rows": total_count,
+                "coverage_pct": round(coverage_pct, 2),
+                "interpretation": interpretation,
+            })
+print("=" * 55)
+
+computed_avgs = [m["average"] for m in metric_summary if m["average"] is not None]
+if computed_avgs:
+    overall_avg = sum(computed_avgs) / len(computed_avgs)
+    if overall_avg >= 0.85:
+        overall_band = "Excellent"
+    elif overall_avg >= 0.70:
+        overall_band = "Good"
+    elif overall_avg >= 0.50:
+        overall_band = "Fair"
+    else:
+        overall_band = "Poor"
+    print(f"\nOverall quality (computed metrics only): {overall_avg:.4f} -> {overall_band}")
+else:
+    print("\nOverall quality: N/A (no metric values were computed)")
+    print(
+        "Reason hint: RAGAS calls may be failing for gpt-5-mini due to temperature constraints "
+        "(unsupported non-default temperature values in evaluator calls)."
+    )
+
+print("\nPer-Question Breakdown:\n")
+display_cols = [
+    col
+    for col in (["question_id", "question"] + [m for m in metric_cols if m in scores_df.columns])
+    if col in scores_df.columns
+]
+
+if display_cols:
+    print(scores_df[display_cols].to_string(index=False))
+else:
+    print("No per-question identifier columns returned by RAGAS; showing available result columns instead.\n")
+    print(scores_df.to_string(index=False))
+
+script_dir = Path(__file__).parent
+output_csv = script_dir / "ragas_policy_results.csv"
+scores_df.to_csv(output_csv, index=False)
+print(f"\nFull results saved -> {output_csv}")
+
+summary_csv = script_dir / "ragas_policy_summary.csv"
+pd.DataFrame(metric_summary).to_csv(summary_csv, index=False)
+print(f"Summary saved -> {summary_csv}")
+
+
+# ──────────────────────────────────────────────
+# 6. CHUNK-LEVEL RETRIEVAL ANALYSIS
+# ──────────────────────────────────────────────
+
+print("\nChunk-Level Retrieval Analysis:")
+print("-" * 55)
+for rec in raw_data:
+    retrieved = set(rec.get("retrieved_context_ids", []))
+    reference = set(rec.get("reference_context_ids", []))
+
+    true_positives  = retrieved & reference
+    false_positives = retrieved - reference
+    false_negatives = reference - retrieved
+
+    precision = len(true_positives) / len(retrieved) if retrieved else 0
+    recall    = len(true_positives) / len(reference)  if reference else 0
+
+    print(f"\n  [{rec['question_id']}] {rec['user_input'][:65]}...")
+    print(f"    Chunk Precision : {precision:.2f}  ({len(true_positives)}/{len(retrieved)} retrieved chunks relevant)")
+    print(f"    Chunk Recall    : {recall:.2f}  ({len(true_positives)}/{len(reference)} reference chunks found)")
+    if false_positives:
+        print(f"    Noisy chunks    : {sorted(false_positives)}")
+    if false_negatives:
+        print(f"    Missed chunks   : {sorted(false_negatives)}")
+
+
+# ──────────────────────────────────────────────
+# 7. INTERPRETATION GUIDE
+# ──────────────────────────────────────────────
+
+print("""
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SCORE INTERPRETATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  0.85-1.00  Excellent — production ready
+  0.70-0.84  Good      — minor tuning needed
+  0.50-0.69  Fair      — significant issues
+  0.00-0.49  Poor      — major rework required
+
+  Policy system targets:
+  faithfulness      > 0.85  (no hallucinated clauses)
+  answer_relevancy  > 0.80  (on-topic responses)
+
+  Low context_recall    -> improve chunking / retrieval
+  Low context_precision -> reduce top-k or add reranker
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+""")

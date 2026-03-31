@@ -1,0 +1,5 @@
+metric,average,valid_rows,total_rows,coverage_pct,interpretation
+faithfulness,0.5635278593955064,100,100,100.0,Fair
+answer_relevancy,0.4555557425995659,99,100,99.0,Poor
+context_precision,0.7352171136191351,87,100,87.0,Good
+context_recall,0.7859999999999999,100,100,100.0,Good
