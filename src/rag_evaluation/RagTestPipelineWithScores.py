@@ -103,7 +103,7 @@ class RAGTestPipelineWithScores:
             
             # Step 3: Reranking
             print(f"  Step 3: Reranking chunks...")
-            reranked_chunks = await self.reranker.rerank_chunks(rewritten_query, chunks, top_k=5)
+            reranked_chunks = await self.reranker.rerank_chunks(rewritten_query, chunks)
             
             # Step 4: Answer Generation
             print(f"  Step 4: Generating answer...")
