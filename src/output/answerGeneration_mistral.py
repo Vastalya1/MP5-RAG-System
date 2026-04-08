@@ -19,7 +19,7 @@ Below are the most relevant document chunks from the insurance policy, along wit
 
 Instructions:
 
-1. Carefully read all the provided chunks. Focus on the top 5 most relevant chunks if there are many.
+1. Carefully read all the provided chunks. The reranker has already selected only the chunks that seem necessary, and the number of chunks may vary by query.
 
 2. Provide a clear, concise, and easy-to-understand answer for a common user, avoiding unnecessary technical terms.
 
@@ -120,7 +120,7 @@ Referenced from Section: [section_heading]"""
                             "section": chunk["metadata"]["section_heading"],
                             "text": chunk["text"][:200] + "..."  # Truncated preview
                         }
-                        for chunk in reranked_chunks[:5]  # Include top 5 chunks
+                        for chunk in reranked_chunks
                     ],
                     "metadata": {
                         "original_query": rewritten_query,

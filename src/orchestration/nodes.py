@@ -192,7 +192,7 @@ class RAGProcessNode:
             
             # Step 3: Reranking
             print(f"[RAGProcessNode] Step 3: Reranking chunks...")
-            reranked_chunks = await self.reranker.rerank_chunks(rewritten_query, chunks, top_k=5)
+            reranked_chunks = await self.reranker.rerank_chunks(rewritten_query, chunks)
             
             # Step 4: Answer Generation
             print(f"[RAGProcessNode] Step 4: Generating answer...")

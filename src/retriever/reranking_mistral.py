@@ -23,17 +23,25 @@ Document chunks to rank:
 
 Instructions:
 1. Analyze the relevance of each chunk to the query.
-2. Select the top 5 most relevant chunks.
-3. IMPORTANT: Respond ONLY with the chunk numbers in a comma-separated format.
-4. Do not add any explanations, just the numbers.
+2. Select only the chunks truly needed to answer the query accurately.
+3. The number of chunks should vary based on need. Return fewer chunks for specific queries and more only when required.
+4. Do not include redundant or weakly relevant chunks.
+5. IMPORTANT: Respond ONLY with the chunk numbers in a comma-separated format.
+6. Do not add any explanations, just the numbers.
 
 Example correct responses:
-0,1,2,3,4
-4,2,0,1,3
-1,4,3,2,0
+0
+4,2
+1,4,3
 
 Your response must match this format exactly - just numbers and commas, nothing else.
 Response:"""
+
+    def _limit_chunks(self, chunks: List[Dict], top_k: Optional[int]) -> List[Dict]:
+        """Apply an optional safety cap to the returned chunks."""
+        if top_k is None:
+            return chunks
+        return chunks[:top_k]
 
     def metadata_enhanced_reranking(self, 
                                   query: str, 
@@ -88,17 +96,17 @@ Response:"""
             print(f"Error in metadata reranking: {str(e)}")
             return chunks
 
-    async def llm_reranking(self, query: str, chunks: List[Dict], top_k: int = 5) -> List[Dict]:
+    async def llm_reranking(self, query: str, chunks: List[Dict], top_k: Optional[int] = None) -> List[Dict]:
         """
         Use Gemini to rerank the chunks based on relevance to query
         
         Args:
             query: The search query
             chunks: List of chunks to rerank
-            top_k: Number of chunks to return (default: 5)
+            top_k: Optional maximum number of chunks to return
             
         Returns:
-            Top k most relevant chunks according to LLM
+            Variable-length list of relevant chunks according to LLM
         """
         try:
             if not chunks:
@@ -144,13 +152,19 @@ Response:"""
                     cleaned_text = ''.join(char for char in response_text if char.isdigit() or char == ',')
                     
                     # Split and convert to integers, filter out any empty strings
-                    indices = [int(idx.strip()) for idx in cleaned_text.split(',') if idx.strip()][:top_k]
+                    indices = [int(idx.strip()) for idx in cleaned_text.split(',') if idx.strip()]
+                    if top_k is not None:
+                        indices = indices[:top_k]
                     
                     # Validate indices
-                    valid_indices = [idx for idx in indices if idx < len(chunks)]
+                    valid_indices = []
+                    for idx in indices:
+                        if 0 <= idx < len(chunks) and idx not in valid_indices:
+                            valid_indices.append(idx)
+
                     if not valid_indices:
                         print("No valid indices found in response, falling back to default ranking")
-                        return chunks[:top_k]
+                        return self._limit_chunks(chunks, top_k)
                         
                     indices = valid_indices
                     # Get chunks in the order specified by LLM
@@ -159,26 +173,26 @@ Response:"""
                     return reranked_chunks
                 except Exception as e:
                     print(f"Error parsing LLM response: {str(e)}")
-                    return chunks[:top_k]
+                    return self._limit_chunks(chunks, top_k)
             else:
                 print("Error: Empty response from LLM")
-                return chunks[:top_k]
+                return self._limit_chunks(chunks, top_k)
 
         except Exception as e:
             print(f"Error in LLM reranking: {str(e)}")
-            return chunks[:top_k]
+            return self._limit_chunks(chunks, top_k)
 
-    async def rerank_chunks(self, query: str, chunks: List[Dict], top_k: int = 5) -> List[Dict]:
+    async def rerank_chunks(self, query: str, chunks: List[Dict], top_k: Optional[int] = None) -> List[Dict]:
         """
         Complete reranking pipeline: metadata-enhanced followed by LLM reranking
         
         Args:
             query: The search query
             chunks: Initial chunks from retrieval
-            top_k: Final number of chunks to return
+            top_k: Optional maximum number of chunks to return
             
         Returns:
-            Final reranked list of most relevant chunks
+            Final reranked list of relevant chunks, with size chosen by the LLM
         """
         try:
             # Step 1: Metadata-enhanced reranking
@@ -191,7 +205,7 @@ Response:"""
             
         except Exception as e:
             print(f"Error in reranking pipeline: {str(e)}")
-            return chunks[:top_k]
+            return self._limit_chunks(chunks, top_k)
 
 
 # Example usage
