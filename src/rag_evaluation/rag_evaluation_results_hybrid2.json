@@ -1,0 +1,66 @@
+[
+  {
+    "question_id": "Q_032",
+    "question": "Are treatments for illnesses in the first 30 days covered by the policy?",
+    "answer": "No. Expenses related to the treatment of any illness within 30 days from the first policy commencement date shall be excluded except claims arising due to an accident.",
+    "policy_id": [
+      "Classic_Group_Health_Insurance_6e05831c03.pdf"
+    ],
+    "chunk_id": [
+      "Classic_Group_Health_Insurance_6e05831c03.pdf_58",
+      "Classic_Group_Health_Insurance_6e05831c03.pdf_104"
+    ],
+    "chunk_content": [
+      "A. Expenses related to the treatment of any illness within 30 days from the first policy commencement date shall be excluded except claims arising due to an accident, provided the same are covered B. This exclusion shall not, however, apply if the Insured Person has Continuous Coverage for more than twelve months C. The within referred waiting period is made applicable to the enhanced sum insured in the event of granting higher sum insured subsequently",
+      "5. In the event of the group policy being discontinued or not renewed or when the members of the group leave the group on account of resignation/retirement/termination or otherwise, the following provision shall apply. a. The insured person/s covered under this group policy will be granted cover under Indemnity based Individual Health Policy. In respect of persons who have been covered continuously for a period of one year under this group policy with the Company, exclusion Code Excl – 03 shall be waived. b. In respect of persons who have been covered continuously for a period of two years under this group policy with the Company, exclusions Code Excl-03 and Code Excl-02 shall be waived c. In respect of persons who have been covered continuously for a period of three years under this group policy with the Company, exclusions Code Excl-03, Code Excl-02 and Code Excl-01 shall be waived."
+    ]
+  },
+  {
+    "question_id": "Q_049",
+    "question": "When will emergency ambulance expenses be covered?",
+    "answer": "Not found",
+    "policy_id": [
+      "Health Companion-Health Insurance Plan_GEN617.pdf"
+    ],
+    "chunk_id": [
+      "Health Companion-Health Insurance Plan_GEN617.pdf_11"
+    ],
+    "chunk_content": [
+      "We will cover Reasonable and Customary ambulance expenses incurred to transfer the Insured Person by surface transport following an Emergency to the nearest Hospital with adequate facilities if: a. The ambulance service is offered by a healthcare or ambulance service provider; b. We have accepted an In-patient Hospitalization claim under the provisions of 2.1 above; In the case of Out-Of-Network Hospitalization of the Insured Person Our maximum liability for ambulance expenses is limited to Rs.2,000/- per event."
+    ]
+  },
+  {
+    "question_id": "Q_076",
+    "question": "Are diseases diagnosed within the first 30 days covered by the policy?",
+    "answer": "Not found",
+    "policy_id": [
+      "National Mediclaim Policy.pdf"
+    ],
+    "chunk_id": [
+      "National Mediclaim Policy.pdf_35",
+      "National Mediclaim Policy.pdf_31"
+    ],
+    "chunk_content": [
+      "All pre-existing diseases when the cover incepts for the first time until 48 months of continuous coverage has elapsed. Any complication arising from pre-existing ailment/disease/injuries will be considered as a part of the pre existing health condition or disease. To illustrate if a person is suffering from either hypertension or diabetes or both at the time of taking the policy, then policy shall",
+      "3.26 Pre-existing disease means any condition, ailment or injury or related condition(s) for which the insured person had signs or symptoms and/or was diagnosed and/or received medical advice/ treatment within 48 months prior to the first policy issued by the company. 3.27 Portability means transfer by an individual health insurance policy holder (including family cover) of the credit gained for pre-existing conditions and time bound exclusions if the policy holder chooses to switch from one insurer to another. 3.28 Qualified nurse means a person who holds a valid registration from the Nursing Council of India or the Nursing Council of any state in India. 3.29 Reasonable and Customary charges means the charges for services or supplies, which are the standard charges for the specific provider and consistent with the prevailing charges in the geographical area for identical or similar services, taking into account the nature of the illness / injury involved. 3.30 Sum insured means the sum insured and the cumulative bonus accrued in respect of each insured person as mentioned in the schedule. The sum insured represents maximum liability for each insured person for any and all benefits claimed during the policy period."
+    ]
+  },
+  {
+    "question_id": "Q_077",
+    "question": "What are the waiting periods for certain treatments like cataract or joint replacement?",
+    "answer": "Not found",
+    "policy_id": [
+      "National Mediclaim Policy.pdf"
+    ],
+    "chunk_id": [
+      "National Mediclaim Policy.pdf_39",
+      "National Mediclaim Policy.pdf_35",
+      "National Mediclaim Policy.pdf_137"
+    ],
+    "chunk_content": [
+      "Any disease contracted by the insured person during the first 30 days from the inception of the first policy. This shall not apply in case the insured person is hospitalised for injuries, suffered in an accident which occurred after inception of the first policy.",
+      "All pre-existing diseases when the cover incepts for the first time until 48 months of continuous coverage has elapsed. Any complication arising from pre-existing ailment/disease/injuries will be considered as a part of the pre existing health condition or disease. To illustrate if a person is suffering from either hypertension or diabetes or both at the time of taking the policy, then policy shall",
+      "i. Day care treatment will include above day care procedures ii. Any surgery/procedure (not listed above) which due to advancement of medical science requires hospitalisation for less than 24 hours will require prior approval from company/TPA. iii. The standard exclusions and waiting periods are applicable to all of the above day care procedures / surgeries depending on the medical condition / disease under treatment. Only 24 hours hospitalisation is not mandatory."
+    ]
+  }
+]

@@ -1,0 +1,23 @@
+RAGAS Single-Turn Parallel Evaluation Summary
+=================================================
+Generated at: 2026-04-09T01:47:50
+Input file: D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\ragas\combined_evaluation_dataset.json
+Rows evaluated: 100
+Rows with metric errors: 0
+Parallel question workers: 5
+
+Average scores:
+- Context Precision: 0.831622 (valid rows: 100/100)
+- Context Recall: 0.802500 (valid rows: 100/100)
+- Response Relevancy: 0.674987 (valid rows: 100/100)
+- Faithfulness: 0.785371 (valid rows: 100/100)
+- Answer Accuracy: 0.585000 (valid rows: 100/100)
+- Context Relevance: 0.905000 (valid rows: 100/100)
+- Response Groundedness: 0.902500 (valid rows: 100/100)
+- Semantic Similarity: 0.737532 (valid rows: 100/100)
+- BLEU Score: 0.052015 (valid rows: 100/100)
+- ROUGE-1: 0.349389 (valid rows: 100/100)
+- ROUGE-L: 0.235833 (valid rows: 100/100)
+
+Overall summary:
+- Overall average across computed metrics: 0.623795

@@ -1,0 +1,88 @@
+[
+  {
+    "question_id": "Q_008",
+    "question": "What is hospitalization according to the policy terms?",
+    "answer": "Not found",
+    "policy_id": [
+      "BAJHLIP23020V012223.pdf"
+    ],
+    "chunk_id": [
+      "BAJHLIP23020V012223.pdf_158"
+    ],
+    "chunk_content": [
+      "Rehabilitation is defined as a set of interventions designed to optimize functioning and reduce disability in individuals with health conditions in interaction with their environment. It aims to restore original form or function after an acute Illness, Injury or surgery. Rehabilitation is a treatment that combines therapies such as physical, occupational and speech therapy. We will pay You up to the limits specified in the Policy Schedule for the cost of In-patient Rehabilitation provided a. it is carried out by a Medical Practitioner specializing in rehabilitation; and b. it is carried out in a licensed rehabilitation Hospital or unit; c. We have accepted an Inpatient Hospitalization claim for the Insured under In Patient Hospitalization Treatment and rehabilitation starts within 14 days of discharge from Hospital following acute medical and/or surgical treatment d. the treatment could not be carried out on an out-patient basis This cover is subject to the Sum Insured, sub-limits, terms, conditions and definitions, exclusions contained or"
+    ]
+  },
+  {
+    "question_id": "Q_009",
+    "question": "How does the policy define an injury?",
+    "answer": "Injury means accidental physical bodily harm excluding illness or disease solely and directly caused by external, violent, visible and evident means which is verified and certified by a Medical Practitioner.",
+    "policy_id": [
+      "BAJHLIP23020V012223.pdf"
+    ],
+    "chunk_id": [
+      "BAJHLIP23020V012223.pdf_25"
+    ],
+    "chunk_content": [
+      "Injury means Accidental physical bodily harm excluding Illness or disease solely and directly caused by external, violent, visible and evident means which is verified and certified by a Medical Practitioner."
+    ]
+  },
+  {
+    "question_id": "Q_030",
+    "question": "What is the definition of a hospital according to the policy?",
+    "answer": "Not found",
+    "policy_id": [
+      "Classic_Group_Health_Insurance_6e05831c03.pdf"
+    ],
+    "chunk_id": [
+      "Classic_Group_Health_Insurance_6e05831c03.pdf_14",
+      "Classic_Group_Health_Insurance_6e05831c03.pdf_3"
+    ],
+    "chunk_content": [
+      "Injury: Injury means accidental physical bodily harm excluding illness or disease solely and directly caused by external, violent, visible and evident means which is verified and certified by a Medical Practitioner. Inpatient Care Inpatient care means treatment for which the insured person has to stay in a hospital for more than 24 hours for a covered event. Intensive Care Unit: Intensive care unit means an identified section, ward or wing of a hospital which is under the constant supervision of a dedicated medical practitioner(s), and which is specially equipped for the continuous monitoring and treatment of patients who are in a critical condition, or require life support facilities and where the level of care and supervision is considerably more sophisticated and intensive than in the ordinary and other wards. ICU Charges: ICU (Intensive Care Unit) Charges means the amount charged by a Hospital towards ICU expenses which shall include the expenses for ICU bed, general medical support services provided to any ICU patient including monitoring devices, critical care nursing and intensivist charges. Medical Advice: Medical Advice means any consultation or advice from a Medical Practitioner including the issuance of any prescription or follow-up prescription.",
+      "a. Central or State Government AYUSH Hospital; or b. Teaching hospital attached to AYUSH College recognized by the Central Government/Central Council of Indian Medicine/Central Council for Homeopathy; or c. AYUSH Hospital, standalone or co-located with in-patient healthcare facility of any recognized system of medicine, registered with the local authorities, wherever applicable, and is under the supervision of a qualified"
+    ]
+  },
+  {
+    "question_id": "Q_049",
+    "question": "When will emergency ambulance expenses be covered?",
+    "answer": "Not found",
+    "policy_id": [
+      "Health Companion-Health Insurance Plan_GEN617.pdf"
+    ],
+    "chunk_id": [
+      "Health Companion-Health Insurance Plan_GEN617.pdf_11"
+    ],
+    "chunk_content": [
+      "We will cover Reasonable and Customary ambulance expenses incurred to transfer the Insured Person by surface transport following an Emergency to the nearest Hospital with adequate facilities if: a. The ambulance service is offered by a healthcare or ambulance service provider; b. We have accepted an In-patient Hospitalization claim under the provisions of 2.1 above; In the case of Out-Of-Network Hospitalization of the Insured Person Our maximum liability for ambulance expenses is limited to Rs.2,000/- per event."
+    ]
+  },
+  {
+    "question_id": "Q_064",
+    "question": "Is Ayurveda treatment covered in this policy?",
+    "answer": "Not found",
+    "policy_id": [
+      "National Mediclaim Policy.pdf"
+    ],
+    "chunk_id": [
+      "National Mediclaim Policy.pdf_34"
+    ],
+    "chunk_content": [
+      "The company shall not be liable to make any payment under the policy in respect of any expenses incurred in connection with or"
+    ]
+  },
+  {
+    "question_id": "Q_078",
+    "question": "If I plan a hospital admission, when should I inform the insurer for cashless treatment?",
+    "answer": "Not found",
+    "policy_id": [
+      "National Mediclaim Policy.pdf"
+    ],
+    "chunk_id": [
+      "National Mediclaim Policy.pdf_71"
+    ],
+    "chunk_content": [
+      "i. Treatment may be taken in a network provider/PPN and is subject to pre authorization by the TPA. ii. Cashless request form available with the network provider/PPN and TPA shall be completed and sent to the TPA for authorization. iii. The TPA upon getting cashless request form and related medical information from the insured person/ network provider/PPN will issue pre-authorization letter to the hospital after verification. iv. At the time of discharge, the insured person has to verify and sign the discharge papers, pay for non-medical and inadmissible expenses. v. The TPA reserves the right to deny pre-authorization in case the insured person is unable to provide the relevant medical details. vi. In case of denial of cashless access, the insured person may obtain the treatment as per treating doctor’s advice and"
+    ]
+  }
+]

@@ -12,6 +12,7 @@ transformers
 torch
 scikit-learn
 scipy
+rank-bm25
 pandas
 openpyxl
 pdfplumber
@@ -20,3 +21,8 @@ reportlab
 mistralai
 langgraph
 langchain-core
+langchain-openai
+openai
+ragas
+sacrebleu
+rouge-score

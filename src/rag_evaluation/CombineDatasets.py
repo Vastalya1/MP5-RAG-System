@@ -159,9 +159,9 @@ def main():
     base_dir = Path(__file__).resolve().parent
     
     excel_path = base_dir / "golden_dataset.xlsx"
-    json_path = base_dir / "rag_evaluation_results.json"
+    json_path = base_dir / "rag_evaluation_results_lexical.json"
     chunks_md_path = base_dir / "dataset_chunks.md"
-    output_path = base_dir / "combined_evaluation_dataset.json"
+    output_path = base_dir / "combined_evaluation_dataset_lexical.json"
     
     # Verify files exist
     for path, name in [(excel_path, "golden_dataset.xlsx"), 

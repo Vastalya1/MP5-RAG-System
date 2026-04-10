@@ -24,7 +24,7 @@ load_dotenv()
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from queryRewriter.rewriting import QueryRewriter
-from retriever.retrival import retrivalModel
+from retriever.retrival_hybrid import retrivalModel
 from retriever.reranking_mistral import ChunkReranker
 from output.answerGeneration_mistral import AnswerGenerator
 
@@ -315,7 +315,7 @@ async def main():
     # Set up paths
     base_dir = Path(__file__).resolve().parent
     excel_path = base_dir / "golden_dataset.xlsx"
-    output_path = base_dir / "rag_evaluation_results3.json"
+    output_path = base_dir / "rag_evaluation_results_hybrid2.json"
     
     # Initialize and run pipeline
     pipeline = RAGTestPipeline(api_key)

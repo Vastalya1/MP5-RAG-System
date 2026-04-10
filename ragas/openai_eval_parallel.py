@@ -1,5 +1,8 @@
 """
-Single-turn RAGAS evaluation pipeline using OpenAI models.
+Parallel single-turn RAGAS evaluation pipeline using OpenAI models.
+
+This keeps the same input schema as `ragas/openai_eval`, but evaluates up to
+5 questions concurrently. Metrics inside each question still run sequentially.
 
 Input JSON records are expected in this shape:
 {
@@ -14,8 +17,8 @@ Input JSON records are expected in this shape:
 }
 
 Outputs:
-    - ragas_single_turn_results.csv
-    - ragas_single_turn_aggregated_results.txt
+    - ragas_single_turn_parallel_results.csv
+    - ragas_single_turn_parallel_aggregated_results.txt
 """
 
 from __future__ import annotations
@@ -36,11 +39,12 @@ from dotenv import load_dotenv
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
-INPUT_JSON = "combined_evaluation_dataset.json"
-OUTPUT_CSV = "ragas_single_turn_results.csv"
-OUTPUT_TXT = "ragas_single_turn_aggregated_results.txt"
+INPUT_JSON = "combined_evaluation_dataset_lexical.json"
+OUTPUT_CSV = "ragas_single_turn_parallel_results_lexical.csv"
+OUTPUT_TXT = "ragas_single_turn_parallel_aggregated_results_lexical.txt"
 LLM_MODEL = "gpt-4o-mini"
 EMBEDDING_MODEL = "text-embedding-3-small"
+MAX_PARALLEL_QUESTIONS = 5
 
 REQUIRED_FIELDS = {
     "question_id",
@@ -330,17 +334,6 @@ def sample_to_kwargs(sample: SingleTurnSample) -> dict[str, Any]:
     }
 
 
-def run_async(coro: Any) -> Any:
-    try:
-        return asyncio.run(coro)
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        try:
-            return loop.run_until_complete(coro)
-        finally:
-            loop.close()
-
-
 def extract_score_value(result: Any) -> float | None:
     if result is None:
         return None
@@ -353,26 +346,26 @@ def extract_score_value(result: Any) -> float | None:
     return None
 
 
-def score_metric(metric: Any, sample: SingleTurnSample) -> float | None:
+async def score_metric_async(metric: Any, sample: SingleTurnSample) -> float | None:
     payload = sample_to_kwargs(sample)
 
-    if hasattr(metric, "single_turn_score"):
-        return extract_score_value(metric.single_turn_score(sample))
-
-    if hasattr(metric, "score"):
-        try:
-            return extract_score_value(metric.score(**payload))
-        except TypeError:
-            return extract_score_value(metric.score(sample))
-
     if hasattr(metric, "single_turn_ascore"):
-        return extract_score_value(run_async(metric.single_turn_ascore(sample)))
+        return extract_score_value(await metric.single_turn_ascore(sample))
 
     if hasattr(metric, "ascore"):
         try:
-            return extract_score_value(run_async(metric.ascore(**payload)))
+            return extract_score_value(await metric.ascore(**payload))
         except TypeError:
-            return extract_score_value(run_async(metric.ascore(sample)))
+            return extract_score_value(await metric.ascore(sample))
+
+    if hasattr(metric, "single_turn_score"):
+        return extract_score_value(await asyncio.to_thread(metric.single_turn_score, sample))
+
+    if hasattr(metric, "score"):
+        try:
+            return extract_score_value(await asyncio.to_thread(metric.score, **payload))
+        except TypeError:
+            return extract_score_value(await asyncio.to_thread(metric.score, sample))
 
     raise AttributeError(
         f"Metric '{metric.__class__.__name__}' does not expose a supported scoring method."
@@ -428,12 +421,13 @@ def write_average_report(
 ) -> None:
     rows_with_errors = int(results_df["errors"].astype(str).str.len().gt(0).sum())
     lines = [
-        "RAGAS Single-Turn Evaluation Summary",
-        "=" * 40,
+        "RAGAS Single-Turn Parallel Evaluation Summary",
+        "=" * 49,
         f"Generated at: {datetime.now().isoformat(timespec='seconds')}",
         f"Input file: {input_path}",
         f"Rows evaluated: {len(results_df)}",
         f"Rows with metric errors: {rows_with_errors}",
+        f"Parallel question workers: {MAX_PARALLEL_QUESTIONS}",
         "",
         "Average scores:",
     ]
@@ -465,27 +459,21 @@ def write_average_report(
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def main() -> None:
-    input_path = SCRIPT_DIR / INPUT_JSON
-    if not input_path.exists():
-        raise FileNotFoundError(f"Input JSON not found: {input_path}")
-
-    print(f"Loading dataset from {input_path}")
-    records = load_records(input_path)
-    print(f"Loaded {len(records)} record(s)")
-
-    ragas_llm, ragas_embeddings = build_clients()
-    metric_map = get_metric_specs(ragas_llm, ragas_embeddings)
-    metric_columns = list(metric_map.keys())
-
-    rows: list[dict[str, Any]] = []
-    for index, record in enumerate(records, start=1):
+async def score_record(
+    record_index: int,
+    total_records: int,
+    record: dict[str, Any],
+    metric_map: dict[str, Any],
+    semaphore: asyncio.Semaphore,
+) -> dict[str, Any]:
+    async with semaphore:
         question_id = str(record["question_id"])
-        print(f"Scoring {index}/{len(records)}: {question_id}")
+        print(f"Starting {record_index}/{total_records}: {question_id}")
 
         ragas_payload = record_to_ragas_payload(record)
         sample = record_to_sample(record)
         row = {
+            "_row_index": record_index,
             "question_id": question_id,
             "user_input": str(record["user_input"]),
             "response": str(record["response"]),
@@ -510,7 +498,7 @@ def main() -> None:
         row_errors: dict[str, str] = {}
         for metric_name, metric in metric_map.items():
             try:
-                row[metric_name] = score_metric(metric, sample)
+                row[metric_name] = await score_metric_async(metric, sample)
             except Exception as exc:
                 row[metric_name] = None
                 row_errors[metric_name] = str(exc)
@@ -518,9 +506,33 @@ def main() -> None:
         if row_errors:
             row["errors"] = json.dumps(row_errors, ensure_ascii=True)
 
-        rows.append(row)
+        print(f"Finished {record_index}/{total_records}: {question_id}")
+        return row
+
+
+async def main_async() -> None:
+    input_path = SCRIPT_DIR / INPUT_JSON
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input JSON not found: {input_path}")
+
+    print(f"Loading dataset from {input_path}")
+    records = load_records(input_path)
+    print(f"Loaded {len(records)} record(s)")
+    print(f"Running with up to {MAX_PARALLEL_QUESTIONS} questions in parallel")
+
+    ragas_llm, ragas_embeddings = build_clients()
+    metric_map = get_metric_specs(ragas_llm, ragas_embeddings)
+    metric_columns = list(metric_map.keys())
+    semaphore = asyncio.Semaphore(MAX_PARALLEL_QUESTIONS)
+
+    tasks = [
+        score_record(index, len(records), record, metric_map, semaphore)
+        for index, record in enumerate(records, start=1)
+    ]
+    rows = await asyncio.gather(*tasks)
 
     results_df = pd.DataFrame(rows)
+    results_df = results_df.sort_values("_row_index").drop(columns=["_row_index"])
 
     output_csv_path = SCRIPT_DIR / OUTPUT_CSV
     results_df.to_csv(output_csv_path, index=False)
@@ -532,6 +544,10 @@ def main() -> None:
     print(output_csv_path)
     print("\nAverage score summary saved to:")
     print(output_txt_path)
+
+
+def main() -> None:
+    asyncio.run(main_async())
 
 
 if __name__ == "__main__":
