@@ -159,13 +159,13 @@ def main():
     base_dir = Path(__file__).resolve().parent
     
     excel_path = base_dir / "golden_dataset.xlsx"
-    json_path = base_dir / "Rag_evaluation_results/rag_evaluation_results_semantic_chatgpt.json" 
+    json_path = base_dir / "Rag_evaluation_results/rag_evaluation_results_lexical_chatgpt.json" 
     chunks_md_path = base_dir / "dataset_chunks.md"
-    output_path = base_dir / "combined_evaluation_dataset/combined_evaluation_dataset_semantic_chatgpt.json"
+    output_path = base_dir / "combined_evaluation_dataset/combined_evaluation_dataset_lexical_chatgpt.json"
     
     # Verify files exist
     for path, name in [(excel_path, "golden_dataset.xlsx"), 
-                       (json_path, "rag_evaluation_results_semantic_chatgpt.json"),
+                       (json_path, "rag_evaluation_results_lexical_chatgpt.json"),
                        (chunks_md_path, "dataset_chunks.md")]:
         if not path.exists():
             raise FileNotFoundError(f"{name} not found at {path}")

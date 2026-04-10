@@ -39,9 +39,9 @@ from dotenv import load_dotenv
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
-INPUT_JSON = "combined_evaluation_dataset_lexical_chatgpt.json"
-OUTPUT_CSV = "ragas_single_turn_parallel_results_lexical_chatgpt.csv"
-OUTPUT_TXT = "ragas_single_turn_parallel_aggregated_results_lexical_chatgpt.txt"
+INPUT_JSON = "combined_evaluation_dataset_semantic_chatgpt.json"
+OUTPUT_CSV = "ragas_single_turn_parallel_results_semantic_chatgpt.csv"
+OUTPUT_TXT = "ragas_single_turn_parallel_aggregated_results_semantic_chatgpt.txt"
 LLM_MODEL = "gpt-4o-mini"
 EMBEDDING_MODEL = "text-embedding-3-small"
 MAX_PARALLEL_QUESTIONS = 5
@@ -374,9 +374,9 @@ async def score_metric_async(metric: Any, sample: SingleTurnSample) -> float | N
 
 def build_clients() -> tuple[Any, Any]:
     load_dotenv(PROJECT_ROOT / ".env")
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY_GEN")
     if not api_key:
-        raise EnvironmentError("OPENAI_API_KEY was not found in .env or the environment.")
+        raise EnvironmentError("OPENAI_API_KEY_GEN was not found in .env or the environment.")
 
     llm = ChatOpenAI(
         model=LLM_MODEL,

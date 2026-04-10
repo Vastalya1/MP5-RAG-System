@@ -1,0 +1,23 @@
+RAGAS Single-Turn Parallel Evaluation Summary
+=================================================
+Generated at: 2026-04-11T02:06:52
+Input file: D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\ragas\combined_evaluation_dataset_lexical_chatgpt.json
+Rows evaluated: 100
+Rows with metric errors: 1
+Parallel question workers: 5
+
+Average scores:
+- Context Precision: 0.881667 (valid rows: 100/100)
+- Context Recall: 0.808000 (valid rows: 100/100)
+- Response Relevancy: 0.692518 (valid rows: 100/100)
+- Faithfulness: 0.883742 (valid rows: 99/100)
+- Answer Accuracy: 0.675000 (valid rows: 100/100)
+- Context Relevance: 0.940000 (valid rows: 100/100)
+- Response Groundedness: 0.912500 (valid rows: 100/100)
+- Semantic Similarity: 0.784955 (valid rows: 100/100)
+- BLEU Score: 0.276266 (valid rows: 100/100)
+- ROUGE-1: 0.584553 (valid rows: 100/100)
+- ROUGE-L: 0.537966 (valid rows: 100/100)
+
+Overall summary:
+- Overall average across computed metrics: 0.725197
