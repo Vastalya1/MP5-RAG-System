@@ -315,7 +315,7 @@ async def main():
     # Set up paths
     base_dir = Path(__file__).resolve().parent
     excel_path = base_dir / "golden_dataset.xlsx"
-    output_path = base_dir / "rag_evaluation_results_hybrid2.json"
+    output_path = base_dir / "Rag_evaluation_results/rag_evaluation_results_hybrid.json"
     
     # Initialize and run pipeline
     pipeline = RAGTestPipeline(api_key)

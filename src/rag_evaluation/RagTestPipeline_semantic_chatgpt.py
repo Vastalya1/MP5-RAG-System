@@ -2,7 +2,7 @@
 RAG Test Pipeline
 
 This script reads questions from golden_dataset.xlsx and runs them through
-the hybrid RAG pipeline using OpenAI for query rewriting, reranking, and
+the semantic RAG pipeline using OpenAI for query rewriting, reranking, and
 answer generation, storing results in a JSON file.
 """
 
@@ -27,7 +27,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from output.answerGeneration_chatgpt import AnswerGenerator
 from queryRewriter.rewriting_chatgpt import QueryRewriter
 from retriever.reranking_chatgpt import ChunkReranker
-from retriever.retrival_hybrid import retrivalModel
+from retriever.retrival import retrivalModel
 
 
 def parse_question_numbers(value: Optional[str]) -> Optional[Set[int]]:
@@ -289,8 +289,10 @@ class RAGTestPipeline:
         if output_path is None:
             output_dir = Path(__file__).resolve().parent
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = output_dir / f"rag_results_hybrid_chatgpt_{timestamp}.json"
+            output_path = output_dir / f"rag_results_semantic_chatgpt_{timestamp}.json"
 
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2, ensure_ascii=False)
 
@@ -301,7 +303,7 @@ class RAGTestPipeline:
 async def main():
     """Main entry point for the RAG test pipeline."""
     parser = argparse.ArgumentParser(
-        description="Run the OpenAI hybrid RAG test pipeline on all or selected questions."
+        description="Run the OpenAI semantic RAG test pipeline on all or selected questions."
     )
     parser.add_argument(
         "--question-numbers",
@@ -312,14 +314,14 @@ async def main():
     args = parser.parse_args()
 
     # Get API key from environment
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY_GEN")
     if not api_key:
-        raise ValueError("OPENAI_API_KEY environment variable not set")
+        raise ValueError("OPENAI_API_KEY_GEN environment variable not set")
 
     # Set up paths
     base_dir = Path(__file__).resolve().parent
     excel_path = base_dir / "golden_dataset.xlsx"
-    output_path = base_dir / "Rag_evaluation_results/rag_evaluation_results_hybrid_chatgpt.json"
+    output_path = base_dir / "Rag_evaluation_results/rag_evaluation_results_semantic_chatgpt2.json"
 
     # Initialize and run pipeline
     pipeline = RAGTestPipeline(api_key)
