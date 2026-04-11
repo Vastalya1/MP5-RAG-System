@@ -15,19 +15,19 @@ from datetime import datetime, timedelta, timezone
 import secrets
 from passlib.context import CryptContext
 from dotenv import load_dotenv
-
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from queryRewriter.rewriting import QueryRewriter
 from retriever.retrival import retrivalModel
 from retriever.reranking_mistral import ChunkReranker
 from output.answerGeneration_mistral import AnswerGenerator
-
 # Import LangGraph orchestrator
 from orchestration.orchestrator import QueryOrchestrator, create_orchestrator
-
 # Import your ingestion pipeline and other necessary components
 from ingestion.ingestionPipeline import IngestionPipeline
+from tavily_fallback.tavily_client import TavilySearchClient
+from tavily_fallback.tavily_service import TavilyService
+
 
 # Load environment variables from .env (if present)
 load_dotenv()
@@ -459,6 +459,52 @@ def _list_uploaded_files(scope: str, username: str | None = None) -> list[dict]:
                 for row in cursor.fetchall()
             ]
 
+def _get_document_options(user: dict) -> list[dict]:
+    options = [{"value": "", "label": "All policy documents"}]
+    seen: set[tuple[str, str]] = set()
+
+    for item in _list_uploaded_files("shared"):
+        filename = item["filename"]
+        key = ("shared", filename)
+        if key in seen:
+            continue
+        seen.add(key)
+        options.append(
+            {
+                "value": f"shared::{filename}",
+                "label": f"{filename} (Shared)",
+            }
+        )
+
+    personal_files = _list_uploaded_files("personal", user.get("username"))
+    for item in personal_files:
+        filename = item["filename"]
+        key = ("personal", filename)
+        if key in seen:
+            continue
+        seen.add(key)
+        options.append(
+            {
+                "value": f"personal::{filename}",
+                "label": f"{filename} (Personal)",
+            }
+        )
+
+    return options
+
+def _parse_document_selection(selected_document: str | None) -> tuple[str | None, str | None]:
+    if not selected_document:
+        return None, None
+    try:
+        document_scope, document_name = selected_document.split("::", 1)
+    except ValueError:
+        return None, None
+    document_scope = document_scope.strip().lower()
+    document_name = document_name.strip()
+    if document_scope not in {"shared", "personal"} or not document_name:
+        return None, None
+    return document_scope, document_name
+
 def _add_uploaded_file(scope: str, filename: str, username: str | None, size_bytes: int | None) -> None:
     with _db_conn() as conn:
         with conn.cursor() as cursor:
@@ -602,20 +648,27 @@ async def home(request: Request):
 async def admin_dashboard(request: Request, user: dict = Depends(_require_admin)):
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "admin.html",
-        {
+        request=request,
+        name="admin.html",
+        context={
             "request": request,
             "user": user,
             "csrf_token": csrf_token,
-        }
+        },
     )
 
 @app.get("/admin/all", response_class=HTMLResponse)
 async def admin_all(request: Request, user: dict = Depends(_require_admin)):
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "admin_all.html",
-        {"request": request, "user": user, "csrf_token": csrf_token},
+        request=request,
+        name="admin_all.html",
+        context={
+            "request": request,
+            "user": user,
+            "csrf_token": csrf_token,
+            "document_options": _get_document_options(user),
+        },
     )
 
 @app.get("/admin/shared", response_class=HTMLResponse)
@@ -623,28 +676,36 @@ async def admin_shared(request: Request, user: dict = Depends(_require_admin)):
     shared_files = _list_uploaded_files("shared")
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "shared.html",
-        {"request": request, "user": user, "shared_files": shared_files, "csrf_token": csrf_token},
+        request=request,
+        name="shared.html",
+        context={"request": request, "user": user, "shared_files": shared_files, "csrf_token": csrf_token},
     )
 
 @app.get("/app", response_class=HTMLResponse)
 async def user_dashboard(request: Request, user: dict = Depends(_require_auth)):
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "user.html",
-        {
+        request=request,
+        name="user.html",
+        context={
             "request": request,
             "user": user,
             "csrf_token": csrf_token,
-        }
+        },
     )
 
 @app.get("/app/all", response_class=HTMLResponse)
 async def user_all(request: Request, user: dict = Depends(_require_auth)):
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "user_all.html",
-        {"request": request, "user": user, "csrf_token": csrf_token},
+        request=request,
+        name="user_all.html",
+        context={
+            "request": request,
+            "user": user,
+            "csrf_token": csrf_token,
+            "document_options": _get_document_options(user),
+        },
     )
 
 @app.get("/app/shared", response_class=HTMLResponse)
@@ -652,8 +713,9 @@ async def user_shared(request: Request, user: dict = Depends(_require_auth)):
     shared_files = _list_uploaded_files("shared")
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "shared.html",
-        {"request": request, "user": user, "shared_files": shared_files, "csrf_token": csrf_token},
+        request=request,
+        name="shared.html",
+        context={"request": request, "user": user, "shared_files": shared_files, "csrf_token": csrf_token},
     )
 
 @app.get("/activity", response_class=HTMLResponse)
@@ -661,8 +723,9 @@ async def activity_page(request: Request, user: dict = Depends(_require_auth)):
     events = _get_user_activity(user["username"])
     csrf_token = _ensure_csrf_token(request)
     return templates.TemplateResponse(
-        "activity.html",
-        {"request": request, "user": user, "events": events, "csrf_token": csrf_token},
+        request=request,
+        name="activity.html",
+        context={"request": request, "user": user, "events": events, "csrf_token": csrf_token},
     )
 
 @app.get("/login", response_class=HTMLResponse)
@@ -673,8 +736,9 @@ async def login_page(request: Request):
             return RedirectResponse(url="/admin", status_code=status.HTTP_302_FOUND)
         return RedirectResponse(url="/app", status_code=status.HTTP_302_FOUND)
     return templates.TemplateResponse(
-        "login.html",
-        {"request": request, "csrf_token": _ensure_csrf_token(request)}
+        request=request,
+        name="login.html",
+        context={"request": request, "csrf_token": _ensure_csrf_token(request)},
     )
 
 @app.post("/login")
@@ -697,8 +761,9 @@ async def login(
                 metadata={"locked_until": record["locked_until"].isoformat()},
             )
             return templates.TemplateResponse(
-                "login.html",
-                {"request": request, "error": "Account is temporarily locked. Try again later."},
+                request=request,
+                name="login.html",
+                context={"request": request, "error": "Account is temporarily locked. Try again later."},
                 status_code=status.HTTP_403_FORBIDDEN,
             )
 
@@ -727,8 +792,9 @@ async def login(
                 request,
             )
         return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "error": "Invalid username or password."},
+            request=request,
+            name="login.html",
+            context={"request": request, "error": "Invalid username or password."},
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
     with _db_conn() as conn:
@@ -764,8 +830,9 @@ async def register(
         if is_fetch:
             return {"ok": False, "message": message, "error_code": "missing_fields"}
         return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "register_error": message},
+            request=request,
+            name="login.html",
+            context={"request": request, "register_error": message},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     ok, message = _create_user(username, password)
@@ -774,16 +841,18 @@ async def register(
         if is_fetch:
             return {"ok": False, "message": message, "error_code": error_code}
         return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "register_error": message},
+            request=request,
+            name="login.html",
+            context={"request": request, "register_error": message},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     _record_audit_event(username, "user", "REGISTER", request)
     if is_fetch:
         return {"ok": True, "message": message}
     return templates.TemplateResponse(
-        "login.html",
-        {"request": request, "register_success": message},
+        request=request,
+        name="login.html",
+        context={"request": request, "register_success": message},
         status_code=status.HTTP_201_CREATED,
     )
 
@@ -928,22 +997,81 @@ async def delete_personal_file(
     )
     return {"message": f"Deleted {filename}"}
 
+_tavily_service: TavilyService | None = None
+
+def _get_tavily_service() -> TavilyService:
+    global _tavily_service
+    if _tavily_service is None:
+        client = TavilySearchClient()
+        _tavily_service = TavilyService(client)
+    return _tavily_service
+
+
+def _build_retrieval_debug(chunks: list[dict] | None) -> dict:
+    chunks = chunks or []
+    source_counts = {"semantic": 0, "keyword": 0, "both": 0}
+    top_chunks: list[dict] = []
+
+    for chunk in chunks[:5]:
+        matched_by = chunk.get("matched_by", []) or []
+        matched_set = set(matched_by)
+        if matched_set == {"semantic"}:
+            source_counts["semantic"] += 1
+        elif matched_set == {"keyword"}:
+            source_counts["keyword"] += 1
+        elif matched_set:
+            source_counts["both"] += 1
+
+        metadata = chunk.get("metadata", {}) or {}
+        top_chunks.append(
+            {
+                "document": metadata.get("document_name", "unknown_document"),
+                "section": metadata.get("section_heading", "General"),
+                "matched_by": sorted(matched_set),
+                "hybrid_score": chunk.get("hybrid_score"),
+                "semantic_score": chunk.get("semantic_score"),
+                "keyword_score": chunk.get("keyword_score"),
+            }
+        )
+
+    return {
+        "top_chunk_count": len(chunks[:5]),
+        "source_counts": source_counts,
+        "top_chunks": top_chunks,
+    }
+
+
 @app.post("/query")
 async def query(
     request: Request,
     query: str = Form(...),
     scope: str = Form("shared"),
+    selected_document: str = Form(""),
     user: dict = Depends(_require_auth),
     csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
     try:
+        selected_scope, document_filter = _parse_document_selection(selected_document)
+        effective_scope = scope
+        collection_name = None
+        if selected_scope == "shared":
+            effective_scope = "shared"
+            collection_name = "dataset"
+        elif selected_scope == "personal":
+            effective_scope = "personal"
+            collection_name = f"user_{user['username']}_documents"
+
         _record_audit_event(
             user.get("username"),
             user.get("role"),
             "QUERY",
             request,
-            metadata={"scope": scope, "query_length": len(query)},
+            metadata={
+                "scope": effective_scope,
+                "query_length": len(query),
+                "selected_document": document_filter,
+            },
         )
         
         if USE_ORCHESTRATION:
@@ -951,14 +1079,17 @@ async def query(
             orchestrator = _get_orchestrator()
             result = await orchestrator.process_query(
                 query=query,
-                scope=scope,
-                username=user.get("username")
+                scope=effective_scope,
+                username=user.get("username"),
+                collection_name=collection_name,
+                document_filter=document_filter,
             )
             
             response_text = result.get("response", "")
             justification_text = result.get("justification")
             sources = result.get("sources", [])
             route_taken = result.get("route_taken", "unknown")
+            retrieval_debug = result.get("retrieval_debug")
             
             # Log the route taken for debugging
             print(f"[Query] Route taken: {route_taken}")
@@ -966,7 +1097,7 @@ async def query(
             _save_query_history(
                 user.get("username"),
                 user.get("role"),
-                scope,
+                effective_scope,
                 query,
                 response_text,
                 justification_text,
@@ -978,6 +1109,7 @@ async def query(
                 "justification": justification_text,
                 "sources": sources,
                 "route_taken": route_taken,  # Include route info in response
+                "retrieval_debug": retrieval_debug,
             }
         else:
             # Legacy path: Direct RAG processing without orchestration
@@ -987,34 +1119,61 @@ async def query(
 
             retriever = _get_retriever()
             chunks: list[dict] = []
-            if scope == "shared":
-                chunks = retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
-            elif scope == "personal":
+            if effective_scope == "shared":
+                chunks = retriever.retrive_Chunks(
+                    rewritten_query,
+                    collection_name="dataset",
+                    document_filter=document_filter,
+                )
+            elif effective_scope == "personal":
                 chunks = retriever.retrive_Chunks(
                     rewritten_query,
                     collection_name=f"user_{user['username']}_documents",
+                    document_filter=document_filter,
                 )
-            elif scope == "combined":
-                chunks = retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
+            elif effective_scope == "combined":
+                chunks = retriever.retrive_Chunks(
+                    rewritten_query,
+                    collection_name="dataset",
+                    document_filter=document_filter,
+                )
                 chunks += retriever.retrive_Chunks(
                     rewritten_query,
                     collection_name=f"user_{user['username']}_documents",
+                    document_filter=document_filter,
                 )
             else:
                 return {"error": f"Unknown scope: {scope}"}
 
-            if not chunks:
-                response_text = "No relevant policy content found for this question."
-                _save_query_history(
-                    user.get("username"),
-                    user.get("role"),
-                    scope,
-                    query,
-                    response_text,
-                    None,
-                    [],
-                )
-                return {"response": response_text}
+            # if not chunks:
+            #     if not chunks:
+            #         tavily = _get_tavily_service()
+            #         tavily_result = tavily.get_answer(query)
+
+            #         _record_audit_event(
+            #             user.get("username"),
+            #             user.get("role"),
+            #             "QUERY_EXTERNAL",
+            #             request,
+            #             metadata={"provider": "tavily"}
+            #         )
+
+            #         _save_query_history(
+            #             user.get("username"),
+            #             user.get("role"),
+            #             "external",
+            #             query,
+            #             tavily_result["answer"],
+            #             "Answer generated using Tavily web search",
+            #             tavily_result["sources"],
+            #         )
+
+            #         return {
+            #             "response": tavily_result["answer"],
+            #             "sources": tavily_result["sources"],
+            #             "route_taken": "tavily_fallback"
+            #         }
+
 
             reranker = _get_reranker()
             answer_generator = _get_answer_generator()
@@ -1023,11 +1182,12 @@ async def query(
             response_text = answer.get("answer", "")
             justification_text = answer.get("justification")
             sources = answer.get("source_chunks", [])
+            retrieval_debug = _build_retrieval_debug(reranked)
 
             _save_query_history(
                 user.get("username"),
                 user.get("role"),
-                scope,
+                effective_scope,
                 query,
                 response_text,
                 justification_text,
@@ -1038,6 +1198,7 @@ async def query(
                 "response": response_text,
                 "justification": justification_text,
                 "sources": sources,
+                "retrieval_debug": retrieval_debug,
             }
     except Exception as e:
         return {"error": str(e)}
@@ -1048,3 +1209,5 @@ async def history(
     limit: int = 50,
 ):
     return {"items": _get_query_history(user.get("username"), limit=limit)}
+
+

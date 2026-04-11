@@ -15,11 +15,46 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from mistralai import Mistral
+from mistralai.client import Mistral
 from queryRewriter.rewriting import QueryRewriter
 from retriever.retrival import retrivalModel
 from retriever.reranking_mistral import ChunkReranker
 from output.answerGeneration_mistral import AnswerGenerator
+from tavily_fallback.tavily_client import TavilySearchClient
+from tavily_fallback.tavily_service import TavilyService
+
+
+def _build_retrieval_debug(chunks: List[Dict]) -> Dict[str, Any]:
+    source_counts = {"semantic": 0, "keyword": 0, "both": 0}
+    top_chunks: List[Dict[str, Any]] = []
+
+    for chunk in (chunks or [])[:5]:
+        matched_by = chunk.get("matched_by", []) or []
+        matched_set = set(matched_by)
+        if matched_set == {"semantic"}:
+            source_counts["semantic"] += 1
+        elif matched_set == {"keyword"}:
+            source_counts["keyword"] += 1
+        elif matched_set:
+            source_counts["both"] += 1
+
+        metadata = chunk.get("metadata", {}) or {}
+        top_chunks.append(
+            {
+                "document": metadata.get("document_name", "unknown_document"),
+                "section": metadata.get("section_heading", "General"),
+                "matched_by": sorted(matched_set),
+                "hybrid_score": chunk.get("hybrid_score"),
+                "semantic_score": chunk.get("semantic_score"),
+                "keyword_score": chunk.get("keyword_score"),
+            }
+        )
+
+    return {
+        "top_chunk_count": len((chunks or [])[:5]),
+        "source_counts": source_counts,
+        "top_chunks": top_chunks,
+    }
 
 
 class DirectLLMNode:
@@ -112,7 +147,7 @@ class RAGProcessNode:
     # Threshold for triggering web scraping (when distance is too high, meaning low similarity)
     # ChromaDB uses cosine distance: 0 = identical, 2 = opposite
     # Distance > 1.2 indicates poor similarity (less than ~40% similar)
-    DISTANCE_THRESHOLD = 1.2
+    DISTANCE_THRESHOLD = 1.3
     
     def __init__(
         self,
@@ -143,7 +178,8 @@ class RAGProcessNode:
         query: str,
         scope: str = "shared",
         username: Optional[str] = None,
-        collection_name: Optional[str] = None
+        collection_name: Optional[str] = None,
+        document_filter: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Process a query through the full RAG pipeline.
@@ -153,6 +189,7 @@ class RAGProcessNode:
             scope: The search scope ("shared", "personal", "combined")
             username: Username for personal document access
             collection_name: Optional specific collection name
+            document_filter: Optional document name to filter within a collection
             
         Returns:
             Dict containing the answer, justification, sources, and metadata
@@ -167,7 +204,13 @@ class RAGProcessNode:
             
             # Step 2: Retrieval
             print(f"[RAGProcessNode] Step 2: Retrieving chunks...")
-            chunks = self._retrieve_chunks(rewritten_query, scope, username, collection_name)
+            chunks = self._retrieve_chunks(
+                rewritten_query,
+                scope,
+                username,
+                collection_name,
+                document_filter,
+            )
             
             if not chunks:
                 return {
@@ -206,7 +249,8 @@ class RAGProcessNode:
                 "rewritten_query": rewritten_query,
                 "success": True,
                 "needs_web_scraping": needs_web_scraping,
-                "top_chunk_distance": top_chunk_distance  # Raw distance from ChromaDB
+                "top_chunk_distance": top_chunk_distance,  # Raw distance from ChromaDB
+                "retrieval_debug": _build_retrieval_debug(reranked_chunks),
             }
             
         except Exception as e:
@@ -226,87 +270,119 @@ class RAGProcessNode:
         rewritten_query: str,
         scope: str,
         username: Optional[str],
-        collection_name: Optional[str]
+        collection_name: Optional[str],
+        document_filter: Optional[str]
     ) -> List[Dict]:
         """
         Retrieve chunks based on scope and collection settings.
         """
         if collection_name:
-            return self.retriever.retrive_Chunks(rewritten_query, collection_name=collection_name)
+            return self.retriever.retrive_Chunks(
+                rewritten_query,
+                collection_name=collection_name,
+                document_filter=document_filter,
+            )
         
         chunks = []
         if scope == "shared":
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
+            chunks = self.retriever.retrive_Chunks(
+                rewritten_query,
+                collection_name="dataset",
+                document_filter=document_filter,
+            )
         elif scope == "personal" and username:
             chunks = self.retriever.retrive_Chunks(
                 rewritten_query,
-                collection_name=f"user_{username}_documents"
+                collection_name=f"user_{username}_documents",
+                document_filter=document_filter,
             )
         elif scope == "combined" and username:
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
+            chunks = self.retriever.retrive_Chunks(
+                rewritten_query,
+                collection_name="dataset",
+                document_filter=document_filter,
+            )
             chunks += self.retriever.retrive_Chunks(
                 rewritten_query,
-                collection_name=f"user_{username}_documents"
+                collection_name=f"user_{username}_documents",
+                document_filter=document_filter,
             )
         else:
-            chunks = self.retriever.retrive_Chunks(rewritten_query, collection_name="dataset")
+            chunks = self.retriever.retrive_Chunks(
+                rewritten_query,
+                collection_name="dataset",
+                document_filter=document_filter,
+            )
         
         return chunks
 
 
 class WebScrapingNode:
     """
-    Node for handling queries when RAG retrieval returns low similarity scores.
-    This is a PLACEHOLDER implementation for future web scraping functionality.
-    
-    Purpose: When the similarity score after fetching the top chunk is less than
-    the threshold (0.5), this node can be triggered to search for information
-    on the web.
+    Node for handling low-confidence RAG results using Tavily web search.
     """
-    
-    def __init__(self, api_key: str):
+
+    def __init__(self, api_key: str = None):
         """
         Initialize the Web Scraping Node.
         
         Args:
-            api_key: API key for any required services
+            api_key: Mistral API key (optional, can use LLM for synthesis)
         """
         self.api_key = api_key
-        # Placeholder for web scraping setup
-        # Future: Add Serper, Tavily, or other web search APIs
-    
+        if api_key:
+            self.client = Mistral(api_key=api_key)
+        try:
+            self.service = TavilyService(TavilySearchClient())
+            self.tavily_available = True
+            print("[WebScrapingNode] Tavily service initialized")
+        except Exception as e:
+            print(f"[WebScrapingNode] Tavily not available: {e}")
+            self.tavily_available = False
+
     async def process(self, query: str, context: Optional[Dict] = None) -> Dict[str, Any]:
         """
-        Process a query by searching the web for information.
-        
-        NOTE: This is a placeholder implementation. In a full implementation,
-        this would:
-        1. Search the web for relevant information
-        2. Scrape and extract content
-        3. Synthesize an answer from web sources
+        Uses Tavily to answer the query using web search.
         
         Args:
-            query: The user's query
+            query: The user's query (ideally rewritten)
             context: Optional context from previous processing
             
         Returns:
-            Dict containing the answer and metadata
+            Dict with answer, sources, and metadata
         """
-        # Placeholder implementation
-        print(f"[WebScrapingNode] Placeholder - Web scraping not yet implemented")
+        if not self.tavily_available:
+            return {
+                "answer": "Web search is currently unavailable. Please try again or contact support.",
+                "justification": "Tavily service unavailable",
+                "sources": [],
+                "route_taken": "web_scraping",
+                "success": False,
+                "error": "Tavily API not configured"
+            }
         
-        return {
-            "answer": (
-                "I couldn't find specific information in the policy documents for your query. "
-                "Web search functionality is not yet enabled. "
-                "Please try rephrasing your question or contact customer support for assistance."
-            ),
-            "justification": None,
-            "sources": [],
-            "route_taken": "web_scraping",
-            "success": False,
-            "message": "Web scraping node is a placeholder - not yet implemented"
-        }
+        try:
+            print(f"[WebScrapingNode] Searching web for: {query}")
+            result = self.service.get_answer(query)
+
+            return {
+                "answer": result.get("answer", ""),
+                "justification": "Answer generated using web search",
+                "sources": result.get("sources", []),
+                "route_taken": "web_scraping",
+                "success": True
+            }
+
+        except Exception as e:
+            print(f"[WebScrapingNode] Error: {str(e)}")
+            return {
+                "answer": "Unable to fetch information from web search. Please try again.",
+                "justification": None,
+                "sources": [],
+                "route_taken": "web_scraping",
+                "success": False,
+                "error": str(e)
+            }
 
 
 # Convenience functions for LangGraph node integration
@@ -341,7 +417,8 @@ async def rag_process_node(
         state["query"],
         scope=state.get("scope", "shared"),
         username=state.get("username"),
-        collection_name=state.get("collection_name")
+        collection_name=state.get("collection_name"),
+        document_filter=state.get("document_filter"),
     )
     return {**state, "result": result}
 
