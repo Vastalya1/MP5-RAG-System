@@ -10,13 +10,25 @@ between different processing paths:
 
 from .orchestrator import QueryOrchestrator, GraphState
 from .classifier import QueryClassifier
-from .nodes import direct_llm_node, rag_process_node, web_scraping_node
+from .nodes import (
+    DirectLLMNode,
+    RAGProcessNode,
+    WebScrapingNode,
+    direct_llm_node,
+    rag_process_node,
+    web_scraping_node,
+)
 
 __all__ = [
     "QueryOrchestrator",
     "GraphState",
     "QueryClassifier",
+    "DirectLLMNode",
+    "RAGProcessNode",
+    "WebScrapingNode",
     "direct_llm_node",
     "rag_process_node",
     "web_scraping_node",
 ]
+
+

@@ -50,6 +50,7 @@ class GraphState(TypedDict):
     scope: str
     username: Optional[str]
     collection_name: Optional[str]
+    document_filter: Optional[str]
     route: Optional[Literal["rag", "direct"]]
     answer: Optional[str]
     justification: Optional[str]
@@ -108,6 +109,7 @@ class QueryOrchestrator:
         # Build the graph
         self.graph = self._build_graph()
     
+        
     def _build_graph(self) -> StateGraph:
         """
         Build the LangGraph state graph with nodes and edges.
@@ -124,20 +126,18 @@ class QueryOrchestrator:
         
         Note: Web scraping node is defined but not connected in edges yet.
         """
-        # Create the graph with our state schema
         builder = StateGraph(GraphState)
-        
+
         # Add nodes
         builder.add_node("classifier_node", self._classifier_node)
         builder.add_node("direct_llm_node", self._direct_llm_node)
         builder.add_node("rag_node", self._rag_node)
-        builder.add_node("web_scraping_node", self._web_scraping_node)  # Defined but not connected
-        
-        # Add edges
-        # Start with classifier
+        builder.add_node("web_scraping_node", self._web_scraping_node)
+
+        # START → classifier
         builder.add_edge(START, "classifier_node")
-        
-        # Conditional routing based on classification
+
+        # classifier → (direct | rag)
         builder.add_conditional_edges(
             "classifier_node",
             self._route_query,
@@ -146,28 +146,27 @@ class QueryOrchestrator:
                 "rag": "rag_node"
             }
         )
-        
-        # Both processing nodes go to END
+
+        # rag → (end | web_scraping)
+        builder.add_conditional_edges(
+            "rag_node",
+            self._check_similarity_threshold,
+            {
+                "proceed": END,
+                "web_scrape": "web_scraping_node"
+            }
+        )
+
+        # web_scraping → END
+        builder.add_edge("web_scraping_node", END)
+
+        # direct → END
         builder.add_edge("direct_llm_node", END)
-        builder.add_edge("rag_node", END)
-        
-        # Note: web_scraping_node is not connected yet
-        # Future: Add conditional edge from rag_node based on similarity threshold
-        # builder.add_conditional_edges(
-        #     "rag_node",
-        #     self._check_similarity_threshold,
-        #     {
-        #         "proceed": END,
-        #         "web_scrape": "web_scraping_node"
-        #     }
-        # )
-        # builder.add_edge("web_scraping_node", END)
-        
-        # Compile the graph
+
         compiled_graph = builder.compile()
-        
         print("[Orchestrator] LangGraph compiled successfully")
         return compiled_graph
+
     
     def _classifier_node(self, state: GraphState) -> dict:
         """
@@ -211,6 +210,7 @@ class QueryOrchestrator:
         scope = state.get("scope", "shared")
         username = state.get("username")
         collection_name = state.get("collection_name")
+        document_filter = state.get("document_filter")
         
         print(f"[Orchestrator] Processing via RAG pipeline...")
         
@@ -218,7 +218,8 @@ class QueryOrchestrator:
             query=query,
             scope=scope,
             username=username,
-            collection_name=collection_name
+            collection_name=collection_name,
+            document_filter=document_filter,
         )
         
         return {
@@ -229,6 +230,7 @@ class QueryOrchestrator:
             "route_taken": "rag",
             "rewritten_query": result.get("rewritten_query"),
             "needs_web_scraping": result.get("needs_web_scraping", False),
+            "retrieval_debug": result.get("retrieval_debug"),
             "error": result.get("error"),
             "metadata": {
                 **state.get("metadata", {}),
@@ -237,23 +239,25 @@ class QueryOrchestrator:
         }
     
     async def _web_scraping_node(self, state: GraphState) -> dict:
-        """
-        Node that handles web scraping for low similarity scenarios.
-        Currently a placeholder.
-        """
-        query = state["query"]
-        print(f"[Orchestrator] Processing via Web Scraping (placeholder)...")
-        
-        result = await self.web_scraping_node.process(query, context={"previous_result": state})
-        
+        rewritten_query = state.get("rewritten_query") or state["query"]
+
+        print("[Orchestrator] Falling back to Tavily web search")
+
+        result = await self.web_scraping_node.process(
+            query=rewritten_query,
+            context=state
+        )
+
         return {
             "answer": result.get("answer"),
             "justification": result.get("justification"),
             "sources": result.get("sources", []),
             "success": result.get("success", False),
-            "route_taken": "web_scraping",
+            "route_taken": "tavily_web_search",
             "error": result.get("error")
         }
+
+
     
     def _route_query(self, state: GraphState) -> Literal["direct", "rag"]:
         """
@@ -278,7 +282,8 @@ class QueryOrchestrator:
         query: str,
         scope: str = "shared",
         username: Optional[str] = None,
-        collection_name: Optional[str] = None
+        collection_name: Optional[str] = None,
+        document_filter: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Process a query through the orchestration graph.
@@ -288,6 +293,7 @@ class QueryOrchestrator:
             scope: Search scope (shared, personal, combined)
             username: Username for personal document access
             collection_name: Optional specific collection name
+            document_filter: Optional document name to filter within a collection
             
         Returns:
             Dict containing the answer, justification, sources, and metadata
@@ -299,6 +305,7 @@ class QueryOrchestrator:
             "scope": scope,
             "username": username,
             "collection_name": collection_name,
+            "document_filter": document_filter,
             "route": None,
             "answer": None,
             "justification": None,
@@ -323,6 +330,7 @@ class QueryOrchestrator:
                 "sources": result.get("sources", []),
                 "route_taken": result.get("route_taken"),
                 "rewritten_query": result.get("rewritten_query"),
+                "retrieval_debug": result.get("retrieval_debug"),
                 "success": result.get("success", False),
                 "needs_web_scraping": result.get("needs_web_scraping", False),
                 "metadata": result.get("metadata", {})
