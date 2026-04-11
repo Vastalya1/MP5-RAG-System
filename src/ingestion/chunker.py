@@ -2,9 +2,29 @@ import os
 import re
 import json
 from collections import Counter
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 import pdfplumber
 from transformers import AutoTokenizer
+
+try:
+    from shared.heading_detection import normalize_line as _normalize_line, is_probable_heading
+except ImportError:
+    from src.shared.heading_detection import normalize_line as _normalize_line, is_probable_heading
+
+try:
+    from tableHandling.tablePdfRead import (
+        _trim_empty_edges as _trim_table_edges,
+        _table_quality_score as _table_quality_score,
+        _table_acceptance_threshold as _table_acceptance_threshold,
+        _bbox_overlap_ratio as _bbox_overlap_ratio,
+    )
+except ImportError:
+    from src.tableHandling.tablePdfRead import (
+        _trim_empty_edges as _trim_table_edges,
+        _table_quality_score as _table_quality_score,
+        _table_acceptance_threshold as _table_acceptance_threshold,
+        _bbox_overlap_ratio as _bbox_overlap_ratio,
+    )
 
 # Load tokenizer (match your embedding model)
 tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
@@ -13,24 +33,48 @@ tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v
 DEFAULT_MAX_TOKENS = 240
 DEFAULT_OVERLAP = 0.15
 
-# Common keywords often used as section titles in policies.
-SECTION_KEYWORDS = [
-    "coverage", "exclusion", "exclusions", "claim", "claims",
-    "definition", "definitions", "eligibility", "benefit", "benefits",
-    "policy", "conditions", "waiting period", "preamble"
-]
-
 PAGE_NUMBER_RE = re.compile(r"^(?:page\s*)?\d+(?:\s*of\s*\d+)?$", re.IGNORECASE)
-STRUCTURED_HEADING_RE = re.compile(
-    r"^(?:section|clause|part|chapter)\s+[A-Za-z0-9IVXLCM\.]+(?:[\)\.\:-])?\s+.+$",
-    re.IGNORECASE,
-)
-NUMERIC_HEADING_RE = re.compile(r"^(?:def\.\s*)?\d+(?:\.\d+){0,3}[\)\.\:-]?\s+.+$", re.IGNORECASE)
 CLAUSE_ID_RE = re.compile(r"^(?:def\.\s*)?(?P<id>\d+(?:\.\d+){0,3})[\)\.\:-]?", re.IGNORECASE)
-
-
-def _normalize_line(line: str) -> str:
-    return re.sub(r"\s+", " ", line).strip()
+TABLE_EXTRACTION_STRATEGIES = [
+    {
+        "name": "lattice_lines",
+        "min_score": 0.42,
+        "settings": {
+            "vertical_strategy": "lines",
+            "horizontal_strategy": "lines",
+            "snap_tolerance": 3,
+            "join_tolerance": 3,
+            "edge_min_length": 10,
+            "intersection_tolerance": 3,
+        },
+    },
+    {
+        "name": "lattice_loose",
+        "min_score": 0.40,
+        "settings": {
+            "vertical_strategy": "lines",
+            "horizontal_strategy": "lines",
+            "snap_tolerance": 5,
+            "join_tolerance": 6,
+            "edge_min_length": 6,
+            "intersection_tolerance": 5,
+        },
+    },
+    {
+        "name": "stream_text",
+        "min_score": 0.52,
+        "settings": {
+            "vertical_strategy": "text",
+            "horizontal_strategy": "text",
+            "snap_tolerance": 3,
+            "join_tolerance": 3,
+            "text_tolerance": 3,
+            "intersection_tolerance": 5,
+            "min_words_vertical": 2,
+            "min_words_horizontal": 1,
+        },
+    },
+]
 
 
 def _looks_like_toc_page(lines: List[str]) -> bool:
@@ -54,11 +98,123 @@ def _extract_pdf_pages(pdf_path: str) -> List[List[str]]:
     page_lines: List[List[str]] = []
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
-            text = page.extract_text() or ""
-            lines = [_normalize_line(line) for line in text.splitlines()]
-            lines = [line for line in lines if line]
+            lines = _extract_page_lines(page)
             page_lines.append(lines)
     return page_lines
+
+
+def _find_table_bboxes(page: pdfplumber.page.Page) -> List[Tuple[float, float, float, float]]:
+    candidates: List[Dict[str, Any]] = []
+
+    for strategy in TABLE_EXTRACTION_STRATEGIES:
+        try:
+            table_finder = page.debug_tablefinder(strategy["settings"])
+            found_tables = table_finder.tables
+        except Exception:
+            continue
+
+        for table_obj in found_tables:
+            table = table_obj.extract()
+            if not table:
+                continue
+
+            filtered_table = _trim_table_edges(table)
+            if not filtered_table:
+                continue
+
+            score, metrics = _table_quality_score(filtered_table)
+            threshold = max(strategy["min_score"], _table_acceptance_threshold(metrics))
+            if score < threshold:
+                continue
+
+            bbox = tuple(round(float(value), 2) for value in table_obj.bbox)
+            candidates.append(
+                {
+                    "bbox": bbox,
+                    "score": score,
+                    "num_rows": int(metrics.get("rows", len(filtered_table))),
+                    "num_cols": int(metrics.get("cols", max(len(row) for row in filtered_table))),
+                }
+            )
+
+    if not candidates:
+        return []
+
+    ranked = sorted(
+        candidates,
+        key=lambda candidate: (
+            candidate.get("score", 0.0),
+            candidate.get("num_rows", 0) * candidate.get("num_cols", 0),
+        ),
+        reverse=True,
+    )
+
+    selected: List[Dict[str, Any]] = []
+    for candidate in ranked:
+        bbox = candidate["bbox"]
+        if any(_bbox_overlap_ratio(bbox, kept["bbox"]) >= 0.85 for kept in selected):
+            continue
+        selected.append(candidate)
+
+    return [candidate["bbox"] for candidate in sorted(selected, key=lambda item: (item["bbox"][1], item["bbox"][0]))]
+
+
+def _word_inside_table(
+    word: Dict[str, float],
+    table_bboxes: List[Tuple[float, float, float, float]],
+    padding: float = 1.5,
+) -> bool:
+    center_x = (float(word["x0"]) + float(word["x1"])) / 2
+    center_y = (float(word["top"]) + float(word["bottom"])) / 2
+
+    for x0, top, x1, bottom in table_bboxes:
+        if (x0 - padding) <= center_x <= (x1 + padding) and (top - padding) <= center_y <= (bottom + padding):
+            return True
+    return False
+
+
+def _words_to_lines(words: List[Dict[str, float]], y_tolerance: float = 3.0) -> List[str]:
+    if not words:
+        return []
+
+    sorted_words = sorted(words, key=lambda word: (round(float(word["top"]), 1), float(word["x0"])))
+    lines: List[str] = []
+    current_words: List[str] = []
+    current_top: Optional[float] = None
+
+    for word in sorted_words:
+        word_top = float(word["top"])
+        if current_top is None or abs(word_top - current_top) <= y_tolerance:
+            current_words.append(word["text"])
+            if current_top is None:
+                current_top = word_top
+            continue
+
+        line = _normalize_line(" ".join(current_words))
+        if line:
+            lines.append(line)
+
+        current_words = [word["text"]]
+        current_top = word_top
+
+    if current_words:
+        line = _normalize_line(" ".join(current_words))
+        if line:
+            lines.append(line)
+
+    return lines
+
+
+def _extract_page_lines(page: pdfplumber.page.Page) -> List[str]:
+    table_bboxes = _find_table_bboxes(page)
+    if not table_bboxes:
+        text = page.extract_text() or ""
+        lines = [_normalize_line(line) for line in text.splitlines()]
+        return [line for line in lines if line]
+
+    words = page.extract_words(use_text_flow=True, keep_blank_chars=False) or []
+    non_table_words = [word for word in words if not _word_inside_table(word, table_bboxes)]
+    return _words_to_lines(non_table_words)
 
 
 def _remove_repeated_boilerplate(page_lines: List[List[str]]) -> List[List[str]]:
@@ -84,39 +240,6 @@ def _remove_repeated_boilerplate(page_lines: List[List[str]]) -> List[List[str]]
         ]
         cleaned_pages.append(filtered)
     return cleaned_pages
-
-
-def is_probable_heading(line: str) -> bool:
-    line = _normalize_line(line)
-    if not line:
-        return False
-
-    words = line.split()
-    lower = line.lower()
-
-    # Ignore long lines. In these policy PDFs, long lines are usually content, not headings.
-    if len(words) > 14 or len(line) > 140:
-        return False
-
-    # Bullet/list items are usually not section headings.
-    if re.match(r"^(?:[a-z]|[ivxlcdm]+)[\)\.]\s+", lower):
-        return False
-
-    if STRUCTURED_HEADING_RE.match(line):
-        return True
-    if NUMERIC_HEADING_RE.match(line):
-        return True
-    if line.endswith(":") and len(words) <= 12:
-        return True
-    if line.isupper() and 1 < len(words) <= 10:
-        return True
-    if line.istitle() and len(words) <= 8 and not line.endswith("."):
-        return True
-    if any(keyword in lower for keyword in SECTION_KEYWORDS) and len(words) <= 10:
-        return True
-    return False
-
-
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extract text and remove repeated boilerplate lines and TOC-like pages."""
     page_lines = _extract_pdf_pages(pdf_path)

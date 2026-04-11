@@ -1,0 +1,39 @@
+[
+  {
+    "page_number": 13,
+    "table_index": 1,
+    "num_rows": 15,
+    "num_cols": 7,
+    "heading": "TABLE OF BENEFITS FOR DOMESTIC COVER",
+    "spans_pages": false,
+    "markdown": "| COVER                                                        | IMPERIAL PLAN     | IMPERIAL PLAN     | IMPERIAL PLAN     | IMPERIAL PLUS PLAN |                   |                   |\n| ------------------------------------------------------------ | ----------------- | ----------------- | ----------------- | ------------------ | ----------------- | ----------------- |\n| In-patient Hospitalization Treatment Limits                  | INR 3,750,000     | INR 5,600,000     | INR 7,500,000     | INR 11,200,000     | INR 18,750,000    | INR 37,500,000    |\n| In-patient Hospitalization Treatment                         | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |\n| Hospital accommodation (Room rent and ICU)                   | At Actual         | At Actual         | At Actual         | At Actual          | At Actual         | At Actual         |\n| Pre-hospitalisation                                          | 60 days           | 60 days           | 60 days           | 60 days            | 60 days           | 60 days           |\n| Post-hospitalisation                                         | 180 days          | 180 days          | 180 days          | 180 days           | 180 days          | 180 days          |\n| Local (Road) Ambulance                                       | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |\n| Day Care Procedures                                          | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |\n| Living Donor Medical Costs                                   | INR 500,000       | INR 500,000       | INR 500,000       | INR 500,000        | INR 500,000       | INR 500,000       |\n| Annual Preventive Health Check- up (only offered at renewal) | INR 5,000         | INR 5,000         | INR 5,000         | INR 5,000          | INR 5,000         | INR 5,000         |\n| Ayurvedic / Homeopathic Hospitalization Expenses             | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |\n| Air Ambulance                                                | INR 500,000       | INR 675,000       | INR 750,000       | INR 750,000        | INR 750,000       | INR 750,000       |\n| Mental Illness Treatment                                     | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |\n| Rehabilitation                                               | INR 50,000        | INR 50,000        | INR 50,000        | INR 50,000         | INR 50,000        | INR 50,000        |\n| Modern Treatment Methods and Advancement in Technologies     | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured | Up to Sum Insured  | Up to Sum Insured | Up to Sum Insured |",
+    "nl_sentences": [
+      "In-patient Hospitalization Treatment Limits",
+      "In-patient Hospitalization Treatment",
+      "Hospital accommodation (Room rent and ICU)",
+      "Pre-hospitalisation",
+      "Post-hospitalisation",
+      "Local (Road) Ambulance",
+      "Day Care Procedures",
+      "Living Donor Medical Costs",
+      "Annual Preventive Health Check- up (only offered at renewal)",
+      "Ayurvedic / Homeopathic Hospitalization Expenses",
+      "Air Ambulance",
+      "Mental Illness Treatment",
+      "Rehabilitation",
+      "Modern Treatment Methods and Advancement in Technologies"
+    ],
+    "nl_status": "ok",
+    "nl_expected_rows": 14,
+    "nl_generated_rows": 14,
+    "nl_headers": [
+      "COVER",
+      "IMPERIAL PLAN",
+      "IMPERIAL PLAN",
+      "IMPERIAL PLAN",
+      "IMPERIAL PLUS PLAN",
+      "",
+      ""
+    ]
+  }
+]
