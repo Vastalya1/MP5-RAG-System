@@ -7,7 +7,7 @@ This classifier determines whether a query:
 """
 
 from typing import Literal
-from mistralai.client import Mistral
+from mistralai import Mistral
 
 
 class QueryClassifier:

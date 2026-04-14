@@ -15,7 +15,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from mistralai.client import Mistral
+from mistralai import Mistral
 from queryRewriter.rewriting import QueryRewriter
 from retriever.retrival import retrivalModel
 from retriever.reranking_mistral import ChunkReranker

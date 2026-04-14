@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional
 import json
-from mistralai.client import Mistral
+from mistralai import Mistral
 
 class AnswerGenerator:
     def __init__(self, api_key: str):
