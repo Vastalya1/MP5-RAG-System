@@ -23,14 +23,18 @@ Document chunks to rank:
 
 Instructions:
 1. Analyze the relevance of each chunk to the query.
-2. Select the top 5 most relevant chunks.
+2. Select only the chunks truly needed to answer the query accuractely.
+3. The number of chunks selected can vary based on need. Return fewer chunks for specific queries and more only when required.
+4. do not include redundant or weakly relevant chunks.
 3. IMPORTANT: Respond ONLY with the chunk numbers in a comma-separated format.
 4. Do not add any explanations, just the numbers.
 
-Example correct responses:
+Example correct responses can be:
 0,1,2,3,4
-4,2,0,1,3
-1,4,3,2,0
+4
+1,4,3
+0,3,2,1
+3,4
 
 Your response must match this format exactly - just numbers and commas, nothing else.
 Response:"""
