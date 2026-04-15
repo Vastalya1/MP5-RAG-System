@@ -8,10 +8,11 @@ from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 
 from .chunker import chunk_pdfs
+from shared.chroma_config import get_shared_collection_name
 
 
 class DocumentEmbedder:
-    def __init__(self, collection_name: str = "temp_dataset"):
+    def __init__(self, collection_name: str | None = None):
         """Initialize the embedder with SBERT model and ChromaDB."""
         env_path = Path(__file__).resolve().parents[2] / ".env"
         load_dotenv(env_path)
@@ -29,8 +30,9 @@ class DocumentEmbedder:
             database='Major-Project'
             )
 
+        resolved_collection_name = collection_name or get_shared_collection_name()
         self.collection = self.client.get_or_create_collection(
-            name=collection_name,
+            name=resolved_collection_name,
             metadata={"hnsw:space": "cosine"},
         )
 

@@ -104,6 +104,7 @@ Referenced from Section: [section_heading]"""
                     "justification": justification,
                     "source_chunks": [
                         {
+                            "chunk_id": chunk.get("chunk_id", ""),
                             "document": chunk["metadata"]["document_name"],
                             "section": chunk["metadata"]["section_heading"],
                             "text": chunk["text"][:200] + "...",

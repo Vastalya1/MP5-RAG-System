@@ -20,10 +20,11 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 from ingestion.ingestionPipeline import IngestionPipeline
 from ingestion.chunker import chunk_pdfs
 from ingestion.embedder import DocumentEmbedder
+from shared.chroma_config import get_shared_collection_name
 
 
 def ingest_sample_dataset(
-    collection_name: str = "dataset",
+    collection_name: str | None = None,
     save_chunks_json: bool = False
 ) -> None:
     """
@@ -57,14 +58,15 @@ def ingest_sample_dataset(
         chunk_output_dir = str(current_dir / "output")
     
     # Create and run the ingestion pipeline
+    resolved_collection_name = collection_name or get_shared_collection_name()
     pipeline = IngestionPipeline(
         dataset_dir=str(sample_dataset_dir),
-        collection_name=collection_name,
+        collection_name=resolved_collection_name,
         chunk_output_dir=chunk_output_dir,
     )
     
     print(f"\nStarting ingestion pipeline...")
-    print(f"Collection name: {collection_name}")
+    print(f"Collection name: {resolved_collection_name}")
     print("-" * 50)
     
     pipeline.run()
@@ -75,7 +77,7 @@ def ingest_sample_dataset(
 
 def ingest_specific_files(
     file_paths: list,
-    collection_name: str = "dataset"
+    collection_name: str | None = None
 ) -> None:
     """
     Ingest specific PDF files into ChromaDB.
@@ -87,9 +89,10 @@ def ingest_specific_files(
     current_dir = Path(__file__).resolve().parent
     sample_dataset_dir = current_dir / "sampleDataset"
     
+    resolved_collection_name = collection_name or get_shared_collection_name()
     pipeline = IngestionPipeline(
         dataset_dir=str(sample_dataset_dir),
-        collection_name=collection_name,
+        collection_name=resolved_collection_name,
         file_paths=file_paths,
     )
     
@@ -100,6 +103,6 @@ if __name__ == "__main__":
     # Run the ingestion for sampleDataset folder
     # Collection name: dataset
     ingest_sample_dataset(
-        collection_name="dataset",
+        collection_name=get_shared_collection_name(),
         save_chunks_json=False  # Set to True if you want to save chunks to JSON
     )

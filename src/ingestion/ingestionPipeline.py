@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from .chunker import chunk_pdf_files, DEFAULT_MAX_TOKENS, DEFAULT_OVERLAP
 from .embedder import DocumentEmbedder
+from shared.chroma_config import get_shared_collection_name
 
 try:
     from ..tableHandling.tablePdfRead import extract_tables_from_pdf
@@ -18,7 +19,7 @@ class IngestionPipeline:
     def __init__(
         self,
         dataset_dir: str,
-        collection_name: str = "temp_dataset",
+        collection_name: Optional[str] = None,
         chunk_output_dir: Optional[str] = None,
         file_paths: Optional[List[str]] = None,
         table_sentence_model: str = "mistral-medium-latest",
@@ -35,11 +36,11 @@ class IngestionPipeline:
         """
         self.dataset_dir = Path(dataset_dir)
         self.chunk_output_dir = Path(chunk_output_dir) if chunk_output_dir else None
-        self.collection_name = collection_name
+        self.collection_name = collection_name or get_shared_collection_name()
         self.file_paths = file_paths
         self.table_sentence_model = table_sentence_model
 
-        self.embedder = DocumentEmbedder(collection_name=collection_name)
+        self.embedder = DocumentEmbedder(collection_name=self.collection_name)
         self.document_chunks: Dict[str, List[Dict[str, Any]]] = {}
         self.document_tables: Dict[str, List[Dict[str, Any]]] = {}
         self.document_table_sentences: Dict[str, List[Dict[str, Any]]] = {}
@@ -260,7 +261,7 @@ if __name__ == "__main__":
     dataset_dir = r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\src\ingestion\temp_dataset"
     pipeline = IngestionPipeline(
         dataset_dir=dataset_dir,
-        collection_name="temp_dataset",
+        collection_name=get_shared_collection_name(),
         chunk_output_dir=None,
     )
     pipeline.run()

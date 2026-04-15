@@ -9,6 +9,8 @@ import chromadb
 from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
 
+from shared.chroma_config import get_shared_collection_name
+
 
 class retrivalModel:
     def __init__(self):
@@ -40,10 +42,13 @@ class retrivalModel:
         ]
         return " ".join(part.strip() for part in parts if part and str(part).strip())
 
-    def _get_collection(self, collection_name: str):
-        return self.client.get_collection(name=collection_name)
+    def _resolve_collection_name(self, collection_name: str | None) -> str:
+        return collection_name or get_shared_collection_name()
 
-    def _get_all_chunks(self, collection_name: str = "dataset", document_filter: str = None) -> list[dict]:
+    def _get_collection(self, collection_name: str | None):
+        return self.client.get_collection(name=self._resolve_collection_name(collection_name))
+
+    def _get_all_chunks(self, collection_name: str | None = None, document_filter: str = None) -> list[dict]:
         try:
             collection = self._get_collection(collection_name)
             get_params: dict[str, Any] = {
@@ -71,12 +76,16 @@ class retrivalModel:
             print(f"Error fetching all chunks for keyword retrieval: {str(e)}")
             return []
 
-    def _get_keyword_index(self, collection_name: str = "dataset", document_filter: str = None) -> dict[str, Any] | None:
-        cache_key = (collection_name, document_filter)
+    def _get_keyword_index(self, collection_name: str | None = None, document_filter: str = None) -> dict[str, Any] | None:
+        resolved_collection_name = self._resolve_collection_name(collection_name)
+        cache_key = (resolved_collection_name, document_filter)
         if cache_key in self._keyword_index_cache:
             return self._keyword_index_cache[cache_key]
 
-        chunks = self._get_all_chunks(collection_name=collection_name, document_filter=document_filter)
+        chunks = self._get_all_chunks(
+            collection_name=resolved_collection_name,
+            document_filter=document_filter,
+        )
         if not chunks:
             return None
 
@@ -100,7 +109,7 @@ class retrivalModel:
         self._keyword_index_cache[cache_key] = index
         return index
 
-    def semantic_search(self, rewritten_query: str, collection_name: str = "dataset", top_k: int = 15, document_filter: str = None) -> list[dict]:
+    def semantic_search(self, rewritten_query: str, collection_name: str | None = None, top_k: int = 15, document_filter: str = None) -> list[dict]:
         try:
             collection = self._get_collection(collection_name)
             query_embedding = self.model.encode([rewritten_query]).tolist()
@@ -137,7 +146,7 @@ class retrivalModel:
             print(f"Error in semantic retrieval: {str(e)}")
             return []
 
-    def keyword_search(self, rewritten_query: str, collection_name: str = "dataset", top_k: int = 15, document_filter: str = None) -> list[dict]:
+    def keyword_search(self, rewritten_query: str, collection_name: str | None = None, top_k: int = 15, document_filter: str = None) -> list[dict]:
         try:
             index = self._get_keyword_index(collection_name=collection_name, document_filter=document_filter)
             if not index:
@@ -167,7 +176,7 @@ class retrivalModel:
             print(f"Error in keyword retrieval: {str(e)}")
             return []
 
-    def hybrid_search(self, rewritten_query: str, collection_name: str = "dataset", top_k: int = 15, document_filter: str = None) -> list[dict]:
+    def hybrid_search(self, rewritten_query: str, collection_name: str | None = None, top_k: int = 15, document_filter: str = None) -> list[dict]:
         semantic_k = max(top_k * 2, 15)
         keyword_k = max(top_k * 2, 15)
 
@@ -213,7 +222,7 @@ class retrivalModel:
         print(f" Retrieved {len(merged_chunks)} hybrid chunks after fusion")
         return merged_chunks
 
-    def retrive_Chunks(self, rewritten_query: str, collection_name: str = "dataset", top_k: int = 15, document_filter: str = None):
+    def retrive_Chunks(self, rewritten_query: str, collection_name: str | None = None, top_k: int = 15, document_filter: str = None):
         """Retrieve relevant document chunks using hybrid search over semantic and keyword retrieval."""
         try:
             return self.hybrid_search(

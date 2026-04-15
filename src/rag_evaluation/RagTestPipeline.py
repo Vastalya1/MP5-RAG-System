@@ -26,6 +26,7 @@ from queryRewriter.rewriting import QueryRewriter
 from retriever.retrival import retrivalModel
 from retriever.reranking_mistral import ChunkReranker
 from output.answerGeneration_mistral import AnswerGenerator
+from shared.chroma_config import get_shared_collection_name
 
 
 class RAGTestPipeline:
@@ -54,7 +55,7 @@ class RAGTestPipeline:
         self, 
         question_id: int, 
         question: str,
-        collection_name: str = "dataset",
+        collection_name: str | None = None,
         policy_id: str = None
     ) -> Dict[str, Any]:
         """
@@ -145,7 +146,7 @@ class RAGTestPipeline:
         excel_path: str, 
         sheet_name: str = "dataset",
         output_path: str = None,
-        collection_name: str = "dataset"
+        collection_name: str | None = None
     ) -> List[Dict[str, Any]]:
         """
         Run the RAG pipeline on all questions from the Excel file.
@@ -245,7 +246,7 @@ async def main():
         excel_path=str(excel_path),
         sheet_name="dataset",
         output_path=str(output_path),
-        collection_name="dataset"
+        collection_name=get_shared_collection_name()
     )
     
     print(f"\n[RAGTestPipeline] Processed {len(results)} questions")

@@ -13,6 +13,7 @@ from output.answerGeneration_Chatgpt import AnswerGenerator
 from queryRewriter.rewriting_Chatgpt import QueryRewriter
 from retriever.reranking_Chatgpt import ChunkReranker
 from retriever.retrival import retrivalModel
+from shared.chroma_config import get_personal_collection_name, get_shared_collection_name
 
 
 def build_retrieval_debug(chunks: List[Dict]) -> Dict[str, Any]:
@@ -234,32 +235,32 @@ class RAGSubQueryProcessor:
         if scope == "shared":
             return self.retriever.retrive_Chunks(
                 rewritten_query,
-                collection_name="dataset",
+                collection_name=get_shared_collection_name(),
                 document_filter=document_filter,
             )
 
         if scope == "personal" and username:
             return self.retriever.retrive_Chunks(
                 rewritten_query,
-                collection_name=f"user_{username}_documents",
+                collection_name=get_personal_collection_name(username),
                 document_filter=document_filter,
             )
 
         if scope == "combined" and username:
             shared_chunks = self.retriever.retrive_Chunks(
                 rewritten_query,
-                collection_name="dataset",
+                collection_name=get_shared_collection_name(),
                 document_filter=document_filter,
             )
             personal_chunks = self.retriever.retrive_Chunks(
                 rewritten_query,
-                collection_name=f"user_{username}_documents",
+                collection_name=get_personal_collection_name(username),
                 document_filter=document_filter,
             )
             return shared_chunks + personal_chunks
 
         return self.retriever.retrive_Chunks(
             rewritten_query,
-            collection_name="dataset",
+            collection_name=get_shared_collection_name(),
             document_filter=document_filter,
         )
