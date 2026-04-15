@@ -2,6 +2,6 @@
 Query decomposition package.
 """
 
-from .orchestrator import QueryDecompositionOrchestrator
+from .orchestrator_Chatgpt import QueryDecompositionOrchestrator
 
 __all__ = ["QueryDecompositionOrchestrator"]

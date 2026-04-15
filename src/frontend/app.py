@@ -6,6 +6,7 @@ from starlette.middleware.sessions import SessionMiddleware
 import shutil
 import os
 from pathlib import Path
+import chromadb
 import hashlib
 import hmac
 import psycopg2
@@ -74,12 +75,15 @@ PWD_CONTEXT = CryptContext(schemes=["argon2"], deprecated="auto")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 DISABLE_CSRF = os.getenv("DISABLE_CSRF", "false").lower() in {"1", "true", "yes"}
 CHROMA_SHARED_COLLECTION_NAME = get_shared_collection_name()
+CHROMA_CLOUD_TENANT = os.getenv("CHROMA_CLOUD_TENANT", "a92961b0-ea65-4a82-a7ad-321a4baaaa60")
+CHROMA_CLOUD_DATABASE = os.getenv("CHROMA_CLOUD_DATABASE", "Major-Project")
 
 _retriever_instance: retrivalModel | None = None
 _rewriter_instance: QueryRewriter | None = None
 _reranker_instance: ChunkReranker | None = None
 _answer_generator_instance: AnswerGenerator | None = None
 _orchestrator_instance: QueryOrchestrator | None = None
+_chroma_client_instance = None
 
 # Flag to enable/disable orchestration (set to True to use LangGraph orchestration)
 USE_ORCHESTRATION = os.getenv("USE_ORCHESTRATION", "true").lower() in {"1", "true", "yes"}
@@ -128,6 +132,19 @@ def _get_orchestrator() -> QueryOrchestrator:
             answer_generator=_get_answer_generator()
         )
     return _orchestrator_instance
+
+def _get_chroma_client():
+    global _chroma_client_instance
+    if _chroma_client_instance is None:
+        api_key = os.getenv("CHROMA_CLOUD_API_KEY")
+        if not api_key:
+            raise RuntimeError("CHROMA_CLOUD_API_KEY is required for Chroma access.")
+        _chroma_client_instance = chromadb.CloudClient(
+            api_key=api_key,
+            tenant=CHROMA_CLOUD_TENANT,
+            database=CHROMA_CLOUD_DATABASE,
+        )
+    return _chroma_client_instance
 
 def _hash_password(password: str, salt: str) -> str:
     return hashlib.pbkdf2_hmac(
@@ -466,36 +483,56 @@ def _list_uploaded_files(scope: str, username: str | None = None) -> list[dict]:
                 for row in cursor.fetchall()
             ]
 
+def _list_chroma_document_names(collection_name: str | None) -> list[str]:
+    if not collection_name:
+        return []
+
+    try:
+        collection = _get_chroma_client().get_collection(name=collection_name)
+        results = collection.get(include=["metadatas"])
+    except Exception as exc:
+        print(f"[DocumentOptions] Failed to read Chroma collection '{collection_name}': {exc}")
+        return []
+
+    document_names: set[str] = set()
+    for metadata in results.get("metadatas") or []:
+        if not metadata:
+            continue
+        document_name = str(metadata.get("document_name", "")).strip()
+        if document_name:
+            document_names.add(document_name)
+
+    return sorted(document_names, key=str.lower)
+
 def _get_document_options(user: dict) -> list[dict]:
     options = [{"value": "", "label": "All policy documents"}]
     seen: set[tuple[str, str]] = set()
 
-    for item in _list_uploaded_files("shared"):
-        filename = item["filename"]
-        key = ("shared", filename)
-        if key in seen:
-            continue
+    def append_option(scope: str, filename: str, label_suffix: str) -> None:
+        normalized_filename = (filename or "").strip()
+        key = (scope, normalized_filename)
+        if not normalized_filename or key in seen:
+            return
         seen.add(key)
         options.append(
             {
-                "value": f"shared::{filename}",
-                "label": f"{filename} (Shared)",
+                "value": f"{scope}::{normalized_filename}",
+                "label": f"{normalized_filename} ({label_suffix})",
             }
         )
 
-    personal_files = _list_uploaded_files("personal", user.get("username"))
-    for item in personal_files:
-        filename = item["filename"]
-        key = ("personal", filename)
-        if key in seen:
-            continue
-        seen.add(key)
-        options.append(
-            {
-                "value": f"personal::{filename}",
-                "label": f"{filename} (Personal)",
-            }
-        )
+    for filename in _list_chroma_document_names(CHROMA_SHARED_COLLECTION_NAME):
+        append_option("shared", filename, "Shared")
+
+    for item in _list_uploaded_files("shared"):
+        append_option("shared", item["filename"], "Shared")
+
+    personal_collection_name = get_personal_collection_name(user.get("username", ""))
+    for filename in _list_chroma_document_names(personal_collection_name):
+        append_option("personal", filename, "Personal")
+
+    for item in _list_uploaded_files("personal", user.get("username")):
+        append_option("personal", item["filename"], "Personal")
 
     return options
 
