@@ -1,0 +1,149 @@
+from typing import Dict, List
+
+from openai import OpenAI
+
+
+class AnswerGenerator:
+    def __init__(self, api_key: str):
+        """Initialize the Answer Generator with OpenAI API."""
+        self.client = OpenAI(api_key=api_key)
+        self.model_name = "gpt-4o-mini"
+
+        self.ANSWER_PROMPT = """You are an expert assistant specialized in medical insurance policies.
+
+A user has asked the following question:
+"{rewritten_query}"
+
+Below are the most relevant document chunks from the insurance policy, along with their section headings:
+
+{chunks_text}
+
+Instructions:
+
+1. Carefully read all the provided chunks. Focus on the top 5 most relevant chunks if there are many.
+
+2. Provide a clear, concise, and easy-to-understand answer for a common user, avoiding unnecessary technical terms.
+
+3. Use medical and insurance terminology only when needed, and explain it in simple words if you do.
+
+4. Justify your answer by referencing the chunk(s) used and their section headings.
+
+5. If information is missing or unclear, explicitly say that instead of guessing.
+
+6. Do not hallucinate.
+
+7. IMPORTANT: Return PLAIN TEXT only. Do NOT use any markdown formatting such as:
+   - No asterisks for bold (**text**)
+   - No underscores for italics
+   - No hash symbols for headings
+   - No bullet points with dashes or asterisks
+   - No horizontal rules (---)
+   Just use plain sentences and paragraphs.
+
+Present your answer in this format:
+
+Answer:
+[Your plain text answer here, simple and readable]
+
+Justification:
+Referenced from Section: [section_heading]"""
+
+    def _format_chunks_for_prompt(self, chunks: List[Dict]) -> str:
+        """Format chunks into a string for the prompt."""
+        chunks_text = ""
+        for i, chunk in enumerate(chunks, 1):
+            chunks_text += f"\nChunk {i}:\n"
+            chunks_text += f"Section: {chunk['metadata']['section_heading']}\n"
+            chunks_text += f"Text: {chunk['text']}\n"
+            chunks_text += "-" * 80 + "\n"
+        return chunks_text
+
+    def generate_answer_sync(self, rewritten_query: str, reranked_chunks: List[Dict]) -> Dict:
+        """
+        Synchronously generate an answer for thread-based execution paths.
+        """
+        try:
+            chunks_text = self._format_chunks_for_prompt(reranked_chunks)
+
+            prompt = self.ANSWER_PROMPT.format(
+                rewritten_query=rewritten_query,
+                chunks_text=chunks_text,
+            )
+
+            messages = [
+                {
+                    "role": "system",
+                    "content": "You are an expert assistant specialized in medical insurance policies. Provide clear, concise answers and always reference the relevant policy sections.",
+                },
+                {"role": "user", "content": prompt},
+            ]
+
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                temperature=0.3,
+                top_p=0.95,
+                max_tokens=500,
+            )
+
+            if response and response.choices:
+                answer_text = (response.choices[0].message.content or "").strip()
+                answer_parts = answer_text.split("Justification:")
+                main_answer = answer_parts[0].replace("Answer:", "").strip()
+
+                justification = ""
+                if len(answer_parts) > 1:
+                    section_parts = answer_parts[1].split("Referenced from Section:")
+                    if len(section_parts) > 1:
+                        justification = "Referenced from Section: " + section_parts[1].strip()
+                    else:
+                        justification = answer_parts[1].strip()
+
+                response_object = {
+                    "answer": main_answer,
+                    "justification": justification,
+                    "source_chunks": [
+                        {
+                            "document": chunk["metadata"]["document_name"],
+                            "section": chunk["metadata"]["section_heading"],
+                            "text": chunk["text"][:200] + "...",
+                        }
+                        for chunk in reranked_chunks[:5]
+                    ],
+                    "metadata": {
+                        "original_query": rewritten_query,
+                        "num_chunks_used": len(reranked_chunks),
+                    },
+                }
+
+                print(" Successfully generated answer")
+                return response_object
+
+            raise Exception("Empty response from OpenAI")
+
+        except Exception as e:
+            error_response = {
+                "error": str(e),
+                "answer": "I apologize, but I encountered an error while generating the answer. Please try rephrasing your question.",
+                "justification": None,
+                "source_chunks": [],
+                "metadata": {
+                    "error_type": type(e).__name__,
+                    "original_query": rewritten_query,
+                },
+            }
+            print(f"Error in answer generation: {str(e)}")
+            return error_response
+
+    async def generate_answer(self, rewritten_query: str, reranked_chunks: List[Dict]) -> Dict:
+        """
+        Generate an answer using the rewritten query and reranked chunks
+
+        Args:
+            rewritten_query: The query after being processed by QueryRewriter
+            reranked_chunks: List of chunks after being processed by ChunkReranker
+
+        Returns:
+            Dict containing the generated answer and metadata
+        """
+        return self.generate_answer_sync(rewritten_query, reranked_chunks)
