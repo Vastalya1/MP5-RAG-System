@@ -29,6 +29,7 @@ from output.answerGeneration_Chatgpt import AnswerGenerator
 # Import LangGraph orchestrator
 # from orchestration.orchestrator import QueryOrchestrator, create_orchestrator
 from orchestration.orchestrator_Chatgpt import QueryOrchestrator, create_orchestrator
+from orchestration.scope_guard_Chatgpt import FALLBACK_MESSAGE, QueryScopeGuard
 # Import your ingestion pipeline and other necessary components
 # from ingestion.ingestionPipeline import IngestionPipeline
 from ingestion.ingestionPipeline_Chatgpt import IngestionPipeline
@@ -83,6 +84,7 @@ _rewriter_instance: QueryRewriter | None = None
 _reranker_instance: ChunkReranker | None = None
 _answer_generator_instance: AnswerGenerator | None = None
 _orchestrator_instance: QueryOrchestrator | None = None
+_scope_guard_instance: QueryScopeGuard | None = None
 _chroma_client_instance = None
 
 # Flag to enable/disable orchestration (set to True to use LangGraph orchestration)
@@ -132,6 +134,37 @@ def _get_orchestrator() -> QueryOrchestrator:
             answer_generator=_get_answer_generator()
         )
     return _orchestrator_instance
+
+def _get_scope_guard() -> QueryScopeGuard:
+    global _scope_guard_instance
+    if not OPENAI_API_KEY:
+        raise RuntimeError("OPENAI_API_KEY is required for query scope checks.")
+    if _scope_guard_instance is None:
+        _scope_guard_instance = QueryScopeGuard(OPENAI_API_KEY)
+    return _scope_guard_instance
+
+def _get_current_topic_context(request: Request) -> tuple[str | None, str | None]:
+    topic = request.session.get("current_topic")
+    if not isinstance(topic, dict):
+        return None, None
+    topic_query = topic.get("query")
+    topic_answer = topic.get("answer")
+    return topic_query, topic_answer
+
+def _update_current_topic_context(request: Request, query: str, answer: str) -> None:
+    request.session["current_topic"] = {
+        "query": query[:500],
+        "answer": answer[:1000],
+    }
+
+def _build_out_of_scope_response() -> dict:
+    return {
+        "response": FALLBACK_MESSAGE,
+        "justification": None,
+        "sources": [],
+        "route_taken": "out_of_scope",
+        "retrieval_debug": None,
+    }
 
 def _get_chroma_client():
     global _chroma_client_instance
@@ -1117,6 +1150,27 @@ async def query(
                 "selected_document": document_filter,
             },
         )
+
+        topic_query, topic_answer = _get_current_topic_context(request)
+        scope_guard = _get_scope_guard()
+        query_in_scope = scope_guard.is_in_scope(
+            query=query,
+            current_topic_query=topic_query,
+            current_topic_answer=topic_answer,
+        )
+
+        if not query_in_scope:
+            response_payload = _build_out_of_scope_response()
+            _save_query_history(
+                user.get("username"),
+                user.get("role"),
+                effective_scope,
+                query,
+                response_payload["response"],
+                response_payload["justification"],
+                response_payload["sources"],
+            )
+            return response_payload
         
         if USE_ORCHESTRATION:
             # Use LangGraph orchestration for intelligent routing
@@ -1147,6 +1201,8 @@ async def query(
                 justification_text,
                 sources,
             )
+            if result.get("success") and response_text:
+                _update_current_topic_context(request, query, response_text)
 
             return {
                 "response": response_text,
@@ -1237,6 +1293,8 @@ async def query(
                 justification_text,
                 sources,
             )
+            if response_text:
+                _update_current_topic_context(request, query, response_text)
 
             return {
                 "response": response_text,
