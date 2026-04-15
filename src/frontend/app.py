@@ -72,6 +72,10 @@ PASSWORD_MIN_LENGTH = int(os.getenv("PASSWORD_MIN_LENGTH", "8"))
 PWD_CONTEXT = CryptContext(schemes=["argon2"], deprecated="auto")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 DISABLE_CSRF = os.getenv("DISABLE_CSRF", "false").lower() in {"1", "true", "yes"}
+CHROMA_UPLOAD_COLLECTION_NAME = os.getenv("CHROMA_UPLOAD_COLLECTION_NAME", "temp_dataset")
+CHROMA_SHARED_COLLECTION_NAME = os.getenv("CHROMA_SHARED_COLLECTION_NAME", "dataset")
+CHROMA_PERSONAL_COLLECTION_PREFIX = os.getenv("CHROMA_PERSONAL_COLLECTION_PREFIX", "user_")
+CHROMA_PERSONAL_COLLECTION_SUFFIX = os.getenv("CHROMA_PERSONAL_COLLECTION_SUFFIX", "_documents")
 
 _retriever_instance: retrivalModel | None = None
 _rewriter_instance: QueryRewriter | None = None
@@ -81,6 +85,10 @@ _orchestrator_instance: QueryOrchestrator | None = None
 
 # Flag to enable/disable orchestration (set to True to use LangGraph orchestration)
 USE_ORCHESTRATION = os.getenv("USE_ORCHESTRATION", "true").lower() in {"1", "true", "yes"}
+
+
+def _get_personal_collection_name(username: str) -> str:
+    return f"{CHROMA_PERSONAL_COLLECTION_PREFIX}{username}{CHROMA_PERSONAL_COLLECTION_SUFFIX}"
 
 def _get_retriever() -> retrivalModel:
     global _retriever_instance
@@ -886,7 +894,7 @@ async def upload_policy(
         # Process the new policy
         pipeline = IngestionPipeline(
             dataset_dir=str(UPLOAD_DIR),
-            collection_name="dataset",
+            collection_name=CHROMA_UPLOAD_COLLECTION_NAME,
             file_paths=[str(file_path)],
         )
         pipeline.run()
@@ -927,7 +935,7 @@ async def upload_personal(
 
         pipeline = IngestionPipeline(
             dataset_dir=str(user_dir),
-            collection_name=f"user_{user['username']}_documents",
+            collection_name=_get_personal_collection_name(user["username"]),
             file_paths=[str(file_path)],
         )
         pipeline.run()
@@ -1062,10 +1070,10 @@ async def query(
         collection_name = None
         if selected_scope == "shared":
             effective_scope = "shared"
-            collection_name = "dataset"
+            collection_name = CHROMA_SHARED_COLLECTION_NAME
         elif selected_scope == "personal":
             effective_scope = "personal"
-            collection_name = f"user_{user['username']}_documents"
+            collection_name = _get_personal_collection_name(user["username"])
 
         _record_audit_event(
             user.get("username"),
@@ -1127,24 +1135,24 @@ async def query(
             if effective_scope == "shared":
                 chunks = retriever.retrive_Chunks(
                     rewritten_query,
-                    collection_name="dataset",
+                    collection_name=CHROMA_SHARED_COLLECTION_NAME,
                     document_filter=document_filter,
                 )
             elif effective_scope == "personal":
                 chunks = retriever.retrive_Chunks(
                     rewritten_query,
-                    collection_name=f"user_{user['username']}_documents",
+                    collection_name=_get_personal_collection_name(user["username"]),
                     document_filter=document_filter,
                 )
             elif effective_scope == "combined":
                 chunks = retriever.retrive_Chunks(
                     rewritten_query,
-                    collection_name="dataset",
+                    collection_name=CHROMA_SHARED_COLLECTION_NAME,
                     document_filter=document_filter,
                 )
                 chunks += retriever.retrive_Chunks(
                     rewritten_query,
-                    collection_name=f"user_{user['username']}_documents",
+                    collection_name=_get_personal_collection_name(user["username"]),
                     document_filter=document_filter,
                 )
             else:
