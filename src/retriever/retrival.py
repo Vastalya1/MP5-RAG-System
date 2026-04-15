@@ -25,6 +25,7 @@ class retrivalModel:
             tenant='a92961b0-ea65-4a82-a7ad-321a4baaaa60',
             database='Major-Project'
             )
+        self._keyword_index_cache: dict[tuple[str, str | None], dict[str, Any]] = {}
 
     def _tokenize(self, text: str) -> list[str]:
         return re.findall(r"[a-z0-9]+", (text or "").lower())

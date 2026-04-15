@@ -18,6 +18,7 @@ from .nodes import (
     rag_process_node,
     web_scraping_node,
 )
+from .rag_pipeline import RAGSubQueryProcessor
 
 __all__ = [
     "QueryOrchestrator",
@@ -25,6 +26,7 @@ __all__ = [
     "QueryClassifier",
     "DirectLLMNode",
     "RAGProcessNode",
+    "RAGSubQueryProcessor",
     "WebScrapingNode",
     "direct_llm_node",
     "rag_process_node",

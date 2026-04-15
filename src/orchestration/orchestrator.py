@@ -6,9 +6,8 @@ It routes queries between Direct LLM and RAG processing paths based on
 classification performed BEFORE query rewriting.
 """
 
-from typing import TypedDict, Literal, Optional, Any, Dict, List, Annotated
+from typing import Literal, Optional, Any, Dict, List
 from typing_extensions import TypedDict
-import operator
 
 from langgraph.graph import StateGraph, START, END
 
@@ -59,6 +58,7 @@ class GraphState(TypedDict):
     route_taken: Optional[str]
     needs_web_scraping: bool
     error: Optional[str]
+    sub_query_results: List[Dict[str, Any]]
     metadata: Dict[str, Any]
 
 
@@ -231,15 +231,18 @@ class QueryOrchestrator:
             "rewritten_query": result.get("rewritten_query"),
             "needs_web_scraping": result.get("needs_web_scraping", False),
             "retrieval_debug": result.get("retrieval_debug"),
+            "sub_query_results": result.get("sub_query_results", []),
             "error": result.get("error"),
             "metadata": {
                 **state.get("metadata", {}),
-                "top_chunk_distance": result.get("top_chunk_distance")
+                "top_chunk_distance": result.get("top_chunk_distance"),
+                "sub_query_results": result.get("sub_query_results", []),
             }
         }
     
     async def _web_scraping_node(self, state: GraphState) -> dict:
-        rewritten_query = state.get("rewritten_query") or state["query"]
+        metadata = state.get("metadata", {})
+        rewritten_query = state["query"] if metadata.get("decomposition_used") else (state.get("rewritten_query") or state["query"])
 
         print("[Orchestrator] Falling back to Tavily web search")
 
@@ -314,6 +317,7 @@ class QueryOrchestrator:
             "route_taken": None,
             "needs_web_scraping": False,
             "error": None,
+            "sub_query_results": [],
             "metadata": {}
         }
         

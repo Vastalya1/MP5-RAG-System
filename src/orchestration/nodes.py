@@ -8,7 +8,6 @@ This module contains the three main processing nodes:
 """
 
 from typing import Dict, List, Any, Optional
-from dataclasses import dataclass
 import sys
 from pathlib import Path
 
@@ -20,41 +19,10 @@ from queryRewriter.rewriting import QueryRewriter
 from retriever.retrival import retrivalModel
 from retriever.reranking_mistral import ChunkReranker
 from output.answerGeneration_mistral import AnswerGenerator
+from queryDecomposition.orchestrator import QueryDecompositionOrchestrator
 from tavily_fallback.tavily_client import TavilySearchClient
 from tavily_fallback.tavily_service import TavilyService
-
-
-def _build_retrieval_debug(chunks: List[Dict]) -> Dict[str, Any]:
-    source_counts = {"semantic": 0, "keyword": 0, "both": 0}
-    top_chunks: List[Dict[str, Any]] = []
-
-    for chunk in (chunks or [])[:5]:
-        matched_by = chunk.get("matched_by", []) or []
-        matched_set = set(matched_by)
-        if matched_set == {"semantic"}:
-            source_counts["semantic"] += 1
-        elif matched_set == {"keyword"}:
-            source_counts["keyword"] += 1
-        elif matched_set:
-            source_counts["both"] += 1
-
-        metadata = chunk.get("metadata", {}) or {}
-        top_chunks.append(
-            {
-                "document": metadata.get("document_name", "unknown_document"),
-                "section": metadata.get("section_heading", "General"),
-                "matched_by": sorted(matched_set),
-                "hybrid_score": chunk.get("hybrid_score"),
-                "semantic_score": chunk.get("semantic_score"),
-                "keyword_score": chunk.get("keyword_score"),
-            }
-        )
-
-    return {
-        "top_chunk_count": len((chunks or [])[:5]),
-        "source_counts": source_counts,
-        "top_chunks": top_chunks,
-    }
+from .rag_pipeline import RAGSubQueryProcessor
 
 
 class DirectLLMNode:
@@ -144,11 +112,6 @@ class RAGProcessNode:
     Uses the full RAG pipeline: Query Rewriting -> Retrieval -> Reranking -> Answer Generation
     """
     
-    # Threshold for triggering web scraping (when distance is too high, meaning low similarity)
-    # ChromaDB uses cosine distance: 0 = identical, 2 = opposite
-    # Distance > 1.2 indicates poor similarity (less than ~40% similar)
-    DISTANCE_THRESHOLD = 1.3
-    
     def __init__(
         self,
         api_key: str,
@@ -168,10 +131,17 @@ class RAGProcessNode:
             answer_generator: Optional pre-initialized AnswerGenerator
         """
         self.api_key = api_key
-        self.rewriter = rewriter or QueryRewriter(api_key)
-        self.retriever = retriever or retrivalModel()
-        self.reranker = reranker or ChunkReranker(api_key)
-        self.answer_generator = answer_generator or AnswerGenerator(api_key)
+        self.pipeline = RAGSubQueryProcessor(
+            api_key=api_key,
+            rewriter=rewriter,
+            retriever=retriever,
+            reranker=reranker,
+            answer_generator=answer_generator,
+        )
+        self.decomposition_orchestrator = QueryDecompositionOrchestrator(
+            api_key=api_key,
+            rag_processor=self.pipeline,
+        )
     
     async def process(
         self,
@@ -195,62 +165,31 @@ class RAGProcessNode:
             Dict containing the answer, justification, sources, and metadata
         """
         try:
-            # Step 1: Query Rewriting
-            print(f"[RAGProcessNode] Step 1: Rewriting query...")
-            rewritten_query = await self.rewriter.rewrite_query(query)
-            if not rewritten_query:
-                rewritten_query = query
-            print(f"[RAGProcessNode] Rewritten: {rewritten_query}")
-            
-            # Step 2: Retrieval
-            print(f"[RAGProcessNode] Step 2: Retrieving chunks...")
-            chunks = self._retrieve_chunks(
-                rewritten_query,
-                scope,
-                username,
-                collection_name,
-                document_filter,
+            print(f"[RAGProcessNode] Starting decomposition-aware RAG pipeline...")
+            result = await self.decomposition_orchestrator.process_query(
+                query=query,
+                scope=scope,
+                username=username,
+                collection_name=collection_name,
+                document_filter=document_filter,
             )
-            
-            if not chunks:
-                return {
-                    "answer": "No relevant policy content found for this question.",
-                    "justification": None,
-                    "sources": [],
-                    "route_taken": "rag",
-                    "rewritten_query": rewritten_query,
-                    "success": True,
-                    "needs_web_scraping": False
-                }
-            
-            # Check distance for web scraping trigger
-            # ChromaDB returns distance (lower = better match, higher = worse match)
-            top_chunk_distance = chunks[0].get('distance', 2.0) if chunks else 2.0
-            needs_web_scraping = top_chunk_distance > self.DISTANCE_THRESHOLD
-            
-            if needs_web_scraping:
-                print(f"[RAGProcessNode] High distance ({top_chunk_distance:.3f} > {self.DISTANCE_THRESHOLD}), flagging for web scraping")
-            else:
-                print(f"[RAGProcessNode] Good match (distance: {top_chunk_distance:.3f}, threshold: {self.DISTANCE_THRESHOLD})")
-            
-            # Step 3: Reranking
-            print(f"[RAGProcessNode] Step 3: Reranking chunks...")
-            reranked_chunks = await self.reranker.rerank_chunks(rewritten_query, chunks, top_k=5)
-            
-            # Step 4: Answer Generation
-            print(f"[RAGProcessNode] Step 4: Generating answer...")
-            answer_result = await self.answer_generator.generate_answer(rewritten_query, reranked_chunks)
-            
+            sub_query_results = result.get("sub_query_results", [])
+            top_distances = [
+                item.get("top_chunk_distance")
+                for item in sub_query_results
+                if item.get("top_chunk_distance") is not None
+            ]
             return {
-                "answer": answer_result.get("answer", ""),
-                "justification": answer_result.get("justification"),
-                "sources": answer_result.get("source_chunks", []),
+                "answer": result.get("answer", ""),
+                "justification": result.get("justification"),
+                "sources": result.get("sources", []),
                 "route_taken": "rag",
-                "rewritten_query": rewritten_query,
-                "success": True,
-                "needs_web_scraping": needs_web_scraping,
-                "top_chunk_distance": top_chunk_distance,  # Raw distance from ChromaDB
-                "retrieval_debug": _build_retrieval_debug(reranked_chunks),
+                "rewritten_query": result.get("rewritten_query"),
+                "success": result.get("success", False),
+                "needs_web_scraping": result.get("needs_web_scraping", False),
+                "top_chunk_distance": min(top_distances) if top_distances else None,
+                "retrieval_debug": result.get("retrieval_debug"),
+                "sub_query_results": sub_query_results,
             }
             
         except Exception as e:
@@ -264,57 +203,6 @@ class RAGProcessNode:
                 "error": str(e),
                 "needs_web_scraping": False
             }
-    
-    def _retrieve_chunks(
-        self,
-        rewritten_query: str,
-        scope: str,
-        username: Optional[str],
-        collection_name: Optional[str],
-        document_filter: Optional[str]
-    ) -> List[Dict]:
-        """
-        Retrieve chunks based on scope and collection settings.
-        """
-        if collection_name:
-            return self.retriever.retrive_Chunks(
-                rewritten_query,
-                collection_name=collection_name,
-                document_filter=document_filter,
-            )
-        
-        chunks = []
-        if scope == "shared":
-            chunks = self.retriever.retrive_Chunks(
-                rewritten_query,
-                collection_name="dataset",
-                document_filter=document_filter,
-            )
-        elif scope == "personal" and username:
-            chunks = self.retriever.retrive_Chunks(
-                rewritten_query,
-                collection_name=f"user_{username}_documents",
-                document_filter=document_filter,
-            )
-        elif scope == "combined" and username:
-            chunks = self.retriever.retrive_Chunks(
-                rewritten_query,
-                collection_name="dataset",
-                document_filter=document_filter,
-            )
-            chunks += self.retriever.retrive_Chunks(
-                rewritten_query,
-                collection_name=f"user_{username}_documents",
-                document_filter=document_filter,
-            )
-        else:
-            chunks = self.retriever.retrive_Chunks(
-                rewritten_query,
-                collection_name="dataset",
-                document_filter=document_filter,
-            )
-        
-        return chunks
 
 
 class WebScrapingNode:

@@ -57,60 +57,44 @@ Referenced from Section: [section_heading]"""
             chunks_text += "-" * 80 + "\n"
         return chunks_text
 
-    async def generate_answer(self, rewritten_query: str, reranked_chunks: List[Dict]) -> Dict:
+    def generate_answer_sync(self, rewritten_query: str, reranked_chunks: List[Dict]) -> Dict:
         """
-        Generate an answer using the rewritten query and reranked chunks
-        
-        Args:
-            rewritten_query: The query after being processed by QueryRewriter
-            reranked_chunks: List of chunks after being processed by ChunkReranker
-            
-        Returns:
-            Dict containing the generated answer and metadata
+        Synchronously generate an answer for thread-based execution paths.
         """
         try:
-            # Format chunks for the prompt
             chunks_text = self._format_chunks_for_prompt(reranked_chunks)
-            
-            # Format the complete prompt
+
             prompt = self.ANSWER_PROMPT.format(
                 rewritten_query=rewritten_query,
                 chunks_text=chunks_text
             )
-            
-            # Create chat messages
+
             messages = [
                 {"role": "system", "content": "You are an expert assistant specialized in medical insurance policies. Provide clear, concise answers and always reference the relevant policy sections."},
                 {"role": "user", "content": prompt}
             ]
 
-            # Get response from Mistral API
             response = self.client.chat.complete(
                 model=self.model_name,
                 messages=messages,
-                temperature=0.3,  # Lower temperature for more consistent answers
+                temperature=0.3,
                 top_p=0.95,
-                max_tokens=500  # Longer responses for detailed answers
+                max_tokens=500
             )
-            
+
             if response and response.choices:
                 answer_text = response.choices[0].message.content.strip()
-                
-                # Parse the response into parts
                 answer_parts = answer_text.split("Justification:")
                 main_answer = answer_parts[0].replace("Answer:", "").strip()
-                
-                # Extract just the section references from justification
+
                 justification = ""
                 if len(answer_parts) > 1:
-                    # Get only the "Referenced from Section:" part
                     section_parts = answer_parts[1].split("Referenced from Section:")
                     if len(section_parts) > 1:
                         justification = "Referenced from Section: " + section_parts[1].strip()
                     else:
                         justification = answer_parts[1].strip()
-                
-                # Create response object
+
                 response_object = {
                     "answer": main_answer,
                     "justification": justification,
@@ -118,22 +102,21 @@ Referenced from Section: [section_heading]"""
                         {
                             "document": chunk["metadata"]["document_name"],
                             "section": chunk["metadata"]["section_heading"],
-                            "text": chunk["text"][:200] + "..."  # Truncated preview
+                            "text": chunk["text"][:200] + "..."
                         }
-                        for chunk in reranked_chunks[:5]  # Include top 5 chunks
+                        for chunk in reranked_chunks[:5]
                     ],
                     "metadata": {
                         "original_query": rewritten_query,
                         "num_chunks_used": len(reranked_chunks)
                     }
                 }
-                
+
                 print(" Successfully generated answer")
                 return response_object
-                
-            else:
-                raise Exception("Empty response from Mistral")
-                
+
+            raise Exception("Empty response from Mistral")
+
         except Exception as e:
             error_response = {
                 "error": str(e),
@@ -147,6 +130,19 @@ Referenced from Section: [section_heading]"""
             }
             print(f"Error in answer generation: {str(e)}")
             return error_response
+
+    async def generate_answer(self, rewritten_query: str, reranked_chunks: List[Dict]) -> Dict:
+        """
+        Generate an answer using the rewritten query and reranked chunks
+        
+        Args:
+            rewritten_query: The query after being processed by QueryRewriter
+            reranked_chunks: List of chunks after being processed by ChunkReranker
+            
+        Returns:
+            Dict containing the generated answer and metadata
+        """
+        return self.generate_answer_sync(rewritten_query, reranked_chunks)
 
 
 # # Example usage
