@@ -3,6 +3,10 @@ from typing import Dict, List
 import numpy as np
 from openai import OpenAI
 from sentence_transformers import SentenceTransformer
+from shared.logging_utils import get_logger, log_error, log_info
+
+
+logger = get_logger(__name__)
 
 
 class ChunkReranker:
@@ -82,11 +86,11 @@ Response:"""
                 )
 
             reranked_chunks = sorted(chunks, key=lambda x: x["combined_score"], reverse=True)
-            print("Completed metadata-enhanced reranking")
+            log_info(logger, "metadata_reranking_completed", chunk_count=len(reranked_chunks))
             return reranked_chunks
 
         except Exception as e:
-            print(f"Error in metadata reranking: {str(e)}")
+            log_error(logger, "metadata_reranking_failed", error_type=type(e).__name__, error=str(e))
             return chunks
 
     async def llm_reranking(self, query: str, chunks: List[Dict], top_k: int = 5) -> List[Dict]:
@@ -140,21 +144,21 @@ Response:"""
                     indices = [int(idx.strip()) for idx in cleaned_text.split(",") if idx.strip()][:top_k]
                     valid_indices = [idx for idx in indices if idx < len(chunks)]
                     if not valid_indices:
-                        print("No valid indices found in response, falling back to default ranking")
+                        log_error(logger, "llm_reranking_no_valid_indices")
                         return chunks[:top_k]
 
                     reranked_chunks = [chunks[idx] for idx in valid_indices]
-                    print(f" Completed LLM reranking, selected {len(reranked_chunks)} chunks")
+                    log_info(logger, "llm_reranking_completed", selected_count=len(reranked_chunks))
                     return reranked_chunks
                 except Exception as e:
-                    print(f"Error parsing LLM response: {str(e)}")
+                    log_error(logger, "llm_reranking_parse_failed", error_type=type(e).__name__, error=str(e))
                     return chunks[:top_k]
 
-            print("Error: Empty response from LLM")
+            log_error(logger, "llm_reranking_empty_response")
             return chunks[:top_k]
 
         except Exception as e:
-            print(f"Error in LLM reranking: {str(e)}")
+            log_error(logger, "llm_reranking_failed", error_type=type(e).__name__, error=str(e))
             return chunks[:top_k]
 
     def rerank_chunks_sync(self, query: str, chunks: List[Dict], top_k: int = 5) -> List[Dict]:
@@ -169,7 +173,7 @@ Response:"""
                 else self._llm_rerank_sync(query, metadata_reranked, top_k)
             )
         except Exception as e:
-            print(f"Error in synchronous reranking pipeline: {str(e)}")
+            log_error(logger, "sync_reranking_pipeline_failed", error_type=type(e).__name__, error=str(e))
             return chunks[:top_k]
 
     def _llm_rerank_sync(self, query: str, chunks: List[Dict], top_k: int = 5) -> List[Dict]:
@@ -211,16 +215,16 @@ Response:"""
                 indices = [int(idx.strip()) for idx in cleaned_text.split(",") if idx.strip()][:top_k]
                 valid_indices = [idx for idx in indices if idx < len(chunks)]
                 if not valid_indices:
-                    print("No valid indices found in response, falling back to default ranking")
+                    log_error(logger, "sync_llm_reranking_no_valid_indices")
                     return chunks[:top_k]
                 reranked_chunks = [chunks[idx] for idx in valid_indices]
-                print(f" Completed LLM reranking, selected {len(reranked_chunks)} chunks")
+                log_info(logger, "sync_llm_reranking_completed", selected_count=len(reranked_chunks))
                 return reranked_chunks
 
-            print("Error: Empty response from LLM")
+            log_error(logger, "sync_llm_reranking_empty_response")
             return chunks[:top_k]
         except Exception as e:
-            print(f"Error in synchronous LLM reranking: {str(e)}")
+            log_error(logger, "sync_llm_reranking_failed", error_type=type(e).__name__, error=str(e))
             return chunks[:top_k]
 
     async def rerank_chunks(self, query: str, chunks: List[Dict], top_k: int = 5) -> List[Dict]:

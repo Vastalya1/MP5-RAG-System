@@ -1,6 +1,10 @@
 from typing import Dict, List
 
 from openai import OpenAI
+from shared.logging_utils import get_logger, log_error, log_info
+
+
+logger = get_logger(__name__)
 
 
 class AnswerGenerator:
@@ -117,7 +121,12 @@ Referenced from Section: [section_heading]"""
                     },
                 }
 
-                print(" Successfully generated answer")
+                log_info(
+                    logger,
+                    "answer_generation_completed",
+                    source_count=len(response_object["source_chunks"]),
+                    chunk_count=len(reranked_chunks),
+                )
                 return response_object
 
             raise Exception("Empty response from OpenAI")
@@ -133,7 +142,12 @@ Referenced from Section: [section_heading]"""
                     "original_query": rewritten_query,
                 },
             }
-            print(f"Error in answer generation: {str(e)}")
+            log_error(
+                logger,
+                "answer_generation_failed",
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return error_response
 
     async def generate_answer(self, rewritten_query: str, reranked_chunks: List[Dict]) -> Dict:

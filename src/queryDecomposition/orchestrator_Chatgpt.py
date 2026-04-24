@@ -13,6 +13,7 @@ from typing_extensions import TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from openai import OpenAI
+from shared.logging_utils import get_logger, log_error, log_info
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
@@ -21,6 +22,9 @@ from orchestration.rag_pipeline_Chatgpt import (
     aggregate_retrieval_debug,
     merge_sources,
 )
+
+
+logger = get_logger(__name__)
 
 
 class DecompositionState(TypedDict):
@@ -113,7 +117,7 @@ Return JSON only in this exact shape:
                 "reason": str(plan.get("reason", "")).strip(),
             }
         except Exception as e:
-            print(f"[QueryDecomposer] Falling back to single-query mode: {e}")
+            log_error(logger, "query_decomposition_planning_failed", error_type=type(e).__name__, error=str(e))
             return {
                 "should_decompose": False,
                 "sub_queries": [query],
@@ -184,7 +188,7 @@ Justification:
             justification = answer_parts[1].strip() if len(answer_parts) > 1 else ""
             return {"answer": answer, "justification": justification}
         except Exception as e:
-            print(f"[SubQuerySynthesizer] Falling back to concatenated synthesis: {e}")
+            log_error(logger, "subquery_synthesis_failed", error_type=type(e).__name__, error=str(e))
             fallback_answer = " ".join(
                 result.get("answer", "") for result in sub_query_results if result.get("answer")
             ).strip()
@@ -226,9 +230,11 @@ class QueryDecompositionOrchestrator:
 
     def _plan_decomposition_node(self, state: DecompositionState) -> Dict[str, Any]:
         plan = self.decomposer.plan(state["query"])
-        print(
-            f"[QueryDecomposition] should_decompose={plan['should_decompose']} "
-            f"sub_queries={len(plan['sub_queries'])}"
+        log_info(
+            logger,
+            "query_decomposition_plan_created",
+            should_decompose=plan["should_decompose"],
+            sub_query_count=len(plan["sub_queries"]),
         )
         return {
             "should_decompose": plan["should_decompose"],

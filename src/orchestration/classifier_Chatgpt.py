@@ -9,6 +9,10 @@ This classifier determines whether a query:
 from typing import Literal
 
 from openai import OpenAI
+from shared.logging_utils import get_logger, log_error, log_info
+
+
+logger = get_logger(__name__)
 
 
 class QueryClassifier:
@@ -85,20 +89,20 @@ Do not add any explanation, punctuation, or additional text."""
                 classification = (response.choices[0].message.content or "").strip().lower()
 
                 if "rag" in classification:
-                    print("[Classifier] Query routed to: RAG")
+                    log_info(logger, "query_classified", route=self.ROUTE_RAG)
                     return self.ROUTE_RAG
                 if "direct" in classification:
-                    print("[Classifier] Query routed to: DIRECT LLM")
+                    log_info(logger, "query_classified", route=self.ROUTE_DIRECT)
                     return self.ROUTE_DIRECT
 
-                print(f"[Classifier] Uncertain classification '{classification}', defaulting to RAG")
+                log_error(logger, "query_classification_uncertain", classification=classification, fallback=self.ROUTE_RAG)
                 return self.ROUTE_RAG
 
-            print("[Classifier] Empty response, defaulting to RAG")
+            log_error(logger, "query_classification_empty_response", fallback=self.ROUTE_RAG)
             return self.ROUTE_RAG
 
         except Exception as e:
-            print(f"[Classifier] Error in classification: {str(e)}, defaulting to RAG")
+            log_error(logger, "query_classification_failed", error_type=type(e).__name__, error=str(e), fallback=self.ROUTE_RAG)
             return self.ROUTE_RAG
 
     async def classify_async(self, query: str) -> Literal["rag", "direct"]:

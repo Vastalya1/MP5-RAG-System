@@ -13,6 +13,7 @@ from langgraph.graph import END, START, StateGraph
 
 from .classifier_Chatgpt import QueryClassifier
 from .nodes_Chatgpt import DirectLLMNode, RAGProcessNode, WebScrapingNode
+from shared.logging_utils import get_logger, log_error, log_info
 
 import sys
 from pathlib import Path
@@ -23,6 +24,9 @@ from output.answerGeneration_Chatgpt import AnswerGenerator
 from queryRewriter.rewriting_Chatgpt import QueryRewriter
 from retriever.reranking_Chatgpt import ChunkReranker
 from retriever.retrival import retrivalModel
+
+
+logger = get_logger(__name__)
 
 
 class GraphState(TypedDict):
@@ -89,12 +93,12 @@ class QueryOrchestrator:
         builder.add_edge("direct_llm_node", END)
 
         compiled_graph = builder.compile()
-        print("[Orchestrator] LangGraph compiled successfully")
+        log_info(logger, "langgraph_compiled")
         return compiled_graph
 
     def _classifier_node(self, state: GraphState) -> dict:
         query = state["query"]
-        print(f"[Orchestrator] Classifying query: {query[:50]}...")
+        log_info(logger, "orchestrator_classification_started", query_length=len(query))
         route = self.classifier.classify(query)
         return {
             "route": route,
@@ -103,7 +107,7 @@ class QueryOrchestrator:
 
     async def _direct_llm_node(self, state: GraphState) -> dict:
         query = state["query"]
-        print("[Orchestrator] Processing via Direct LLM...")
+        log_info(logger, "orchestrator_direct_llm_started", query_length=len(query))
         result = await self.direct_llm_node.process(query)
         return {
             "answer": result.get("answer"),
@@ -121,7 +125,7 @@ class QueryOrchestrator:
         username = state.get("username")
         collection_name = state.get("collection_name")
         document_filter = state.get("document_filter")
-        print("[Orchestrator] Processing via RAG pipeline...")
+        log_info(logger, "orchestrator_rag_started", scope=scope, collection_name=collection_name, document_filter=document_filter)
         result = await self.rag_node.process(
             query=query,
             scope=scope,
@@ -155,7 +159,7 @@ class QueryOrchestrator:
             else (state.get("rewritten_query") or state["query"])
         )
 
-        print("[Orchestrator] Falling back to Tavily web search")
+        log_info(logger, "orchestrator_web_fallback_started")
         result = await self.web_scraping_node.process(query=rewritten_query, context=state)
         return {
             "answer": result.get("answer"),
@@ -168,7 +172,7 @@ class QueryOrchestrator:
 
     def _route_query(self, state: GraphState) -> Literal["direct", "rag"]:
         route = state.get("route", "rag")
-        print(f"[Orchestrator] Routing to: {route}")
+        log_info(logger, "orchestrator_route_selected", route=route)
         return route
 
     def _check_similarity_threshold(self, state: GraphState) -> Literal["proceed", "web_scrape"]:
@@ -204,10 +208,10 @@ class QueryOrchestrator:
         }
 
         try:
-            print("[Orchestrator] Starting query processing...")
+            log_info(logger, "orchestrator_processing_started", scope=scope, collection_name=collection_name, document_filter=document_filter)
             result = await self.graph.ainvoke(initial_state)
 
-            print(f"[Orchestrator] Processing complete. Route: {result.get('route_taken')}")
+            log_info(logger, "orchestrator_processing_completed", route_taken=result.get("route_taken"))
             return {
                 "response": result.get("answer", ""),
                 "justification": result.get("justification"),
@@ -221,7 +225,8 @@ class QueryOrchestrator:
             }
 
         except Exception as e:
-            print(f"[Orchestrator] Error during processing: {str(e)}")
+            log_error(logger, "orchestrator_processing_failed", error_type=type(e).__name__, error=str(e))
+            logger.exception("orchestrator_processing_exception")
             return {
                 "response": f"An error occurred: {str(e)}",
                 "justification": None,

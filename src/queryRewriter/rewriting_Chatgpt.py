@@ -1,6 +1,10 @@
 from typing import Optional
 
 from openai import OpenAI
+from shared.logging_utils import get_logger, log_error, log_info
+
+
+logger = get_logger(__name__)
 
 
 class QueryRewriter:
@@ -51,16 +55,24 @@ Respond only with the rewritten query, no additional text or explanations."""
 
             if response and response.choices:
                 rewritten_query = (response.choices[0].message.content or "").strip()
-                print(f"Original query: {query}")
-                print(f"Rewritten query: {rewritten_query}")
+                log_info(
+                    logger,
+                    "query_rewrite_completed",
+                    original_length=len(query),
+                    rewritten_length=len(rewritten_query),
+                )
                 return rewritten_query or None
 
-            print("Error: Empty response from OpenAI API")
+            log_error(logger, "query_rewrite_empty_response")
             return None
 
         except Exception as e:
-            print(f"Error in query rewriting: {str(e)}")
-            print(f"Error type: {type(e)}")
+            log_error(
+                logger,
+                "query_rewrite_failed",
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return None
 
     async def rewrite_query(self, query: str) -> Optional[str]:

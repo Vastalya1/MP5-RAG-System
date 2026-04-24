@@ -14,6 +14,10 @@ from queryRewriter.rewriting_Chatgpt import QueryRewriter
 from retriever.reranking_Chatgpt import ChunkReranker
 from retriever.retrival import retrivalModel
 from shared.chroma_config import get_personal_collection_name, get_shared_collection_name
+from shared.logging_utils import get_logger, log_error, log_info
+
+
+logger = get_logger(__name__)
 
 
 def build_retrieval_debug(chunks: List[Dict]) -> Dict[str, Any]:
@@ -132,10 +136,10 @@ class RAGSubQueryProcessor:
         document_filter: Optional[str] = None,
     ) -> Dict[str, Any]:
         try:
-            print(f"[RAGSubQueryProcessor] Rewriting query: {query[:80]}")
+            log_info(logger, "subquery_processing_started", scope=scope, collection_name=collection_name, document_filter=document_filter)
             rewritten_query = self.rewriter.rewrite_query_sync(query) or query
 
-            print(f"[RAGSubQueryProcessor] Retrieving chunks for: {rewritten_query[:80]}")
+            log_info(logger, "subquery_retrieval_started", rewritten_query_length=len(rewritten_query))
             chunks = self.retrieve_chunks(
                 rewritten_query=rewritten_query,
                 scope=scope,
@@ -163,17 +167,19 @@ class RAGSubQueryProcessor:
             needs_web_scraping = top_chunk_distance > self.DISTANCE_THRESHOLD
 
             if needs_web_scraping:
-                print(
-                    f"[RAGSubQueryProcessor] High distance ({top_chunk_distance:.3f} > "
-                    f"{self.DISTANCE_THRESHOLD}), marking low confidence"
+                log_info(
+                    logger,
+                    "subquery_low_confidence_detected",
+                    top_chunk_distance=round(top_chunk_distance, 4),
+                    threshold=self.DISTANCE_THRESHOLD,
                 )
             else:
-                print(f"[RAGSubQueryProcessor] Good semantic match ({top_chunk_distance:.3f})")
+                log_info(logger, "subquery_semantic_match_good", top_chunk_distance=round(top_chunk_distance, 4))
 
-            print(f"[RAGSubQueryProcessor] Reranking chunks for: {rewritten_query[:80]}")
+            log_info(logger, "subquery_reranking_started", chunk_count=len(chunks))
             reranked_chunks = self.reranker.rerank_chunks_sync(rewritten_query, chunks, top_k=5)
 
-            print(f"[RAGSubQueryProcessor] Generating answer for: {rewritten_query[:80]}")
+            log_info(logger, "subquery_answer_generation_started", reranked_count=len(reranked_chunks))
             answer_result = self.answer_generator.generate_answer_sync(rewritten_query, reranked_chunks)
 
             return {
@@ -188,7 +194,8 @@ class RAGSubQueryProcessor:
             }
 
         except Exception as e:
-            print(f"[RAGSubQueryProcessor] Error: {str(e)}")
+            log_error(logger, "subquery_processing_failed", error_type=type(e).__name__, error=str(e))
+            logger.exception("subquery_processing_exception")
             return {
                 "answer": f"An error occurred while processing your query: {str(e)}",
                 "justification": None,

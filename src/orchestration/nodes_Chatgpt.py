@@ -20,9 +20,13 @@ from queryDecomposition.orchestrator_Chatgpt import QueryDecompositionOrchestrat
 from queryRewriter.rewriting_Chatgpt import QueryRewriter
 from retriever.reranking_Chatgpt import ChunkReranker
 from retriever.retrival import retrivalModel
+from shared.logging_utils import get_logger, log_error, log_info
 from tavily_fallback.tavily_client import TavilySearchClient
 from tavily_fallback.tavily_service import TavilyService
 from .rag_pipeline_Chatgpt import RAGSubQueryProcessor
+
+
+logger = get_logger(__name__)
 
 
 class DirectLLMNode:
@@ -69,6 +73,7 @@ Guidelines:
 
             if response and response.choices:
                 answer = (response.choices[0].message.content or "").strip()
+                log_info(logger, "direct_llm_completed", answer_length=len(answer))
                 return {
                     "answer": answer,
                     "justification": None,
@@ -85,7 +90,7 @@ Guidelines:
             }
 
         except Exception as e:
-            print(f"[DirectLLMNode] Error: {str(e)}")
+            log_error(logger, "direct_llm_failed", error_type=type(e).__name__, error=str(e))
             return {
                 "answer": f"An error occurred while processing your query: {str(e)}",
                 "justification": None,
@@ -132,7 +137,7 @@ class RAGProcessNode:
         document_filter: Optional[str] = None,
     ) -> Dict[str, Any]:
         try:
-            print("[RAGProcessNode] Starting decomposition-aware RAG pipeline...")
+            log_info(logger, "rag_process_node_started", scope=scope, collection_name=collection_name, document_filter=document_filter)
             result = await self.decomposition_orchestrator.process_query(
                 query=query,
                 scope=scope,
@@ -160,7 +165,7 @@ class RAGProcessNode:
             }
 
         except Exception as e:
-            print(f"[RAGProcessNode] Error: {str(e)}")
+            log_error(logger, "rag_process_node_failed", error_type=type(e).__name__, error=str(e))
             return {
                 "answer": f"An error occurred while processing your query: {str(e)}",
                 "justification": None,
@@ -184,9 +189,9 @@ class WebScrapingNode:
         try:
             self.service = TavilyService(TavilySearchClient())
             self.tavily_available = True
-            print("[WebScrapingNode] Tavily service initialized")
+            log_info(logger, "tavily_initialized")
         except Exception as e:
-            print(f"[WebScrapingNode] Tavily not available: {e}")
+            log_error(logger, "tavily_initialization_failed", error_type=type(e).__name__, error=str(e))
             self.tavily_available = False
 
     async def process(self, query: str, context: Optional[Dict] = None) -> Dict[str, Any]:
@@ -201,7 +206,7 @@ class WebScrapingNode:
             }
 
         try:
-            print(f"[WebScrapingNode] Searching web for: {query}")
+            log_info(logger, "tavily_search_started", query_length=len(query))
             result = self.service.get_answer(query)
 
             return {
@@ -213,7 +218,7 @@ class WebScrapingNode:
             }
 
         except Exception as e:
-            print(f"[WebScrapingNode] Error: {str(e)}")
+            log_error(logger, "tavily_search_failed", error_type=type(e).__name__, error=str(e))
             return {
                 "answer": "Unable to fetch information from web search. Please try again.",
                 "justification": None,

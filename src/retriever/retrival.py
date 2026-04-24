@@ -10,6 +10,10 @@ from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
 
 from shared.chroma_config import get_shared_collection_name
+from shared.logging_utils import get_logger, log_error, log_info
+
+
+logger = get_logger(__name__)
 
 
 class retrivalModel:
@@ -28,6 +32,7 @@ class retrivalModel:
             database='Major-Project'
             )
         self._keyword_index_cache: dict[tuple[str, str | None], dict[str, Any]] = {}
+        log_info(logger, "retriever_initialized", tenant="a92961b0-ea65-4a82-a7ad-321a4baaaa60", database="Major-Project")
 
     def _tokenize(self, text: str) -> list[str]:
         return re.findall(r"[a-z0-9]+", (text or "").lower())
@@ -73,7 +78,14 @@ class retrivalModel:
                 )
             return chunks
         except Exception as e:
-            print(f"Error fetching all chunks for keyword retrieval: {str(e)}")
+            log_error(
+                logger,
+                "keyword_chunk_fetch_failed",
+                collection_name=collection_name,
+                document_filter=document_filter,
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return []
 
     def _get_keyword_index(self, collection_name: str | None = None, document_filter: str = None) -> dict[str, Any] | None:
@@ -121,7 +133,12 @@ class retrivalModel:
             }
             if document_filter:
                 query_params["where"] = {"document_name": document_filter}
-                print(f" Filtering by document: {document_filter}")
+                log_info(
+                    logger,
+                    "semantic_search_filter_applied",
+                    collection_name=collection_name,
+                    document_filter=document_filter,
+                )
 
             results = collection.query(**query_params)
 
@@ -140,10 +157,23 @@ class retrivalModel:
                     chunks.append(chunk)
 
                 chunks = sorted(chunks, key=lambda x: x["distance"])
-                print(f" Retrieved {len(chunks)} semantic chunks")
+                log_info(
+                    logger,
+                    "semantic_search_completed",
+                    collection_name=collection_name,
+                    chunk_count=len(chunks),
+                    document_filter=document_filter,
+                )
             return chunks
         except Exception as e:
-            print(f"Error in semantic retrieval: {str(e)}")
+            log_error(
+                logger,
+                "semantic_search_failed",
+                collection_name=collection_name,
+                document_filter=document_filter,
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return []
 
     def keyword_search(self, rewritten_query: str, collection_name: str | None = None, top_k: int = 15, document_filter: str = None) -> list[dict]:
@@ -170,10 +200,23 @@ class retrivalModel:
                 chunk["matched_by"] = ["keyword"]
                 keyword_chunks.append(chunk)
 
-            print(f" Retrieved {len(keyword_chunks)} keyword chunks")
+            log_info(
+                logger,
+                "keyword_search_completed",
+                collection_name=collection_name,
+                chunk_count=len(keyword_chunks),
+                document_filter=document_filter,
+            )
             return keyword_chunks
         except Exception as e:
-            print(f"Error in keyword retrieval: {str(e)}")
+            log_error(
+                logger,
+                "keyword_search_failed",
+                collection_name=collection_name,
+                document_filter=document_filter,
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return []
 
     def hybrid_search(self, rewritten_query: str, collection_name: str | None = None, top_k: int = 15, document_filter: str = None) -> list[dict]:
@@ -219,7 +262,13 @@ class retrivalModel:
             key=lambda item: item.get("hybrid_score", 0.0),
             reverse=True,
         )[:top_k]
-        print(f" Retrieved {len(merged_chunks)} hybrid chunks after fusion")
+        log_info(
+            logger,
+            "hybrid_search_completed",
+            collection_name=collection_name,
+            chunk_count=len(merged_chunks),
+            document_filter=document_filter,
+        )
         return merged_chunks
 
     def retrive_Chunks(self, rewritten_query: str, collection_name: str | None = None, top_k: int = 15, document_filter: str = None):
@@ -232,7 +281,14 @@ class retrivalModel:
                 document_filter=document_filter,
             )
         except Exception as e:
-            print(f"Error in retrieval: {str(e)}")
+            log_error(
+                logger,
+                "retrieval_failed",
+                collection_name=collection_name,
+                document_filter=document_filter,
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return []
 
     def get_context_string(self, chunks: list) -> str:

@@ -7,6 +7,7 @@ import shutil
 import os
 from pathlib import Path
 import chromadb
+import time
 import hashlib
 import hmac
 import psycopg2
@@ -19,6 +20,15 @@ from dotenv import load_dotenv
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from shared.chroma_config import get_personal_collection_name, get_shared_collection_name
+from shared.logging_utils import (
+    capture_print,
+    get_logger,
+    log_error,
+    log_info,
+    new_transaction_id,
+    reset_transaction_id,
+    set_transaction_id,
+)
 # from queryRewriter.rewriting import QueryRewriter
 from queryRewriter.rewriting_Chatgpt import QueryRewriter
 from retriever.retrival import retrivalModel
@@ -38,11 +48,56 @@ from tavily_fallback.tavily_service import TavilyService
 
 # Load environment variables from .env (if present)
 load_dotenv()
+capture_print()
+logger = get_logger(__name__)
 
 # Get the base directory
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 app = FastAPI()
+
+
+@app.middleware("http")
+async def log_request_middleware(request: Request, call_next):
+    transaction_id = request.headers.get("x-transaction-id") or new_transaction_id("req")
+    request.state.transaction_id = transaction_id
+    token = set_transaction_id(transaction_id)
+    start = time.perf_counter()
+    log_info(
+        logger,
+        "request_started",
+        method=request.method,
+        path=request.url.path,
+        client=request.client.host if request.client else None,
+    )
+    try:
+        response = await call_next(request)
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        response.headers["X-Transaction-Id"] = transaction_id
+        log_info(
+            logger,
+            "request_completed",
+            method=request.method,
+            path=request.url.path,
+            status_code=response.status_code,
+            duration_ms=duration_ms,
+        )
+        return response
+    except Exception as exc:
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        log_error(
+            logger,
+            "request_failed",
+            method=request.method,
+            path=request.url.path,
+            duration_ms=duration_ms,
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+        logger.exception("request_exception")
+        raise
+    finally:
+        reset_transaction_id(token)
 
 # Session middleware for login state
 SESSION_SECRET = os.getenv("SESSION_SECRET", "dev-secret-change-me")
@@ -144,6 +199,12 @@ def _get_chroma_client():
             tenant=CHROMA_CLOUD_TENANT,
             database=CHROMA_CLOUD_DATABASE,
         )
+        log_info(
+            logger,
+            "chroma_client_initialized",
+            tenant=CHROMA_CLOUD_TENANT,
+            database=CHROMA_CLOUD_DATABASE,
+        )
     return _chroma_client_instance
 
 def _hash_password(password: str, salt: str) -> str:
@@ -182,15 +243,20 @@ ADMIN_PASSWORDS = {
 def _db_conn():
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL must be set for Postgres access.")
+    log_info(logger, "db_transaction_open")
     conn = psycopg2.connect(DATABASE_URL)
     try:
         yield conn
         conn.commit()
+        log_info(logger, "db_transaction_commit")
     except Exception:
         conn.rollback()
+        log_error(logger, "db_transaction_rollback")
+        logger.exception("db_transaction_exception")
         raise
     finally:
         conn.close()
+        log_info(logger, "db_connection_closed")
 
 def _get_user_record(username: str) -> dict | None:
     with _db_conn() as conn:
@@ -423,6 +489,7 @@ def _init_db() -> None:
 @app.on_event("startup")
 def startup_event():
     _init_db()
+    log_info(logger, "application_started", orchestration_enabled=USE_ORCHESTRATION)
 
 def _get_current_user(request: Request) -> dict | None:
     return request.session.get("user")
@@ -491,7 +558,13 @@ def _list_chroma_document_names(collection_name: str | None) -> list[str]:
         collection = _get_chroma_client().get_collection(name=collection_name)
         results = collection.get(include=["metadatas"])
     except Exception as exc:
-        print(f"[DocumentOptions] Failed to read Chroma collection '{collection_name}': {exc}")
+        log_error(
+            logger,
+            "document_options_chroma_read_failed",
+            collection_name=collection_name,
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
         return []
 
     document_names: set[str] = set()
@@ -502,7 +575,14 @@ def _list_chroma_document_names(collection_name: str | None) -> list[str]:
         if document_name:
             document_names.add(document_name)
 
-    return sorted(document_names, key=str.lower)
+    names = sorted(document_names, key=str.lower)
+    log_info(
+        logger,
+        "document_options_chroma_read_completed",
+        collection_name=collection_name,
+        document_count=len(names),
+    )
+    return names
 
 def _get_document_options(user: dict) -> list[dict]:
     options = [{"value": "", "label": "All policy documents"}]
@@ -929,6 +1009,13 @@ async def upload_policy(
             file_paths=[str(file_path)],
         )
         pipeline.run()
+        log_info(
+            logger,
+            "shared_upload_completed",
+            username=user.get("username"),
+            filename=file.filename,
+            collection_name=CHROMA_SHARED_COLLECTION_NAME,
+        )
 
         _add_uploaded_file("shared", file.filename, user.get("username"), file_path.stat().st_size)
         _record_audit_event(
@@ -942,6 +1029,15 @@ async def upload_policy(
         )
         return {"message": f"Successfully processed policy: {file.filename}"}
     except Exception as e:
+        log_error(
+            logger,
+            "shared_upload_failed",
+            username=user.get("username"),
+            filename=file.filename if file else None,
+            error_type=type(e).__name__,
+            error=str(e),
+        )
+        logger.exception("shared_upload_exception")
         return {"error": str(e)}
 
 @app.post("/upload-personal")
@@ -970,6 +1066,13 @@ async def upload_personal(
             file_paths=[str(file_path)],
         )
         pipeline.run()
+        log_info(
+            logger,
+            "personal_upload_completed",
+            username=user.get("username"),
+            filename=file.filename,
+            collection_name=get_personal_collection_name(user["username"]),
+        )
 
         _add_uploaded_file("personal", file.filename, user.get("username"), file_path.stat().st_size)
         _record_audit_event(
@@ -983,6 +1086,15 @@ async def upload_personal(
         )
         return {"message": f"Personal policy uploaded: {file.filename}"}
     except Exception as e:
+        log_error(
+            logger,
+            "personal_upload_failed",
+            username=user.get("username"),
+            filename=file.filename if file else None,
+            error_type=type(e).__name__,
+            error=str(e),
+        )
+        logger.exception("personal_upload_exception")
         return {"error": str(e)}
 
 @app.get("/files/shared/{filename}")
@@ -1117,6 +1229,14 @@ async def query(
                 "selected_document": document_filter,
             },
         )
+        log_info(
+            logger,
+            "query_processing_started",
+            username=user.get("username"),
+            scope=effective_scope,
+            selected_document=document_filter,
+            collection_name=collection_name,
+        )
         
         if USE_ORCHESTRATION:
             # Use LangGraph orchestration for intelligent routing
@@ -1135,8 +1255,13 @@ async def query(
             route_taken = result.get("route_taken", "unknown")
             retrieval_debug = result.get("retrieval_debug")
             
-            # Log the route taken for debugging
-            print(f"[Query] Route taken: {route_taken}")
+            log_info(
+                logger,
+                "query_orchestration_completed",
+                username=user.get("username"),
+                route_taken=route_taken,
+                source_count=len(sources),
+            )
             
             _save_query_history(
                 user.get("username"),
@@ -1227,6 +1352,15 @@ async def query(
             justification_text = answer.get("justification")
             sources = answer.get("source_chunks", [])
             retrieval_debug = _build_retrieval_debug(reranked)
+            log_info(
+                logger,
+                "query_legacy_rag_completed",
+                username=user.get("username"),
+                scope=effective_scope,
+                chunk_count=len(chunks),
+                reranked_count=len(reranked),
+                source_count=len(sources),
+            )
 
             _save_query_history(
                 user.get("username"),
@@ -1245,6 +1379,15 @@ async def query(
                 "retrieval_debug": retrieval_debug,
             }
     except Exception as e:
+        log_error(
+            logger,
+            "query_processing_failed",
+            username=user.get("username"),
+            scope=scope,
+            error_type=type(e).__name__,
+            error=str(e),
+        )
+        logger.exception("query_processing_exception")
         return {"error": str(e)}
 
 @app.get("/history")
