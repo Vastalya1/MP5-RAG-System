@@ -22,12 +22,17 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from shared.chroma_config import get_personal_collection_name, get_shared_collection_name
 from shared.logging_utils import (
     capture_print,
+    current_transaction_id,
     get_logger,
     log_error,
     log_info,
+    log_query_error,
+    log_query_step,
     new_transaction_id,
+    reset_query_id,
     reset_transaction_id,
     set_transaction_id,
+    start_query_log,
 )
 # from queryRewriter.rewriting import QueryRewriter
 from queryRewriter.rewriting_Chatgpt import QueryRewriter
@@ -1197,6 +1202,25 @@ def _build_retrieval_debug(chunks: list[dict] | None) -> dict:
     }
 
 
+def _chunk_log_summary(chunks: list[dict] | None, limit: int = 5) -> list[dict]:
+    summary: list[dict] = []
+    for chunk in (chunks or [])[:limit]:
+        metadata = chunk.get("metadata", {}) or {}
+        summary.append(
+            {
+                "document": metadata.get("document_name", "unknown_document"),
+                "section": metadata.get("section_heading", "General"),
+                "distance": chunk.get("distance"),
+                "hybrid_score": chunk.get("hybrid_score"),
+                "semantic_score": chunk.get("semantic_score"),
+                "keyword_score": chunk.get("keyword_score"),
+                "matched_by": chunk.get("matched_by", []),
+                "text_preview": str(chunk.get("text", ""))[:220],
+            }
+        )
+    return summary
+
+
 @app.post("/query")
 async def query(
     request: Request,
@@ -1207,6 +1231,7 @@ async def query(
     csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
+    query_log_token = None
     try:
         selected_scope, document_filter = _parse_document_selection(selected_document)
         effective_scope = scope
@@ -1217,6 +1242,16 @@ async def query(
         elif selected_scope == "personal":
             effective_scope = "personal"
             collection_name = get_personal_collection_name(user["username"])
+
+        query_log_token = start_query_log(
+            current_transaction_id(),
+            logger=logger,
+            username=user.get("username"),
+            scope=effective_scope,
+            selected_document=document_filter,
+            collection_name=collection_name,
+            generated=query,
+        )
 
         _record_audit_event(
             user.get("username"),
@@ -1232,6 +1267,15 @@ async def query(
         log_info(
             logger,
             "query_processing_started",
+            username=user.get("username"),
+            scope=effective_scope,
+            selected_document=document_filter,
+            collection_name=collection_name,
+        )
+        log_query_step(
+            logger,
+            "query_pipeline_entered",
+            generated=query,
             username=user.get("username"),
             scope=effective_scope,
             selected_document=document_filter,
@@ -1262,6 +1306,15 @@ async def query(
                 route_taken=route_taken,
                 source_count=len(sources),
             )
+            log_query_step(
+                logger,
+                "query_response_ready",
+                generated=response_text,
+                username=user.get("username"),
+                route_taken=route_taken,
+                source_count=len(sources),
+                justification=justification_text,
+            )
             
             _save_query_history(
                 user.get("username"),
@@ -1285,6 +1338,12 @@ async def query(
             rewritten_query = query
             rewriter = _get_rewriter()
             rewritten_query = await rewriter.rewrite_query(query) or query
+            log_query_step(
+                logger,
+                "query_rewrite",
+                generated=rewritten_query,
+                original_query=query,
+            )
 
             retriever = _get_retriever()
             chunks: list[dict] = []
@@ -1313,6 +1372,14 @@ async def query(
                 )
             else:
                 return {"error": f"Unknown scope: {scope}"}
+
+            log_query_step(
+                logger,
+                "document_retrieval",
+                generated=_chunk_log_summary(chunks),
+                retrieved_count=len(chunks),
+                rewritten_query=rewritten_query,
+            )
 
             # if not chunks:
             #     if not chunks:
@@ -1347,11 +1414,24 @@ async def query(
             reranker = _get_reranker()
             answer_generator = _get_answer_generator()
             reranked = await reranker.rerank_chunks(rewritten_query, chunks, top_k=5)
+            log_query_step(
+                logger,
+                "chunk_reranking",
+                generated=_chunk_log_summary(reranked),
+                reranked_count=len(reranked),
+            )
             answer = await answer_generator.generate_answer(rewritten_query, reranked)
             response_text = answer.get("answer", "")
             justification_text = answer.get("justification")
             sources = answer.get("source_chunks", [])
             retrieval_debug = _build_retrieval_debug(reranked)
+            log_query_step(
+                logger,
+                "answer_generation",
+                generated=response_text,
+                justification=justification_text,
+                source_count=len(sources),
+            )
             log_info(
                 logger,
                 "query_legacy_rag_completed",
@@ -1360,6 +1440,15 @@ async def query(
                 chunk_count=len(chunks),
                 reranked_count=len(reranked),
                 source_count=len(sources),
+            )
+            log_query_step(
+                logger,
+                "query_response_ready",
+                generated=response_text,
+                username=user.get("username"),
+                route_taken="legacy_rag",
+                source_count=len(sources),
+                justification=justification_text,
             )
 
             _save_query_history(
@@ -1379,6 +1468,14 @@ async def query(
                 "retrieval_debug": retrieval_debug,
             }
     except Exception as e:
+        log_query_error(
+            logger,
+            "query_processing_failed",
+            generated=str(e),
+            username=user.get("username"),
+            scope=scope,
+            error_type=type(e).__name__,
+        )
         log_error(
             logger,
             "query_processing_failed",
@@ -1389,6 +1486,9 @@ async def query(
         )
         logger.exception("query_processing_exception")
         return {"error": str(e)}
+    finally:
+        if query_log_token is not None:
+            reset_query_id(query_log_token)
 
 @app.get("/history")
 async def history(

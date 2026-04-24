@@ -20,7 +20,7 @@ from queryDecomposition.orchestrator_Chatgpt import QueryDecompositionOrchestrat
 from queryRewriter.rewriting_Chatgpt import QueryRewriter
 from retriever.reranking_Chatgpt import ChunkReranker
 from retriever.retrival import retrivalModel
-from shared.logging_utils import get_logger, log_error, log_info
+from shared.logging_utils import get_logger, log_error, log_info, log_query_error, log_query_step
 from tavily_fallback.tavily_client import TavilySearchClient
 from tavily_fallback.tavily_service import TavilyService
 from .rag_pipeline_Chatgpt import RAGSubQueryProcessor
@@ -74,6 +74,12 @@ Guidelines:
             if response and response.choices:
                 answer = (response.choices[0].message.content or "").strip()
                 log_info(logger, "direct_llm_completed", answer_length=len(answer))
+                log_query_step(
+                    logger,
+                    "direct_llm_response",
+                    generated=answer,
+                    answer_length=len(answer),
+                )
                 return {
                     "answer": answer,
                     "justification": None,
@@ -91,6 +97,13 @@ Guidelines:
 
         except Exception as e:
             log_error(logger, "direct_llm_failed", error_type=type(e).__name__, error=str(e))
+            log_query_error(
+                logger,
+                "direct_llm_response",
+                generated=str(e),
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return {
                 "answer": f"An error occurred while processing your query: {str(e)}",
                 "justification": None,
@@ -138,6 +151,13 @@ class RAGProcessNode:
     ) -> Dict[str, Any]:
         try:
             log_info(logger, "rag_process_node_started", scope=scope, collection_name=collection_name, document_filter=document_filter)
+            log_query_step(
+                logger,
+                "rag_processing_started",
+                scope=scope,
+                collection_name=collection_name,
+                document_filter=document_filter,
+            )
             result = await self.decomposition_orchestrator.process_query(
                 query=query,
                 scope=scope,
@@ -208,6 +228,12 @@ class WebScrapingNode:
         try:
             log_info(logger, "tavily_search_started", query_length=len(query))
             result = self.service.get_answer(query)
+            log_query_step(
+                logger,
+                "web_search_response",
+                generated=result.get("answer", ""),
+                source_count=len(result.get("sources", []) or []),
+            )
 
             return {
                 "answer": result.get("answer", ""),
@@ -219,6 +245,13 @@ class WebScrapingNode:
 
         except Exception as e:
             log_error(logger, "tavily_search_failed", error_type=type(e).__name__, error=str(e))
+            log_query_error(
+                logger,
+                "web_search_response",
+                generated=str(e),
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return {
                 "answer": "Unable to fetch information from web search. Please try again.",
                 "justification": None,

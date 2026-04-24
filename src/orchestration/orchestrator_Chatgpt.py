@@ -13,7 +13,7 @@ from langgraph.graph import END, START, StateGraph
 
 from .classifier_Chatgpt import QueryClassifier
 from .nodes_Chatgpt import DirectLLMNode, RAGProcessNode, WebScrapingNode
-from shared.logging_utils import get_logger, log_error, log_info
+from shared.logging_utils import get_logger, log_error, log_info, log_query_error, log_query_step
 
 import sys
 from pathlib import Path
@@ -99,6 +99,7 @@ class QueryOrchestrator:
     def _classifier_node(self, state: GraphState) -> dict:
         query = state["query"]
         log_info(logger, "orchestrator_classification_started", query_length=len(query))
+        log_query_step(logger, "orchestrator_classification_started", generated=query)
         route = self.classifier.classify(query)
         return {
             "route": route,
@@ -173,6 +174,7 @@ class QueryOrchestrator:
     def _route_query(self, state: GraphState) -> Literal["direct", "rag"]:
         route = state.get("route", "rag")
         log_info(logger, "orchestrator_route_selected", route=route)
+        log_query_step(logger, "orchestrator_route_selected", generated=route)
         return route
 
     def _check_similarity_threshold(self, state: GraphState) -> Literal["proceed", "web_scrape"]:
@@ -212,6 +214,13 @@ class QueryOrchestrator:
             result = await self.graph.ainvoke(initial_state)
 
             log_info(logger, "orchestrator_processing_completed", route_taken=result.get("route_taken"))
+            log_query_step(
+                logger,
+                "orchestrator_completed",
+                generated=result.get("answer", ""),
+                route_taken=result.get("route_taken"),
+                success=result.get("success", False),
+            )
             return {
                 "response": result.get("answer", ""),
                 "justification": result.get("justification"),
@@ -226,6 +235,13 @@ class QueryOrchestrator:
 
         except Exception as e:
             log_error(logger, "orchestrator_processing_failed", error_type=type(e).__name__, error=str(e))
+            log_query_error(
+                logger,
+                "orchestrator_processing",
+                generated=str(e),
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             logger.exception("orchestrator_processing_exception")
             return {
                 "response": f"An error occurred: {str(e)}",

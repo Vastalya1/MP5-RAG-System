@@ -14,10 +14,29 @@ from queryRewriter.rewriting_Chatgpt import QueryRewriter
 from retriever.reranking_Chatgpt import ChunkReranker
 from retriever.retrival import retrivalModel
 from shared.chroma_config import get_personal_collection_name, get_shared_collection_name
-from shared.logging_utils import get_logger, log_error, log_info
+from shared.logging_utils import get_logger, log_error, log_info, log_query_error, log_query_step
 
 
 logger = get_logger(__name__)
+
+
+def _chunk_log_summary(chunks: List[Dict], limit: int = 5) -> List[Dict[str, Any]]:
+    summary: List[Dict[str, Any]] = []
+    for chunk in (chunks or [])[:limit]:
+        metadata = chunk.get("metadata", {}) or {}
+        summary.append(
+            {
+                "document": metadata.get("document_name", "unknown_document"),
+                "section": metadata.get("section_heading", "General"),
+                "distance": chunk.get("distance"),
+                "hybrid_score": chunk.get("hybrid_score"),
+                "semantic_score": chunk.get("semantic_score"),
+                "keyword_score": chunk.get("keyword_score"),
+                "matched_by": chunk.get("matched_by", []),
+                "text_preview": str(chunk.get("text", ""))[:220],
+            }
+        )
+    return summary
 
 
 def build_retrieval_debug(chunks: List[Dict]) -> Dict[str, Any]:
@@ -138,6 +157,12 @@ class RAGSubQueryProcessor:
         try:
             log_info(logger, "subquery_processing_started", scope=scope, collection_name=collection_name, document_filter=document_filter)
             rewritten_query = self.rewriter.rewrite_query_sync(query) or query
+            log_query_step(
+                logger,
+                "query_rewrite",
+                generated=rewritten_query,
+                original_query=query,
+            )
 
             log_info(logger, "subquery_retrieval_started", rewritten_query_length=len(rewritten_query))
             chunks = self.retrieve_chunks(
@@ -147,8 +172,21 @@ class RAGSubQueryProcessor:
                 collection_name=collection_name,
                 document_filter=document_filter,
             )
+            log_query_step(
+                logger,
+                "document_retrieval",
+                generated=_chunk_log_summary(chunks),
+                retrieved_count=len(chunks),
+                rewritten_query=rewritten_query,
+            )
 
             if not chunks:
+                log_query_step(
+                    logger,
+                    "document_retrieval_empty",
+                    generated="No relevant policy content found for this question.",
+                    rewritten_query=rewritten_query,
+                )
                 return {
                     "answer": "No relevant policy content found for this question.",
                     "justification": None,
@@ -178,9 +216,22 @@ class RAGSubQueryProcessor:
 
             log_info(logger, "subquery_reranking_started", chunk_count=len(chunks))
             reranked_chunks = self.reranker.rerank_chunks_sync(rewritten_query, chunks, top_k=5)
+            log_query_step(
+                logger,
+                "chunk_reranking",
+                generated=_chunk_log_summary(reranked_chunks),
+                reranked_count=len(reranked_chunks),
+            )
 
             log_info(logger, "subquery_answer_generation_started", reranked_count=len(reranked_chunks))
             answer_result = self.answer_generator.generate_answer_sync(rewritten_query, reranked_chunks)
+            log_query_step(
+                logger,
+                "answer_generation",
+                generated=answer_result.get("answer", ""),
+                justification=answer_result.get("justification"),
+                source_count=len(answer_result.get("source_chunks", []) or []),
+            )
 
             return {
                 "answer": answer_result.get("answer", ""),
@@ -195,6 +246,14 @@ class RAGSubQueryProcessor:
 
         except Exception as e:
             log_error(logger, "subquery_processing_failed", error_type=type(e).__name__, error=str(e))
+            log_query_error(
+                logger,
+                "subquery_processing",
+                generated=str(e),
+                error_type=type(e).__name__,
+                error=str(e),
+                original_query=query,
+            )
             logger.exception("subquery_processing_exception")
             return {
                 "answer": f"An error occurred while processing your query: {str(e)}",

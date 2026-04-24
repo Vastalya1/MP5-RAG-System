@@ -4,6 +4,7 @@ LangGraph-based query decomposition for complex RAG questions.
 
 from __future__ import annotations
 
+import contextvars
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -13,7 +14,7 @@ from typing_extensions import TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from openai import OpenAI
-from shared.logging_utils import get_logger, log_error, log_info
+from shared.logging_utils import get_logger, log_error, log_info, log_query_error, log_query_step
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
@@ -118,6 +119,13 @@ Return JSON only in this exact shape:
             }
         except Exception as e:
             log_error(logger, "query_decomposition_planning_failed", error_type=type(e).__name__, error=str(e))
+            log_query_error(
+                logger,
+                "query_decomposition_plan",
+                generated=[query],
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return {
                 "should_decompose": False,
                 "sub_queries": [query],
@@ -197,6 +205,13 @@ Justification:
                 for result in sub_query_results
                 if result.get("justification")
             ).strip()
+            log_query_error(
+                logger,
+                "sub_query_synthesis",
+                generated=fallback_answer,
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return {
                 "answer": fallback_answer or "I could not synthesize a final answer from the sub-query results.",
                 "justification": fallback_justification,
@@ -235,6 +250,13 @@ class QueryDecompositionOrchestrator:
             "query_decomposition_plan_created",
             should_decompose=plan["should_decompose"],
             sub_query_count=len(plan["sub_queries"]),
+        )
+        log_query_step(
+            logger,
+            "query_decomposition_plan",
+            generated=plan["sub_queries"],
+            should_decompose=plan["should_decompose"],
+            reason=plan.get("reason"),
         )
         return {
             "should_decompose": plan["should_decompose"],
@@ -287,6 +309,7 @@ class QueryDecompositionOrchestrator:
         with ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="query-decomp") as executor:
             future_map = {
                 executor.submit(
+                    contextvars.copy_context().run,
                     self.rag_processor.process_sync,
                     sub_query,
                     state["scope"],
@@ -302,6 +325,14 @@ class QueryDecompositionOrchestrator:
                 try:
                     result = future.result()
                 except Exception as e:
+                    log_query_error(
+                        logger,
+                        "sub_query_processing",
+                        generated=str(e),
+                        sub_query=sub_query,
+                        error_type=type(e).__name__,
+                        error=str(e),
+                    )
                     result = {
                         "answer": f"An error occurred while processing this sub-query: {e}",
                         "justification": None,
@@ -315,6 +346,17 @@ class QueryDecompositionOrchestrator:
                     }
 
                 results.append({**result, "sub_query": sub_query})
+                log_query_step(
+                    logger,
+                    "sub_query_processed",
+                    generated={
+                        "sub_query": sub_query,
+                        "rewritten_query": result.get("rewritten_query"),
+                        "answer": result.get("answer", ""),
+                    },
+                    success=result.get("success", False),
+                    needs_web_scraping=result.get("needs_web_scraping", False),
+                )
 
         results.sort(key=lambda item: sub_queries.index(item.get("sub_query", "")))
         aggregated_sources = merge_sources([result.get("sources", []) for result in results])
@@ -337,6 +379,13 @@ class QueryDecompositionOrchestrator:
     def _synthesize_answer_node(self, state: DecompositionState) -> Dict[str, Any]:
         sub_query_results = state.get("sub_query_results", [])
         synthesis = self.synthesizer.synthesize(state["query"], sub_query_results)
+        log_query_step(
+            logger,
+            "sub_query_synthesis",
+            generated=synthesis.get("answer"),
+            sub_query_count=len(sub_query_results),
+            justification=synthesis.get("justification"),
+        )
         rewritten_queries = [
             result.get("rewritten_query", "")
             for result in sub_query_results
