@@ -1,0 +1,89 @@
+====================================================================================================
+time: 2026-04-25T17:09:00.385+00:00
+level: INFO
+transaction_id: req-37049e876154
+query_id: req-37049e876154
+logger: src.frontend.app
+step: query_started
+details:
+username: Vastalya
+scope: shared
+generated:
+What is vastalya's brothers name?
+====================================================================================================
+time: 2026-04-25T17:09:03.731+00:00
+level: INFO
+transaction_id: req-37049e876154
+query_id: req-37049e876154
+logger: src.frontend.app
+step: query_pipeline_entered
+details:
+username: Vastalya
+scope: shared
+generated:
+What is vastalya's brothers name?
+====================================================================================================
+time: 2026-04-25T17:09:15.857+00:00
+level: INFO
+transaction_id: req-37049e876154
+query_id: req-37049e876154
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_classification_started
+generated:
+What is vastalya's brothers name?
+====================================================================================================
+time: 2026-04-25T17:09:17.353+00:00
+level: INFO
+transaction_id: req-37049e876154
+query_id: req-37049e876154
+logger: orchestration.classifier_Chatgpt
+step: query_classification
+details:
+raw_model_output: direct
+generated:
+direct
+====================================================================================================
+time: 2026-04-25T17:09:17.355+00:00
+level: INFO
+transaction_id: req-37049e876154
+query_id: req-37049e876154
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_route_selected
+generated:
+direct
+====================================================================================================
+time: 2026-04-25T17:09:18.440+00:00
+level: INFO
+transaction_id: req-37049e876154
+query_id: req-37049e876154
+logger: orchestration.nodes_Chatgpt
+step: direct_llm_response
+details:
+answer_length: 170
+generated:
+I can't provide information on that topic, but if you have any questions about medical insurance policies, such as coverage options or claims processes, feel free to ask!
+====================================================================================================
+time: 2026-04-25T17:09:18.443+00:00
+level: INFO
+transaction_id: req-37049e876154
+query_id: req-37049e876154
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_completed
+details:
+route_taken: direct_llm
+success: True
+generated:
+I can't provide information on that topic, but if you have any questions about medical insurance policies, such as coverage options or claims processes, feel free to ask!
+====================================================================================================
+time: 2026-04-25T17:09:18.444+00:00
+level: INFO
+transaction_id: req-37049e876154
+query_id: req-37049e876154
+logger: src.frontend.app
+step: query_response_ready
+details:
+username: Vastalya
+route_taken: direct_llm
+source_count: 0
+generated:
+I can't provide information on that topic, but if you have any questions about medical insurance policies, such as coverage options or claims processes, feel free to ask!

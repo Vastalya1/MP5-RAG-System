@@ -1,0 +1,232 @@
+QUERY LIFECYCLE REPORT
+================================================================================
+query_id: phase-7e9e0e7f0c95
+scope: shared
+username: -
+collection_name: test_dataset
+document_filter: -
+
+ORIGINAL QUESTION
+--------------------------------------------------------------------------------
+What is the waiting period for cataract surgery?
+
+FINAL RESULT
+--------------------------------------------------------------------------------
+route_taken: rag
+success: True
+needs_web_scraping: False
+
+response:
+The waiting period for coverage of cataract surgery is 2 years.
+
+justification:
+Referenced from Section: 2) Specified disease/procedure waiting period (Code - Excl02)
+
+raw_query_log:
+D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\Logs\queries\phase-7e9e0e7f0c95.log
+
+QUERY PHASES
+--------------------------------------------------------------------------------
+1. query_started
+   time: 2026-04-24T18:45:54.808+00:00
+   level: INFO
+   logger: __main__
+   details:
+   - scope: shared
+   - collection_name: test_dataset
+   generated:
+     What is the waiting period for cataract surgery?
+
+2. orchestrator_classification_started
+   time: 2026-04-24T18:46:06.397+00:00
+   level: INFO
+   logger: orchestration.orchestrator_Chatgpt
+   generated:
+     What is the waiting period for cataract surgery?
+
+3. query_classification
+   time: 2026-04-24T18:46:08.013+00:00
+   level: INFO
+   logger: orchestration.classifier_Chatgpt
+   details:
+   - raw_model_output: rag
+   generated:
+     rag
+
+4. orchestrator_route_selected
+   time: 2026-04-24T18:46:08.017+00:00
+   level: INFO
+   logger: orchestration.orchestrator_Chatgpt
+   generated:
+     rag
+
+5. rag_processing_started
+   time: 2026-04-24T18:46:08.022+00:00
+   level: INFO
+   logger: orchestration.nodes_Chatgpt
+   details:
+   - scope: shared
+   - collection_name: test_dataset
+
+6. query_decomposition_plan
+   time: 2026-04-24T18:46:10.571+00:00
+   level: INFO
+   logger: queryDecomposition.orchestrator_Chatgpt
+   details:
+   - should_decompose: False
+   - reason: The question is focused and specific, asking only about the waiting period for cataract surgery.
+   generated:
+     [
+       "What is the waiting period for cataract surgery?"
+     ]
+
+7. query_rewrite
+   time: 2026-04-24T18:46:11.727+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - original_query: What is the waiting period for cataract surgery?
+   generated:
+     What is the waiting period applicable for coverage of cataract surgery?
+
+8. document_retrieval
+   time: 2026-04-24T18:46:13.993+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - retrieved_count: 15
+   - rewritten_query: What is the waiting period applicable for coverage of cataract surgery?
+   generated:
+     [
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "2) Specified disease/procedure waiting period (Code - Excl02)",
+         "distance": 0.89666593,
+         "hybrid_score": 0.03028233151183971,
+         "semantic_score": 0.5272409780672339,
+         "keyword_score": 16.487991839053496,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "a. Expenses related to the treatment of the listed Conditions, surgeries/treatments shall be excluded until the expiry of 24 months of continuous coverage after the date of inception of the first Global Health Care Polic"
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "2) Specified disease/procedure waiting period (Code-Excl02)",
+         "distance": 0.8963845,
+         "hybrid_score": 0.03021353930031804,
+         "semantic_score": 0.5273192224467138,
+         "keyword_score": 16.487991839053496,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "a. Expenses related to the treatment of the listed Conditions, surgeries/treatments shall be excluded until the expiry of 24 months of continuous coverage after the date of inception of the first Global Health Care Polic"
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "3) 30-day waiting period (Code - Excl03)",
+         "distance": 0.9187734,
+         "hybrid_score": 0.02854251012145749,
+         "semantic_score": 0.5211662825844886,
+         "keyword_score": 14.80148855569386,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "a. Expenses related to the treatment of any Illness within 30 days from the first Policy commencement date shall be excluded except claims arising due to an Accident, provided the same are covered. b. This exclusion shal"
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "3. Physiotherapy Benefit",
+         "distance": 0.91881466,
+         "hybrid_score": 0.02844551282051282,
+         "semantic_score": 0.5211550760196922,
+         "keyword_score": 15.360017240225936,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "D. Applicable for Part B-III (DENTAL PLAN BENEFITS FOR INTERNATIONAL COVER)  During the first year of Global Health Care Policy with Us, 30 days waiting period would be applicable for all claims under Dental Plan Benefi"
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "Exclusions applicable to Dental Plan Benefits",
+         "distance": 0.91365874,
+         "hybrid_score": 0.028258706467661692,
+         "semantic_score": 0.5225592103218989,
+         "keyword_score": 14.248588173697431,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "a. During the first year of Global Health Care Policy with Us, 30 days waiting period would be applicable for all claims except those arising out of Accidental Injury, however the waiting period would not be applied duri"
+       }
+     ]
+
+9. chunk_reranking
+   time: 2026-04-24T18:46:15.852+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - reranked_count: 3
+   generated:
+     [
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "2) Specified disease/procedure waiting period (Code - Excl02)",
+         "distance": 0.45957604,
+         "hybrid_score": 0.01639344262295082,
+         "semantic_score": 0.6851304574717464,
+         "keyword_score": null,
+         "matched_by": [
+           "semantic"
+         ],
+         "text_preview": "The specified disease/procedure waiting period for cataracts is 2."
+       },
+       {
+         "document": "Policy_Super_Star_V_3_80e5dd8988.pdf",
+         "section": "2. Specified disease / procedure waiting period –",
+         "distance": 0.62677914,
+         "hybrid_score": 0.016129032258064516,
+         "semantic_score": 0.6147115950847514,
+         "keyword_score": null,
+         "matched_by": [
+           "semantic"
+         ],
+         "text_preview": "If any of the specified disease / procedure falls under the waiting period specified for pre-Existing diseases, then the longer of the two waiting periods shall apply. D. The waiting period for listed conditions shall ap"
+       },
+       {
+         "document": "Classic_Group_Health_Insurance_6e05831c03.pdf",
+         "section": "2. Specified disease/procedure waiting period – Code Excl 02",
+         "distance": 0.7342108,
+         "hybrid_score": 0.015873015873015872,
+         "semantic_score": 0.5766311684830933,
+         "keyword_score": null,
+         "matched_by": [
+           "semantic"
+         ],
+         "text_preview": "A. Expenses related to the treatment of the following listed Conditions, surgeries/treatments shall be excluded until the expiry of 24 months of continuous coverage after the date of inception of the first policy with us"
+       }
+     ]
+
+10. answer_generation
+   time: 2026-04-24T18:46:17.392+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - justification: Referenced from Section: 2) Specified disease/procedure waiting period (Code - Excl02)
+   - source_count: 3
+   generated:
+     The waiting period for coverage of cataract surgery is 2 years.
+
+11. orchestrator_completed
+   time: 2026-04-24T18:46:17.400+00:00
+   level: INFO
+   logger: orchestration.orchestrator_Chatgpt
+   details:
+   - route_taken: rag
+   - success: True
+   generated:
+     The waiting period for coverage of cataract surgery is 2 years.

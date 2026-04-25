@@ -1,0 +1,89 @@
+====================================================================================================
+time: 2026-04-24T18:13:57.616+00:00
+level: INFO
+transaction_id: req-957aa3356be8
+query_id: req-957aa3356be8
+logger: src.frontend.app
+step: query_started
+details:
+username: Vastalya
+scope: shared
+generated:
+Who all are the actors in Dhurandhar 2?
+====================================================================================================
+time: 2026-04-24T18:14:00.221+00:00
+level: INFO
+transaction_id: req-957aa3356be8
+query_id: req-957aa3356be8
+logger: src.frontend.app
+step: query_pipeline_entered
+details:
+username: Vastalya
+scope: shared
+generated:
+Who all are the actors in Dhurandhar 2?
+====================================================================================================
+time: 2026-04-24T18:14:00.226+00:00
+level: INFO
+transaction_id: req-957aa3356be8
+query_id: req-957aa3356be8
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_classification_started
+generated:
+Who all are the actors in Dhurandhar 2?
+====================================================================================================
+time: 2026-04-24T18:14:01.040+00:00
+level: INFO
+transaction_id: req-957aa3356be8
+query_id: req-957aa3356be8
+logger: orchestration.classifier_Chatgpt
+step: query_classification
+details:
+raw_model_output: direct
+generated:
+direct
+====================================================================================================
+time: 2026-04-24T18:14:01.050+00:00
+level: INFO
+transaction_id: req-957aa3356be8
+query_id: req-957aa3356be8
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_route_selected
+generated:
+direct
+====================================================================================================
+time: 2026-04-24T18:14:03.015+00:00
+level: INFO
+transaction_id: req-957aa3356be8
+query_id: req-957aa3356be8
+logger: orchestration.nodes_Chatgpt
+step: direct_llm_response
+details:
+answer_length: 200
+generated:
+I appreciate your interest in movies! However, I'm here to assist with questions related to medical insurance policies. If you have any questions about coverage, claims, or benefits, feel free to ask!
+====================================================================================================
+time: 2026-04-24T18:14:03.018+00:00
+level: INFO
+transaction_id: req-957aa3356be8
+query_id: req-957aa3356be8
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_completed
+details:
+route_taken: direct_llm
+success: True
+generated:
+I appreciate your interest in movies! However, I'm here to assist with questions related to medical insurance policies. If you have any questions about coverage, claims, or benefits, feel free to ask!
+====================================================================================================
+time: 2026-04-24T18:14:03.021+00:00
+level: INFO
+transaction_id: req-957aa3356be8
+query_id: req-957aa3356be8
+logger: src.frontend.app
+step: query_response_ready
+details:
+username: Vastalya
+route_taken: direct_llm
+source_count: 0
+generated:
+I appreciate your interest in movies! However, I'm here to assist with questions related to medical insurance policies. If you have any questions about coverage, claims, or benefits, feel free to ask!

@@ -1,0 +1,90 @@
+====================================================================================================
+time: 2026-04-24T18:06:27.944+00:00
+level: INFO
+transaction_id: req-351b7bfcd7a7
+query_id: req-351b7bfcd7a7
+logger: src.frontend.app
+step: query_started
+details:
+username: Vastalya
+scope: shared
+generated:
+Who all are the actors in Dhurandhar 2?
+====================================================================================================
+time: 2026-04-24T18:06:30.551+00:00
+level: INFO
+transaction_id: req-351b7bfcd7a7
+query_id: req-351b7bfcd7a7
+logger: src.frontend.app
+step: query_pipeline_entered
+details:
+username: Vastalya
+scope: shared
+generated:
+Who all are the actors in Dhurandhar 2?
+====================================================================================================
+time: 2026-04-24T18:06:42.282+00:00
+level: INFO
+transaction_id: req-351b7bfcd7a7
+query_id: req-351b7bfcd7a7
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_classification_started
+generated:
+Who all are the actors in Dhurandhar 2?
+====================================================================================================
+time: 2026-04-24T18:06:43.643+00:00
+level: INFO
+transaction_id: req-351b7bfcd7a7
+query_id: req-351b7bfcd7a7
+logger: orchestration.classifier_Chatgpt
+step: query_classification
+details:
+raw_model_output: direct
+generated:
+direct
+====================================================================================================
+time: 2026-04-24T18:06:43.647+00:00
+level: INFO
+transaction_id: req-351b7bfcd7a7
+query_id: req-351b7bfcd7a7
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_route_selected
+generated:
+direct
+====================================================================================================
+time: 2026-04-24T18:06:46.168+00:00
+level: INFO
+transaction_id: req-351b7bfcd7a7
+query_id: req-351b7bfcd7a7
+logger: orchestration.nodes_Chatgpt
+step: direct_llm_response
+details:
+answer_length: 142
+direct_category: out_of_scope
+generated:
+I'm built for medical insurance policy questions. If you have inquiries about coverage, claims, benefits, or similar topics, feel free to ask!
+====================================================================================================
+time: 2026-04-24T18:06:46.172+00:00
+level: INFO
+transaction_id: req-351b7bfcd7a7
+query_id: req-351b7bfcd7a7
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_completed
+details:
+route_taken: direct_llm
+success: True
+generated:
+I'm built for medical insurance policy questions. If you have inquiries about coverage, claims, benefits, or similar topics, feel free to ask!
+====================================================================================================
+time: 2026-04-24T18:06:46.177+00:00
+level: INFO
+transaction_id: req-351b7bfcd7a7
+query_id: req-351b7bfcd7a7
+logger: src.frontend.app
+step: query_response_ready
+details:
+username: Vastalya
+route_taken: direct_llm
+source_count: 0
+generated:
+I'm built for medical insurance policy questions. If you have inquiries about coverage, claims, benefits, or similar topics, feel free to ask!

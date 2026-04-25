@@ -1,0 +1,89 @@
+====================================================================================================
+time: 2026-04-24T18:14:45.268+00:00
+level: INFO
+transaction_id: req-dfd39f569352
+query_id: req-dfd39f569352
+logger: src.frontend.app
+step: query_started
+details:
+username: Vastalya
+scope: shared
+generated:
+how r u?
+====================================================================================================
+time: 2026-04-24T18:14:47.965+00:00
+level: INFO
+transaction_id: req-dfd39f569352
+query_id: req-dfd39f569352
+logger: src.frontend.app
+step: query_pipeline_entered
+details:
+username: Vastalya
+scope: shared
+generated:
+how r u?
+====================================================================================================
+time: 2026-04-24T18:14:47.972+00:00
+level: INFO
+transaction_id: req-dfd39f569352
+query_id: req-dfd39f569352
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_classification_started
+generated:
+how r u?
+====================================================================================================
+time: 2026-04-24T18:14:49.226+00:00
+level: INFO
+transaction_id: req-dfd39f569352
+query_id: req-dfd39f569352
+logger: orchestration.classifier_Chatgpt
+step: query_classification
+details:
+raw_model_output: direct
+generated:
+direct
+====================================================================================================
+time: 2026-04-24T18:14:49.229+00:00
+level: INFO
+transaction_id: req-dfd39f569352
+query_id: req-dfd39f569352
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_route_selected
+generated:
+direct
+====================================================================================================
+time: 2026-04-24T18:14:51.011+00:00
+level: INFO
+transaction_id: req-dfd39f569352
+query_id: req-dfd39f569352
+logger: orchestration.nodes_Chatgpt
+step: direct_llm_response
+details:
+answer_length: 97
+generated:
+I'm here and ready to assist you! How can I help you today with your medical insurance questions?
+====================================================================================================
+time: 2026-04-24T18:14:51.016+00:00
+level: INFO
+transaction_id: req-dfd39f569352
+query_id: req-dfd39f569352
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_completed
+details:
+route_taken: direct_llm
+success: True
+generated:
+I'm here and ready to assist you! How can I help you today with your medical insurance questions?
+====================================================================================================
+time: 2026-04-24T18:14:51.022+00:00
+level: INFO
+transaction_id: req-dfd39f569352
+query_id: req-dfd39f569352
+logger: src.frontend.app
+step: query_response_ready
+details:
+username: Vastalya
+route_taken: direct_llm
+source_count: 0
+generated:
+I'm here and ready to assist you! How can I help you today with your medical insurance questions?

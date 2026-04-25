@@ -1,0 +1,915 @@
+2026-04-15 23:09:04,766 | INFO | tx=- | src.frontend.app | db_transaction_open
+2026-04-15 23:09:12,709 | INFO | tx=- | src.frontend.app | db_transaction_commit
+2026-04-15 23:09:12,716 | INFO | tx=- | src.frontend.app | db_connection_closed
+2026-04-15 23:09:12,716 | INFO | tx=- | src.frontend.app | application_started | orchestration_enabled=True
+2026-04-15 23:09:26,519 | INFO | tx=req-e12aab30af38 | src.frontend.app | request_started | method=GET path=/ client=127.0.0.1
+2026-04-15 23:09:26,521 | INFO | tx=req-e12aab30af38 | src.frontend.app | request_completed | method=GET path=/ status_code=302 duration_ms=1.34
+2026-04-15 23:09:26,526 | INFO | tx=req-fcab7f7a3c55 | src.frontend.app | request_started | method=GET path=/login client=127.0.0.1
+2026-04-15 23:09:26,531 | INFO | tx=req-fcab7f7a3c55 | src.frontend.app | request_completed | method=GET path=/login status_code=200 duration_ms=5.56
+2026-04-15 23:09:44,272 | INFO | tx=req-78921fd4e7cf | src.frontend.app | request_started | method=POST path=/login client=127.0.0.1
+2026-04-15 23:09:44,274 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_transaction_open
+2026-04-15 23:09:47,095 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_transaction_commit
+2026-04-15 23:09:47,096 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_connection_closed
+2026-04-15 23:09:47,096 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_transaction_open
+2026-04-15 23:09:49,837 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_transaction_commit
+2026-04-15 23:09:49,838 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_connection_closed
+2026-04-15 23:09:49,922 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_transaction_open
+2026-04-15 23:09:52,648 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_transaction_commit
+2026-04-15 23:09:52,649 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_connection_closed
+2026-04-15 23:09:52,649 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_transaction_open
+2026-04-15 23:09:55,315 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_transaction_commit
+2026-04-15 23:09:55,316 | INFO | tx=req-78921fd4e7cf | src.frontend.app | db_connection_closed
+2026-04-15 23:09:55,317 | INFO | tx=req-78921fd4e7cf | src.frontend.app | request_completed | method=POST path=/login status_code=302 duration_ms=11044.6
+2026-04-15 23:09:55,323 | INFO | tx=req-28b6e8afedbf | src.frontend.app | request_started | method=GET path=/admin client=127.0.0.1
+2026-04-15 23:09:55,327 | INFO | tx=req-28b6e8afedbf | src.frontend.app | request_completed | method=GET path=/admin status_code=200 duration_ms=3.72
+2026-04-15 23:09:59,225 | INFO | tx=req-010a7235a073 | src.frontend.app | request_started | method=GET path=/admin/all client=127.0.0.1
+2026-04-15 23:09:59,271 | INFO | tx=req-010a7235a073 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-15 23:10:00,509 | INFO | tx=req-010a7235a073 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-15 23:10:00,517 | INFO | tx=req-010a7235a073 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-15 23:10:01,615 | INFO | tx=req-010a7235a073 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-15 23:10:01,883 | INFO | tx=req-010a7235a073 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-15 23:10:01,927 | INFO | tx=req-010a7235a073 | src.frontend.app | chroma_client_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-15 23:10:02,194 | INFO | tx=req-010a7235a073 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-15 23:10:02,846 | INFO | tx=req-010a7235a073 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-15 23:10:03,098 | INFO | tx=req-010a7235a073 | src.frontend.app | document_options_chroma_read_completed | collection_name=test_dataset document_count=1
+2026-04-15 23:10:03,099 | INFO | tx=req-010a7235a073 | src.frontend.app | db_transaction_open
+2026-04-15 23:10:05,778 | INFO | tx=req-010a7235a073 | src.frontend.app | db_transaction_commit
+2026-04-15 23:10:05,779 | INFO | tx=req-010a7235a073 | src.frontend.app | db_connection_closed
+2026-04-15 23:10:06,042 | INFO | tx=req-010a7235a073 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/user_Vastalya_documents "HTTP/1.1 200 OK"
+2026-04-15 23:10:06,494 | INFO | tx=req-010a7235a073 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/45d9fbdf-12b3-457c-b242-6378cd1744c4/get "HTTP/1.1 200 OK"
+2026-04-15 23:10:06,495 | INFO | tx=req-010a7235a073 | src.frontend.app | document_options_chroma_read_completed | collection_name=user_Vastalya_documents document_count=1
+2026-04-15 23:10:06,495 | INFO | tx=req-010a7235a073 | src.frontend.app | db_transaction_open
+2026-04-15 23:10:09,179 | INFO | tx=req-010a7235a073 | src.frontend.app | db_transaction_commit
+2026-04-15 23:10:09,180 | INFO | tx=req-010a7235a073 | src.frontend.app | db_connection_closed
+2026-04-15 23:10:09,190 | INFO | tx=req-010a7235a073 | src.frontend.app | request_completed | method=GET path=/admin/all status_code=200 duration_ms=9964.43
+2026-04-15 23:10:09,222 | INFO | tx=req-b4b5fa6f86d7 | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-15 23:10:09,223 | INFO | tx=req-b4b5fa6f86d7 | src.frontend.app | db_transaction_open
+2026-04-15 23:10:12,436 | INFO | tx=req-b4b5fa6f86d7 | src.frontend.app | db_transaction_commit
+2026-04-15 23:10:12,436 | INFO | tx=req-b4b5fa6f86d7 | src.frontend.app | db_connection_closed
+2026-04-15 23:10:12,440 | INFO | tx=req-b4b5fa6f86d7 | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3218.44
+2026-04-15 23:11:22,086 | INFO | tx=req-599976f125d5 | src.frontend.app | request_started | method=POST path=/query client=127.0.0.1
+2026-04-15 23:11:22,088 | INFO | tx=req-599976f125d5 | src.frontend.app | db_transaction_open
+2026-04-15 23:11:24,817 | INFO | tx=req-599976f125d5 | src.frontend.app | db_transaction_commit
+2026-04-15 23:11:24,818 | INFO | tx=req-599976f125d5 | src.frontend.app | db_connection_closed
+2026-04-15 23:11:24,819 | INFO | tx=req-599976f125d5 | src.frontend.app | query_processing_started | username=Vastalya scope=shared
+2026-04-15 23:11:25,113 | INFO | tx=req-599976f125d5 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-15 23:11:25,113 | INFO | tx=req-599976f125d5 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-15 23:11:28,378 | INFO | tx=req-599976f125d5 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-15 23:11:29,440 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-15 23:11:29,440 | INFO | tx=req-599976f125d5 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-15 23:11:30,488 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-15 23:11:30,753 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-15 23:11:30,791 | INFO | tx=req-599976f125d5 | retriever.retrival | retriever_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-15 23:11:30,793 | INFO | tx=req-599976f125d5 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-15 23:11:30,794 | INFO | tx=req-599976f125d5 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-15 23:11:35,659 | INFO | tx=req-599976f125d5 | orchestration.nodes_Chatgpt | tavily_initialized
+2026-04-15 23:11:35,665 | INFO | tx=req-599976f125d5 | orchestration.orchestrator_Chatgpt | langgraph_compiled
+2026-04-15 23:11:35,665 | INFO | tx=req-599976f125d5 | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared
+2026-04-15 23:11:35,673 | INFO | tx=req-599976f125d5 | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=42
+2026-04-15 23:11:37,775 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-15 23:11:37,792 | INFO | tx=req-599976f125d5 | orchestration.classifier_Chatgpt | query_classified | route=rag
+2026-04-15 23:11:37,793 | INFO | tx=req-599976f125d5 | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=rag
+2026-04-15 23:11:37,795 | INFO | tx=req-599976f125d5 | orchestration.orchestrator_Chatgpt | orchestrator_rag_started | scope=shared
+2026-04-15 23:11:37,795 | INFO | tx=req-599976f125d5 | orchestration.nodes_Chatgpt | rag_process_node_started | scope=shared
+2026-04-15 23:11:39,481 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-15 23:11:39,484 | INFO | tx=req-599976f125d5 | queryDecomposition.orchestrator_Chatgpt | query_decomposition_plan_created | should_decompose=False sub_query_count=1
+2026-04-15 23:11:39,485 | INFO | tx=req-599976f125d5 | orchestration.rag_pipeline_Chatgpt | subquery_processing_started | scope=shared
+2026-04-15 23:11:41,304 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-15 23:11:41,311 | INFO | tx=req-599976f125d5 | queryRewriter.rewriting_Chatgpt | query_rewrite_completed | original_length=42 rewritten_length=78
+2026-04-15 23:11:41,311 | INFO | tx=req-599976f125d5 | orchestration.rag_pipeline_Chatgpt | subquery_retrieval_started | rewritten_query_length=78
+2026-04-15 23:11:41,599 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-15 23:11:42,392 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/query "HTTP/1.1 200 OK"
+2026-04-15 23:11:42,393 | INFO | tx=req-599976f125d5 | retriever.retrival | semantic_search_completed | collection_name=test_dataset chunk_count=30
+2026-04-15 23:11:42,685 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-15 23:11:43,090 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-15 23:11:43,609 | INFO | tx=req-599976f125d5 | retriever.retrival | keyword_search_completed | collection_name=test_dataset chunk_count=30
+2026-04-15 23:11:43,610 | INFO | tx=req-599976f125d5 | retriever.retrival | hybrid_search_completed | collection_name=test_dataset chunk_count=15
+2026-04-15 23:11:43,610 | INFO | tx=req-599976f125d5 | orchestration.rag_pipeline_Chatgpt | subquery_semantic_match_good | top_chunk_distance=0.6356
+2026-04-15 23:11:43,610 | INFO | tx=req-599976f125d5 | orchestration.rag_pipeline_Chatgpt | subquery_reranking_started | chunk_count=15
+2026-04-15 23:11:44,220 | INFO | tx=req-599976f125d5 | retriever.reranking_Chatgpt | metadata_reranking_completed | chunk_count=15
+2026-04-15 23:11:45,645 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-15 23:11:45,650 | INFO | tx=req-599976f125d5 | retriever.reranking_Chatgpt | sync_llm_reranking_completed | selected_count=4
+2026-04-15 23:11:45,651 | INFO | tx=req-599976f125d5 | orchestration.rag_pipeline_Chatgpt | subquery_answer_generation_started | reranked_count=4
+2026-04-15 23:11:47,788 | INFO | tx=req-599976f125d5 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-15 23:11:47,798 | INFO | tx=req-599976f125d5 | output.answerGeneration_Chatgpt | answer_generation_completed | source_count=4 chunk_count=4
+2026-04-15 23:11:47,800 | INFO | tx=req-599976f125d5 | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=rag
+2026-04-15 23:11:47,800 | INFO | tx=req-599976f125d5 | src.frontend.app | query_orchestration_completed | username=Vastalya route_taken=rag source_count=4
+2026-04-15 23:11:47,800 | INFO | tx=req-599976f125d5 | src.frontend.app | db_transaction_open
+2026-04-15 23:11:50,554 | INFO | tx=req-599976f125d5 | src.frontend.app | db_transaction_commit
+2026-04-15 23:11:50,555 | INFO | tx=req-599976f125d5 | src.frontend.app | db_connection_closed
+2026-04-15 23:11:50,555 | INFO | tx=req-599976f125d5 | src.frontend.app | request_completed | method=POST path=/query status_code=200 duration_ms=28469.34
+2026-04-15 23:11:50,559 | INFO | tx=req-9c332d96477a | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-15 23:11:50,560 | INFO | tx=req-9c332d96477a | src.frontend.app | db_transaction_open
+2026-04-15 23:11:53,876 | INFO | tx=req-9c332d96477a | src.frontend.app | db_transaction_commit
+2026-04-15 23:11:53,876 | INFO | tx=req-9c332d96477a | src.frontend.app | db_connection_closed
+2026-04-15 23:11:53,879 | INFO | tx=req-9c332d96477a | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3319.52
+2026-04-17 16:50:01,596 | INFO | tx=- | src.frontend.app | db_transaction_open
+2026-04-17 16:50:16,695 | INFO | tx=- | src.frontend.app | db_transaction_commit
+2026-04-17 16:50:16,702 | INFO | tx=- | src.frontend.app | db_connection_closed
+2026-04-17 16:50:16,703 | INFO | tx=- | src.frontend.app | application_started | orchestration_enabled=True
+2026-04-17 16:50:17,393 | INFO | tx=req-326e09c59e91 | src.frontend.app | request_started | method=GET path=/ client=127.0.0.1
+2026-04-17 16:50:17,394 | INFO | tx=req-326e09c59e91 | src.frontend.app | request_completed | method=GET path=/ status_code=302 duration_ms=1.36
+2026-04-17 16:50:17,402 | INFO | tx=req-759dc944af08 | src.frontend.app | request_started | method=GET path=/login client=127.0.0.1
+2026-04-17 16:50:17,462 | INFO | tx=req-759dc944af08 | src.frontend.app | request_completed | method=GET path=/login status_code=200 duration_ms=60.45
+2026-04-17 16:50:17,537 | INFO | tx=req-c52421fb6326 | src.frontend.app | request_started | method=GET path=/favicon.ico client=127.0.0.1
+2026-04-17 16:50:17,538 | INFO | tx=req-c52421fb6326 | src.frontend.app | request_completed | method=GET path=/favicon.ico status_code=404 duration_ms=1.13
+2026-04-17 16:50:28,100 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | request_started | method=POST path=/login client=127.0.0.1
+2026-04-17 16:50:28,102 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_transaction_open
+2026-04-17 16:50:30,747 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_transaction_commit
+2026-04-17 16:50:30,748 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_connection_closed
+2026-04-17 16:50:30,749 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_transaction_open
+2026-04-17 16:50:33,439 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_transaction_commit
+2026-04-17 16:50:33,440 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_connection_closed
+2026-04-17 16:50:33,567 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_transaction_open
+2026-04-17 16:50:36,238 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_transaction_commit
+2026-04-17 16:50:36,239 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_connection_closed
+2026-04-17 16:50:36,239 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_transaction_open
+2026-04-17 16:50:39,017 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_transaction_commit
+2026-04-17 16:50:39,018 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | db_connection_closed
+2026-04-17 16:50:39,018 | INFO | tx=req-99a2c4041ad7 | src.frontend.app | request_completed | method=POST path=/login status_code=302 duration_ms=10918.58
+2026-04-17 16:50:39,021 | INFO | tx=req-4135d70e7bb5 | src.frontend.app | request_started | method=GET path=/admin client=127.0.0.1
+2026-04-17 16:50:39,040 | INFO | tx=req-4135d70e7bb5 | src.frontend.app | request_completed | method=GET path=/admin status_code=200 duration_ms=18.4
+2026-04-17 16:51:03,329 | INFO | tx=req-411f3b803b7c | src.frontend.app | request_started | method=GET path=/admin/all client=127.0.0.1
+2026-04-17 16:51:03,396 | INFO | tx=req-411f3b803b7c | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-17 16:51:04,736 | INFO | tx=req-411f3b803b7c | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-17 16:51:04,745 | INFO | tx=req-411f3b803b7c | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-17 16:51:06,118 | INFO | tx=req-411f3b803b7c | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-17 16:51:06,397 | INFO | tx=req-411f3b803b7c | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-17 16:51:06,755 | INFO | tx=req-411f3b803b7c | src.frontend.app | chroma_client_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-17 16:51:07,014 | INFO | tx=req-411f3b803b7c | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-17 16:51:07,891 | INFO | tx=req-411f3b803b7c | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-17 16:51:08,133 | INFO | tx=req-411f3b803b7c | src.frontend.app | document_options_chroma_read_completed | collection_name=test_dataset document_count=1
+2026-04-17 16:51:08,134 | INFO | tx=req-411f3b803b7c | src.frontend.app | db_transaction_open
+2026-04-17 16:51:10,854 | INFO | tx=req-411f3b803b7c | src.frontend.app | db_transaction_commit
+2026-04-17 16:51:10,856 | INFO | tx=req-411f3b803b7c | src.frontend.app | db_connection_closed
+2026-04-17 16:51:11,109 | INFO | tx=req-411f3b803b7c | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/user_Vastalya_documents "HTTP/1.1 200 OK"
+2026-04-17 16:51:11,713 | INFO | tx=req-411f3b803b7c | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/45d9fbdf-12b3-457c-b242-6378cd1744c4/get "HTTP/1.1 200 OK"
+2026-04-17 16:51:11,716 | INFO | tx=req-411f3b803b7c | src.frontend.app | document_options_chroma_read_completed | collection_name=user_Vastalya_documents document_count=1
+2026-04-17 16:51:11,717 | INFO | tx=req-411f3b803b7c | src.frontend.app | db_transaction_open
+2026-04-17 16:51:14,496 | INFO | tx=req-411f3b803b7c | src.frontend.app | db_transaction_commit
+2026-04-17 16:51:14,497 | INFO | tx=req-411f3b803b7c | src.frontend.app | db_connection_closed
+2026-04-17 16:51:14,531 | INFO | tx=req-411f3b803b7c | src.frontend.app | request_completed | method=GET path=/admin/all status_code=200 duration_ms=11202.43
+2026-04-17 16:51:14,554 | INFO | tx=req-d0def97e1c19 | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-17 16:51:14,556 | INFO | tx=req-d0def97e1c19 | src.frontend.app | db_transaction_open
+2026-04-17 16:51:17,820 | INFO | tx=req-d0def97e1c19 | src.frontend.app | db_transaction_commit
+2026-04-17 16:51:17,823 | INFO | tx=req-d0def97e1c19 | src.frontend.app | db_connection_closed
+2026-04-17 16:51:17,830 | INFO | tx=req-d0def97e1c19 | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3276.22
+2026-04-17 16:51:26,646 | INFO | tx=req-cd331d6afb72 | src.frontend.app | request_started | method=POST path=/query client=127.0.0.1
+2026-04-17 16:51:26,650 | INFO | tx=req-cd331d6afb72 | src.frontend.app | db_transaction_open
+2026-04-17 16:51:29,236 | INFO | tx=req-cd331d6afb72 | src.frontend.app | db_transaction_commit
+2026-04-17 16:51:29,237 | INFO | tx=req-cd331d6afb72 | src.frontend.app | db_connection_closed
+2026-04-17 16:51:29,237 | INFO | tx=req-cd331d6afb72 | src.frontend.app | query_processing_started | username=Vastalya scope=personal selected_document=EDLHLGA23009V012223 (1).pdf collection_name=user_Vastalya_documents
+2026-04-17 16:51:29,673 | INFO | tx=req-cd331d6afb72 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-17 16:51:29,673 | INFO | tx=req-cd331d6afb72 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-17 16:51:33,144 | INFO | tx=req-cd331d6afb72 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-17 16:51:34,437 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-17 16:51:34,439 | INFO | tx=req-cd331d6afb72 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-17 16:51:35,823 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-17 16:51:36,084 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-17 16:51:36,111 | INFO | tx=req-cd331d6afb72 | retriever.retrival | retriever_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-17 16:51:36,116 | INFO | tx=req-cd331d6afb72 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-17 16:51:36,118 | INFO | tx=req-cd331d6afb72 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-17 16:51:43,255 | INFO | tx=req-cd331d6afb72 | orchestration.nodes_Chatgpt | tavily_initialized
+2026-04-17 16:51:43,299 | INFO | tx=req-cd331d6afb72 | orchestration.orchestrator_Chatgpt | langgraph_compiled
+2026-04-17 16:51:43,301 | INFO | tx=req-cd331d6afb72 | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=personal collection_name=user_Vastalya_documents document_filter=EDLHLGA23009V012223 (1).pdf
+2026-04-17 16:51:43,306 | INFO | tx=req-cd331d6afb72 | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=42
+2026-04-17 16:51:45,511 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-17 16:51:45,533 | INFO | tx=req-cd331d6afb72 | orchestration.classifier_Chatgpt | query_classified | route=rag
+2026-04-17 16:51:45,535 | INFO | tx=req-cd331d6afb72 | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=rag
+2026-04-17 16:51:45,538 | INFO | tx=req-cd331d6afb72 | orchestration.orchestrator_Chatgpt | orchestrator_rag_started | scope=personal collection_name=user_Vastalya_documents document_filter=EDLHLGA23009V012223 (1).pdf
+2026-04-17 16:51:45,539 | INFO | tx=req-cd331d6afb72 | orchestration.nodes_Chatgpt | rag_process_node_started | scope=personal collection_name=user_Vastalya_documents document_filter=EDLHLGA23009V012223 (1).pdf
+2026-04-17 16:51:47,844 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-17 16:51:47,857 | INFO | tx=req-cd331d6afb72 | queryDecomposition.orchestrator_Chatgpt | query_decomposition_plan_created | should_decompose=False sub_query_count=1
+2026-04-17 16:51:47,861 | INFO | tx=req-cd331d6afb72 | orchestration.rag_pipeline_Chatgpt | subquery_processing_started | scope=personal collection_name=user_Vastalya_documents document_filter=EDLHLGA23009V012223 (1).pdf
+2026-04-17 16:51:49,234 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-17 16:51:49,240 | INFO | tx=req-cd331d6afb72 | queryRewriter.rewriting_Chatgpt | query_rewrite_completed | original_length=42 rewritten_length=74
+2026-04-17 16:51:49,240 | INFO | tx=req-cd331d6afb72 | orchestration.rag_pipeline_Chatgpt | subquery_retrieval_started | rewritten_query_length=74
+2026-04-17 16:51:49,490 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/user_Vastalya_documents "HTTP/1.1 200 OK"
+2026-04-17 16:51:49,721 | INFO | tx=req-cd331d6afb72 | retriever.retrival | semantic_search_filter_applied | collection_name=user_Vastalya_documents document_filter=EDLHLGA23009V012223 (1).pdf
+2026-04-17 16:51:50,252 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/45d9fbdf-12b3-457c-b242-6378cd1744c4/query "HTTP/1.1 200 OK"
+2026-04-17 16:51:50,253 | INFO | tx=req-cd331d6afb72 | retriever.retrival | semantic_search_completed | collection_name=user_Vastalya_documents chunk_count=10 document_filter=EDLHLGA23009V012223 (1).pdf
+2026-04-17 16:51:50,507 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/user_Vastalya_documents "HTTP/1.1 200 OK"
+2026-04-17 16:51:50,793 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/45d9fbdf-12b3-457c-b242-6378cd1744c4/get "HTTP/1.1 200 OK"
+2026-04-17 16:51:50,795 | INFO | tx=req-cd331d6afb72 | retriever.retrival | keyword_search_completed | collection_name=user_Vastalya_documents chunk_count=10 document_filter=EDLHLGA23009V012223 (1).pdf
+2026-04-17 16:51:50,796 | INFO | tx=req-cd331d6afb72 | retriever.retrival | hybrid_search_completed | collection_name=user_Vastalya_documents chunk_count=10 document_filter=EDLHLGA23009V012223 (1).pdf
+2026-04-17 16:51:50,796 | INFO | tx=req-cd331d6afb72 | orchestration.rag_pipeline_Chatgpt | subquery_semantic_match_good | top_chunk_distance=0.2986
+2026-04-17 16:51:50,796 | INFO | tx=req-cd331d6afb72 | orchestration.rag_pipeline_Chatgpt | subquery_reranking_started | chunk_count=10
+2026-04-17 16:51:51,293 | INFO | tx=req-cd331d6afb72 | retriever.reranking_Chatgpt | metadata_reranking_completed | chunk_count=10
+2026-04-17 16:51:52,366 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-17 16:51:52,371 | INFO | tx=req-cd331d6afb72 | retriever.reranking_Chatgpt | sync_llm_reranking_completed | selected_count=4
+2026-04-17 16:51:52,371 | INFO | tx=req-cd331d6afb72 | orchestration.rag_pipeline_Chatgpt | subquery_answer_generation_started | reranked_count=4
+2026-04-17 16:51:55,315 | INFO | tx=req-cd331d6afb72 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-17 16:51:55,317 | INFO | tx=req-cd331d6afb72 | output.answerGeneration_Chatgpt | answer_generation_completed | source_count=4 chunk_count=4
+2026-04-17 16:51:55,320 | INFO | tx=req-cd331d6afb72 | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=rag
+2026-04-17 16:51:55,321 | INFO | tx=req-cd331d6afb72 | src.frontend.app | query_orchestration_completed | username=Vastalya route_taken=rag source_count=4
+2026-04-17 16:51:55,321 | INFO | tx=req-cd331d6afb72 | src.frontend.app | db_transaction_open
+2026-04-17 16:51:57,982 | INFO | tx=req-cd331d6afb72 | src.frontend.app | db_transaction_commit
+2026-04-17 16:51:57,983 | INFO | tx=req-cd331d6afb72 | src.frontend.app | db_connection_closed
+2026-04-17 16:51:57,983 | INFO | tx=req-cd331d6afb72 | src.frontend.app | request_completed | method=POST path=/query status_code=200 duration_ms=31337.09
+2026-04-17 16:51:57,990 | INFO | tx=req-02fab6915906 | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-17 16:51:57,991 | INFO | tx=req-02fab6915906 | src.frontend.app | db_transaction_open
+2026-04-17 16:52:01,153 | INFO | tx=req-02fab6915906 | src.frontend.app | db_transaction_commit
+2026-04-17 16:52:01,154 | INFO | tx=req-02fab6915906 | src.frontend.app | db_connection_closed
+2026-04-17 16:52:01,159 | INFO | tx=req-02fab6915906 | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3169.33
+2026-04-17 16:54:52,323 | INFO | tx=req-d7e8d9565546 | src.frontend.app | request_started | method=POST path=/query client=127.0.0.1
+2026-04-17 16:54:52,326 | INFO | tx=req-d7e8d9565546 | src.frontend.app | db_transaction_open
+2026-04-17 16:54:54,925 | INFO | tx=req-d7e8d9565546 | src.frontend.app | db_transaction_commit
+2026-04-17 16:54:54,927 | INFO | tx=req-d7e8d9565546 | src.frontend.app | db_connection_closed
+2026-04-17 16:54:54,928 | INFO | tx=req-d7e8d9565546 | src.frontend.app | query_processing_started | username=Vastalya scope=shared
+2026-04-17 16:54:54,929 | INFO | tx=req-d7e8d9565546 | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared
+2026-04-17 16:54:54,932 | INFO | tx=req-d7e8d9565546 | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=39
+2026-04-17 16:54:55,790 | INFO | tx=req-d7e8d9565546 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-17 16:54:55,794 | INFO | tx=req-d7e8d9565546 | orchestration.classifier_Chatgpt | query_classified | route=direct
+2026-04-17 16:54:55,796 | INFO | tx=req-d7e8d9565546 | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=direct
+2026-04-17 16:54:55,799 | INFO | tx=req-d7e8d9565546 | orchestration.orchestrator_Chatgpt | orchestrator_direct_llm_started | query_length=39
+2026-04-17 16:54:58,297 | INFO | tx=req-d7e8d9565546 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-17 16:54:58,300 | INFO | tx=req-d7e8d9565546 | orchestration.nodes_Chatgpt | direct_llm_completed | answer_length=120
+2026-04-17 16:54:58,301 | INFO | tx=req-d7e8d9565546 | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=direct_llm
+2026-04-17 16:54:58,302 | INFO | tx=req-d7e8d9565546 | src.frontend.app | query_orchestration_completed | username=Vastalya route_taken=direct_llm source_count=0
+2026-04-17 16:54:58,302 | INFO | tx=req-d7e8d9565546 | src.frontend.app | db_transaction_open
+2026-04-17 16:55:01,045 | INFO | tx=req-d7e8d9565546 | src.frontend.app | db_transaction_commit
+2026-04-17 16:55:01,046 | INFO | tx=req-d7e8d9565546 | src.frontend.app | db_connection_closed
+2026-04-17 16:55:01,047 | INFO | tx=req-d7e8d9565546 | src.frontend.app | request_completed | method=POST path=/query status_code=200 duration_ms=8723.65
+2026-04-17 16:55:01,050 | INFO | tx=req-3db9d73208bf | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-17 16:55:01,051 | INFO | tx=req-3db9d73208bf | src.frontend.app | db_transaction_open
+2026-04-17 16:55:04,791 | INFO | tx=req-3db9d73208bf | src.frontend.app | db_transaction_commit
+2026-04-17 16:55:04,791 | INFO | tx=req-3db9d73208bf | src.frontend.app | db_connection_closed
+2026-04-17 16:55:04,794 | INFO | tx=req-3db9d73208bf | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3743.77
+2026-04-24 23:22:11,600 | INFO | tx=- | src.frontend.app | db_transaction_open
+2026-04-24 23:22:20,995 | INFO | tx=- | src.frontend.app | db_transaction_commit
+2026-04-24 23:22:21,001 | INFO | tx=- | src.frontend.app | db_connection_closed
+2026-04-24 23:22:21,002 | INFO | tx=- | src.frontend.app | application_started | orchestration_enabled=True
+2026-04-24 23:22:42,831 | INFO | tx=req-745593e0b0df | src.frontend.app | request_started | method=GET path=/ client=127.0.0.1
+2026-04-24 23:22:42,832 | INFO | tx=req-745593e0b0df | src.frontend.app | request_completed | method=GET path=/ status_code=302 duration_ms=1.26
+2026-04-24 23:22:42,983 | INFO | tx=req-b7babc02a0c0 | src.frontend.app | request_started | method=GET path=/login client=127.0.0.1
+2026-04-24 23:22:42,992 | INFO | tx=req-b7babc02a0c0 | src.frontend.app | request_completed | method=GET path=/login status_code=200 duration_ms=8.5
+2026-04-24 23:22:43,304 | INFO | tx=req-35010fc01fa5 | src.frontend.app | request_started | method=GET path=/favicon.ico client=127.0.0.1
+2026-04-24 23:22:43,305 | INFO | tx=req-35010fc01fa5 | src.frontend.app | request_completed | method=GET path=/favicon.ico status_code=404 duration_ms=1.15
+2026-04-24 23:23:06,388 | INFO | tx=req-bf0ba74139cf | src.frontend.app | request_started | method=POST path=/login client=127.0.0.1
+2026-04-24 23:23:06,394 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_transaction_open
+2026-04-24 23:23:09,097 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_transaction_commit
+2026-04-24 23:23:09,097 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_connection_closed
+2026-04-24 23:23:09,098 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_transaction_open
+2026-04-24 23:23:11,864 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_transaction_commit
+2026-04-24 23:23:11,865 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_connection_closed
+2026-04-24 23:23:11,962 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_transaction_open
+2026-04-24 23:23:14,820 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_transaction_commit
+2026-04-24 23:23:14,821 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_connection_closed
+2026-04-24 23:23:14,821 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_transaction_open
+2026-04-24 23:23:17,574 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_transaction_commit
+2026-04-24 23:23:17,577 | INFO | tx=req-bf0ba74139cf | src.frontend.app | db_connection_closed
+2026-04-24 23:23:17,582 | INFO | tx=req-bf0ba74139cf | src.frontend.app | request_completed | method=POST path=/login status_code=302 duration_ms=11193.56
+2026-04-24 23:23:17,603 | INFO | tx=req-be10c0a722f3 | src.frontend.app | request_started | method=GET path=/admin client=127.0.0.1
+2026-04-24 23:23:17,624 | INFO | tx=req-be10c0a722f3 | src.frontend.app | request_completed | method=GET path=/admin status_code=200 duration_ms=20.34
+2026-04-24 23:23:54,209 | INFO | tx=req-92d077d5d3ed | src.frontend.app | request_started | method=GET path=/admin/all client=127.0.0.1
+2026-04-24 23:23:54,276 | INFO | tx=req-92d077d5d3ed | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-24 23:23:55,737 | INFO | tx=req-92d077d5d3ed | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-24 23:23:55,745 | INFO | tx=req-92d077d5d3ed | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-24 23:23:56,980 | INFO | tx=req-92d077d5d3ed | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-24 23:23:57,244 | INFO | tx=req-92d077d5d3ed | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-24 23:23:57,342 | INFO | tx=req-92d077d5d3ed | src.frontend.app | chroma_client_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-24 23:23:57,599 | INFO | tx=req-92d077d5d3ed | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-24 23:23:58,326 | INFO | tx=req-92d077d5d3ed | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-24 23:23:58,570 | INFO | tx=req-92d077d5d3ed | src.frontend.app | document_options_chroma_read_completed | collection_name=test_dataset document_count=1
+2026-04-24 23:23:58,571 | INFO | tx=req-92d077d5d3ed | src.frontend.app | db_transaction_open
+2026-04-24 23:24:01,248 | INFO | tx=req-92d077d5d3ed | src.frontend.app | db_transaction_commit
+2026-04-24 23:24:01,251 | INFO | tx=req-92d077d5d3ed | src.frontend.app | db_connection_closed
+2026-04-24 23:24:01,513 | INFO | tx=req-92d077d5d3ed | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/user_Vastalya_documents "HTTP/1.1 200 OK"
+2026-04-24 23:24:02,150 | INFO | tx=req-92d077d5d3ed | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/45d9fbdf-12b3-457c-b242-6378cd1744c4/get "HTTP/1.1 200 OK"
+2026-04-24 23:24:02,151 | INFO | tx=req-92d077d5d3ed | src.frontend.app | document_options_chroma_read_completed | collection_name=user_Vastalya_documents document_count=1
+2026-04-24 23:24:02,152 | INFO | tx=req-92d077d5d3ed | src.frontend.app | db_transaction_open
+2026-04-24 23:24:04,824 | INFO | tx=req-92d077d5d3ed | src.frontend.app | db_transaction_commit
+2026-04-24 23:24:04,827 | INFO | tx=req-92d077d5d3ed | src.frontend.app | db_connection_closed
+2026-04-24 23:24:04,845 | INFO | tx=req-92d077d5d3ed | src.frontend.app | request_completed | method=GET path=/admin/all status_code=200 duration_ms=10636.08
+2026-04-24 23:24:04,849 | INFO | tx=req-feabfea9ce2d | src.frontend.app | request_started | method=GET path=/admin/all client=127.0.0.1
+2026-04-24 23:24:05,101 | INFO | tx=req-feabfea9ce2d | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-24 23:24:05,738 | INFO | tx=req-feabfea9ce2d | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-24 23:24:05,980 | INFO | tx=req-feabfea9ce2d | src.frontend.app | document_options_chroma_read_completed | collection_name=test_dataset document_count=1
+2026-04-24 23:24:05,981 | INFO | tx=req-feabfea9ce2d | src.frontend.app | db_transaction_open
+2026-04-24 23:24:08,559 | INFO | tx=req-feabfea9ce2d | src.frontend.app | db_transaction_commit
+2026-04-24 23:24:08,561 | INFO | tx=req-feabfea9ce2d | src.frontend.app | db_connection_closed
+2026-04-24 23:24:08,811 | INFO | tx=req-feabfea9ce2d | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/user_Vastalya_documents "HTTP/1.1 200 OK"
+2026-04-24 23:24:09,236 | INFO | tx=req-feabfea9ce2d | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/45d9fbdf-12b3-457c-b242-6378cd1744c4/get "HTTP/1.1 200 OK"
+2026-04-24 23:24:09,238 | INFO | tx=req-feabfea9ce2d | src.frontend.app | document_options_chroma_read_completed | collection_name=user_Vastalya_documents document_count=1
+2026-04-24 23:24:09,241 | INFO | tx=req-feabfea9ce2d | src.frontend.app | db_transaction_open
+2026-04-24 23:24:11,871 | INFO | tx=req-feabfea9ce2d | src.frontend.app | db_transaction_commit
+2026-04-24 23:24:11,873 | INFO | tx=req-feabfea9ce2d | src.frontend.app | db_connection_closed
+2026-04-24 23:24:11,880 | INFO | tx=req-feabfea9ce2d | src.frontend.app | request_completed | method=GET path=/admin/all status_code=200 duration_ms=7030.9
+2026-04-24 23:24:11,971 | INFO | tx=req-60b058875a18 | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-24 23:24:11,972 | INFO | tx=req-60b058875a18 | src.frontend.app | db_transaction_open
+2026-04-24 23:24:15,572 | INFO | tx=req-60b058875a18 | src.frontend.app | db_transaction_commit
+2026-04-24 23:24:15,576 | INFO | tx=req-60b058875a18 | src.frontend.app | db_connection_closed
+2026-04-24 23:24:15,590 | INFO | tx=req-60b058875a18 | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3619.15
+2026-04-24 23:24:51,259 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | request_started | method=POST path=/query client=127.0.0.1
+2026-04-24 23:24:51,262 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | query_step | step=query_started generated_preview=What are the pre-hospitalization and post-hospitalization coverage durations under the policy, and what expenses are covered under in-patient hospitalization treatment? username=Vastalya scope=shared
+2026-04-24 23:24:51,264 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | db_transaction_open
+2026-04-24 23:24:54,035 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | db_transaction_commit
+2026-04-24 23:24:54,037 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | db_connection_closed
+2026-04-24 23:24:54,038 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | query_processing_started | username=Vastalya scope=shared
+2026-04-24 23:24:54,040 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | query_step | step=query_pipeline_entered generated_preview=What are the pre-hospitalization and post-hospitalization coverage durations under the policy, and what expenses are covered under in-patient hospitalization treatment? username=Vastalya scope=shared
+2026-04-24 23:24:54,550 | INFO | tx=req-31b95fd65ca3 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-24 23:24:54,551 | INFO | tx=req-31b95fd65ca3 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-24 23:24:57,977 | INFO | tx=req-31b95fd65ca3 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-24 23:24:59,183 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-24 23:24:59,186 | INFO | tx=req-31b95fd65ca3 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-24 23:25:00,336 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-24 23:25:00,599 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-24 23:25:00,675 | INFO | tx=req-31b95fd65ca3 | retriever.retrival | retriever_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-24 23:25:00,680 | INFO | tx=req-31b95fd65ca3 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-24 23:25:00,680 | INFO | tx=req-31b95fd65ca3 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-24 23:25:06,325 | INFO | tx=req-31b95fd65ca3 | orchestration.nodes_Chatgpt | tavily_initialized
+2026-04-24 23:25:06,334 | INFO | tx=req-31b95fd65ca3 | orchestration.orchestrator_Chatgpt | langgraph_compiled
+2026-04-24 23:25:06,335 | INFO | tx=req-31b95fd65ca3 | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared
+2026-04-24 23:25:06,345 | INFO | tx=req-31b95fd65ca3 | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=168
+2026-04-24 23:25:06,346 | INFO | tx=req-31b95fd65ca3 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_classification_started generated_preview=What are the pre-hospitalization and post-hospitalization coverage durations under the policy, and what expenses are covered under in-patient hospitalization treatment?
+2026-04-24 23:25:09,660 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:09,674 | INFO | tx=req-31b95fd65ca3 | orchestration.classifier_Chatgpt | query_classified | route=rag
+2026-04-24 23:25:09,675 | INFO | tx=req-31b95fd65ca3 | orchestration.classifier_Chatgpt | query_step | step=query_classification generated_preview=rag raw_model_output=rag
+2026-04-24 23:25:09,678 | INFO | tx=req-31b95fd65ca3 | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=rag
+2026-04-24 23:25:09,679 | INFO | tx=req-31b95fd65ca3 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_route_selected generated_preview=rag
+2026-04-24 23:25:09,682 | INFO | tx=req-31b95fd65ca3 | orchestration.orchestrator_Chatgpt | orchestrator_rag_started | scope=shared
+2026-04-24 23:25:09,683 | INFO | tx=req-31b95fd65ca3 | orchestration.nodes_Chatgpt | rag_process_node_started | scope=shared
+2026-04-24 23:25:09,684 | INFO | tx=req-31b95fd65ca3 | orchestration.nodes_Chatgpt | query_step | step=rag_processing_started scope=shared
+2026-04-24 23:25:11,765 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:11,766 | INFO | tx=req-31b95fd65ca3 | queryDecomposition.orchestrator_Chatgpt | query_decomposition_plan_created | should_decompose=True sub_query_count=3
+2026-04-24 23:25:11,767 | INFO | tx=req-31b95fd65ca3 | queryDecomposition.orchestrator_Chatgpt | query_step | step=query_decomposition_plan generated_preview=[\n  "What are the pre-hospitalization coverage durations under the policy?",\n  "What are the post-hospitalization coverage durations under the policy?",\n  "What expenses are covered under in-patient hospitalization tr... should_decompose=True reason=The question asks about distinct aspects of the policy: coverage durations for pre-hospitalization and post-hospitalization, and expenses covered during in-patient hospitalization.
+2026-04-24 23:25:11,771 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_processing_started | scope=shared
+2026-04-24 23:25:11,773 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_processing_started | scope=shared
+2026-04-24 23:25:11,775 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_processing_started | scope=shared
+2026-04-24 23:25:13,056 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:13,059 | INFO | tx=req-31b95fd65ca3 | queryRewriter.rewriting_Chatgpt | query_rewrite_completed | original_length=69 rewritten_length=92
+2026-04-24 23:25:13,061 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=query_rewrite generated_preview=What expenses are covered under inpatient hospitalization treatment as per the policy terms? original_query=What expenses are covered under in-patient hospitalization treatment?
+2026-04-24 23:25:13,069 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_retrieval_started | rewritten_query_length=92
+2026-04-24 23:25:13,324 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-24 23:25:13,501 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:13,503 | INFO | tx=req-31b95fd65ca3 | queryRewriter.rewriting_Chatgpt | query_rewrite_completed | original_length=69 rewritten_length=82
+2026-04-24 23:25:13,504 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=query_rewrite generated_preview=What are the coverage durations for pre-hospitalization expenses under the policy? original_query=What are the pre-hospitalization coverage durations under the policy?
+2026-04-24 23:25:13,505 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_retrieval_started | rewritten_query_length=82
+2026-04-24 23:25:13,754 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-24 23:25:13,897 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:13,903 | INFO | tx=req-31b95fd65ca3 | queryRewriter.rewriting_Chatgpt | query_rewrite_completed | original_length=70 rewritten_length=83
+2026-04-24 23:25:13,904 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=query_rewrite generated_preview=What are the coverage durations for post-hospitalization expenses under the policy? original_query=What are the post-hospitalization coverage durations under the policy?
+2026-04-24 23:25:13,907 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_retrieval_started | rewritten_query_length=83
+2026-04-24 23:25:14,395 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/query "HTTP/1.1 200 OK"
+2026-04-24 23:25:14,396 | INFO | tx=req-31b95fd65ca3 | retriever.retrival | semantic_search_completed | collection_name=test_dataset chunk_count=30
+2026-04-24 23:25:14,583 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/query "HTTP/1.1 200 OK"
+2026-04-24 23:25:14,585 | INFO | tx=req-31b95fd65ca3 | retriever.retrival | semantic_search_completed | collection_name=test_dataset chunk_count=30
+2026-04-24 23:25:14,654 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-24 23:25:14,657 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-24 23:25:14,830 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-24 23:25:14,934 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-24 23:25:15,106 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-24 23:25:15,462 | INFO | tx=req-31b95fd65ca3 | retriever.retrival | keyword_search_completed | collection_name=test_dataset chunk_count=30
+2026-04-24 23:25:15,462 | INFO | tx=req-31b95fd65ca3 | retriever.retrival | hybrid_search_completed | collection_name=test_dataset chunk_count=15
+2026-04-24 23:25:15,464 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=document_retrieval generated_preview=[\n  {\n    "document": "BAJHLIP23020V012223.pdf",\n    "section": "5. Day Care Procedures",\n    "distance": 0.5860926,\n    "hybrid_score": 0.031544957774465976,\n    "semantic_score": 0.6304802128198568,\n    "keyword_sco... retrieved_count=15 rewritten_query=What expenses are covered under inpatient hospitalization treatment as per the policy terms?
+2026-04-24 23:25:15,469 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_semantic_match_good | top_chunk_distance=0.5861
+2026-04-24 23:25:15,469 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_reranking_started | chunk_count=15
+2026-04-24 23:25:15,590 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/query "HTTP/1.1 200 OK"
+2026-04-24 23:25:15,591 | INFO | tx=req-31b95fd65ca3 | retriever.retrival | semantic_search_completed | collection_name=test_dataset chunk_count=30
+2026-04-24 23:25:15,593 | INFO | tx=req-31b95fd65ca3 | retriever.retrival | keyword_search_completed | collection_name=test_dataset chunk_count=30
+2026-04-24 23:25:15,593 | INFO | tx=req-31b95fd65ca3 | retriever.retrival | hybrid_search_completed | collection_name=test_dataset chunk_count=15
+2026-04-24 23:25:15,594 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=document_retrieval generated_preview=[\n  {\n    "document": "BAJHLIP23020V012223.pdf",\n    "section": "3. Post-Hospitalization",\n    "distance": 0.65376985,\n    "hybrid_score": 0.031099324975891997,\n    "semantic_score": 0.6046790609950955,\n    "keyword_s... retrieved_count=15 rewritten_query=What are the coverage durations for post-hospitalization expenses under the policy?
+2026-04-24 23:25:15,597 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_semantic_match_good | top_chunk_distance=0.5036
+2026-04-24 23:25:15,597 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_reranking_started | chunk_count=15
+2026-04-24 23:25:15,620 | INFO | tx=req-31b95fd65ca3 | retriever.retrival | keyword_search_completed | collection_name=test_dataset chunk_count=30
+2026-04-24 23:25:15,621 | INFO | tx=req-31b95fd65ca3 | retriever.retrival | hybrid_search_completed | collection_name=test_dataset chunk_count=15
+2026-04-24 23:25:15,622 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=document_retrieval generated_preview=[\n  {\n    "document": "BAJHLIP23020V012223.pdf",\n    "section": "2. Pre-Hospitalization",\n    "distance": 0.6729533,\n    "hybrid_score": 0.029910714285714284,\n    "semantic_score": 0.5977453166206134,\n    "keyword_sco... retrieved_count=15 rewritten_query=What are the coverage durations for pre-hospitalization expenses under the policy?
+2026-04-24 23:25:15,625 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_semantic_match_good | top_chunk_distance=0.5028
+2026-04-24 23:25:15,625 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_reranking_started | chunk_count=15
+2026-04-24 23:25:16,630 | INFO | tx=req-31b95fd65ca3 | retriever.reranking_Chatgpt | metadata_reranking_completed | chunk_count=15
+2026-04-24 23:25:16,698 | INFO | tx=req-31b95fd65ca3 | retriever.reranking_Chatgpt | metadata_reranking_completed | chunk_count=15
+2026-04-24 23:25:16,721 | INFO | tx=req-31b95fd65ca3 | retriever.reranking_Chatgpt | metadata_reranking_completed | chunk_count=15
+2026-04-24 23:25:17,790 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:17,792 | INFO | tx=req-31b95fd65ca3 | retriever.reranking_Chatgpt | sync_llm_reranking_completed | selected_count=3
+2026-04-24 23:25:17,793 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=chunk_reranking generated_preview=[\n  {\n    "document": "BAJHLIP23020V012223.pdf",\n    "section": "1. In-patient Hospitalization Treatment",\n    "distance": 0.6230583,\n    "hybrid_score": 0.015151515151515152,\n    "semantic_score": 0.6161208134051624,... reranked_count=3
+2026-04-24 23:25:17,796 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_answer_generation_started | reranked_count=3
+2026-04-24 23:25:17,878 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:17,882 | INFO | tx=req-31b95fd65ca3 | retriever.reranking_Chatgpt | sync_llm_reranking_completed | selected_count=3
+2026-04-24 23:25:17,883 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=chunk_reranking generated_preview=[\n  {\n    "document": "Health Companion-Health Insurance Plan_GEN617.pdf",\n    "section": "2.4. Post-hospitalization Medical Expenses",\n    "distance": 0.5036295,\n    "hybrid_score": 0.01639344262295082,\n    "semantic... reranked_count=3
+2026-04-24 23:25:17,885 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_answer_generation_started | reranked_count=3
+2026-04-24 23:25:18,508 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:18,510 | INFO | tx=req-31b95fd65ca3 | retriever.reranking_Chatgpt | sync_llm_reranking_completed | selected_count=3
+2026-04-24 23:25:18,512 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=chunk_reranking generated_preview=[\n  {\n    "document": "Health Companion-Health Insurance Plan_GEN617.pdf",\n    "section": "2.3. Pre-hospitalization Medical Expenses",\n    "distance": 0.5027529,\n    "hybrid_score": 0.01639344262295082,\n    "semantic_... reranked_count=3
+2026-04-24 23:25:18,515 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | subquery_answer_generation_started | reranked_count=3
+2026-04-24 23:25:19,454 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:19,455 | INFO | tx=req-31b95fd65ca3 | output.answerGeneration_Chatgpt | answer_generation_completed | source_count=3 chunk_count=3
+2026-04-24 23:25:19,456 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=answer_generation generated_preview=The coverage duration for post-hospitalization expenses under the policy varies. According to the policy, expenses can be covered for up to 60 days, 90 days, or 180 days after discharge from the hospital, depending on... justification=Referenced from Section: 2.4. Post-hospitalization Medical Expenses and Section 3. Post-Hospitalization. source_count=3
+2026-04-24 23:25:19,457 | INFO | tx=req-31b95fd65ca3 | queryDecomposition.orchestrator_Chatgpt | query_step | step=sub_query_processed generated_preview={\n  "sub_query": "What are the post-hospitalization coverage durations under the policy?",\n  "rewritten_query": "What are the coverage durations for post-hospitalization expenses under the policy?",\n  "answer": "The c... success=True needs_web_scraping=False
+2026-04-24 23:25:20,249 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:20,251 | INFO | tx=req-31b95fd65ca3 | output.answerGeneration_Chatgpt | answer_generation_completed | source_count=3 chunk_count=3
+2026-04-24 23:25:20,251 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=answer_generation generated_preview=Inpatient hospitalization treatment covers various medical expenses incurred when you are hospitalized due to an illness or injury. These include costs for room and boarding in a private air-conditioned room, ICU expe... justification=Referenced from Section: 1. In-patient Hospitalization Treatment source_count=3
+2026-04-24 23:25:20,253 | INFO | tx=req-31b95fd65ca3 | queryDecomposition.orchestrator_Chatgpt | query_step | step=sub_query_processed generated_preview={\n  "sub_query": "What expenses are covered under in-patient hospitalization treatment?",\n  "rewritten_query": "What expenses are covered under inpatient hospitalization treatment as per the policy terms?",\n  "answer"... success=True needs_web_scraping=False
+2026-04-24 23:25:20,843 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:20,844 | INFO | tx=req-31b95fd65ca3 | output.answerGeneration_Chatgpt | answer_generation_completed | source_count=3 chunk_count=3
+2026-04-24 23:25:20,845 | INFO | tx=req-31b95fd65ca3 | orchestration.rag_pipeline_Chatgpt | query_step | step=answer_generation generated_preview=The coverage duration for pre-hospitalization expenses under the policy is up to 30 days immediately before your admission to the hospital for the same illness, as long as an inpatient hospitalization claim has been a... justification=Referenced from Section: 2.3. Pre-hospitalization Medical Expenses. source_count=3
+2026-04-24 23:25:20,846 | INFO | tx=req-31b95fd65ca3 | queryDecomposition.orchestrator_Chatgpt | query_step | step=sub_query_processed generated_preview={\n  "sub_query": "What are the pre-hospitalization coverage durations under the policy?",\n  "rewritten_query": "What are the coverage durations for pre-hospitalization expenses under the policy?",\n  "answer": "The cov... success=True needs_web_scraping=False
+2026-04-24 23:25:24,700 | INFO | tx=req-31b95fd65ca3 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:25:24,703 | INFO | tx=req-31b95fd65ca3 | queryDecomposition.orchestrator_Chatgpt | query_step | step=sub_query_synthesis generated_preview=Under the policy, the coverage duration for pre-hospitalization expenses is up to 30 days immediately before your admission to the hospital for the same illness, provided that an inpatient hospitalization claim has be... sub_query_count=3 justification=This answer synthesizes information from the sub-query results regarding pre-hospitalization (Section 2.3), post-hospitalization (Sections 2.4 and 3), and inpatient hospitalization treatment (Section 1).
+2026-04-24 23:25:24,713 | INFO | tx=req-31b95fd65ca3 | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=rag
+2026-04-24 23:25:24,714 | INFO | tx=req-31b95fd65ca3 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_completed generated_preview=Under the policy, the coverage duration for pre-hospitalization expenses is up to 30 days immediately before your admission to the hospital for the same illness, provided that an inpatient hospitalization claim has be... route_taken=rag success=True
+2026-04-24 23:25:24,721 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | query_orchestration_completed | username=Vastalya route_taken=rag source_count=7
+2026-04-24 23:25:24,723 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | query_step | step=query_response_ready generated_preview=Under the policy, the coverage duration for pre-hospitalization expenses is up to 30 days immediately before your admission to the hospital for the same illness, provided that an inpatient hospitalization claim has be... username=Vastalya route_taken=rag source_count=7 justification=This answer synthesizes information from the sub-query results regarding pre-hospitalization (Section 2.3), post-hospitalization (Sections 2.4 and 3), and inpatient hospitalization treatment (Section 1).
+2026-04-24 23:25:24,730 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | db_transaction_open
+2026-04-24 23:25:27,432 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | db_transaction_commit
+2026-04-24 23:25:27,433 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | db_connection_closed
+2026-04-24 23:25:27,434 | INFO | tx=req-31b95fd65ca3 | src.frontend.app | request_completed | method=POST path=/query status_code=200 duration_ms=36175.4
+2026-04-24 23:25:27,440 | INFO | tx=req-47fa619d208c | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-24 23:25:27,441 | INFO | tx=req-47fa619d208c | src.frontend.app | db_transaction_open
+2026-04-24 23:25:30,864 | INFO | tx=req-47fa619d208c | src.frontend.app | db_transaction_commit
+2026-04-24 23:25:30,867 | INFO | tx=req-47fa619d208c | src.frontend.app | db_connection_closed
+2026-04-24 23:25:30,889 | INFO | tx=req-47fa619d208c | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3449.36
+2026-04-24 23:34:38,373 | INFO | tx=- | src.frontend.app | db_transaction_open
+2026-04-24 23:34:46,087 | INFO | tx=- | src.frontend.app | db_transaction_commit
+2026-04-24 23:34:46,090 | INFO | tx=- | src.frontend.app | db_connection_closed
+2026-04-24 23:34:46,091 | INFO | tx=- | src.frontend.app | application_started | orchestration_enabled=True
+2026-04-24 23:35:51,142 | INFO | tx=req-8984e11659da | src.frontend.app | request_started | method=GET path=/admin/all client=127.0.0.1
+2026-04-24 23:35:51,187 | INFO | tx=req-8984e11659da | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-24 23:35:52,499 | INFO | tx=req-8984e11659da | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-24 23:35:52,502 | INFO | tx=req-8984e11659da | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-24 23:35:53,681 | INFO | tx=req-8984e11659da | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-24 23:35:53,934 | INFO | tx=req-8984e11659da | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-24 23:35:54,001 | INFO | tx=req-8984e11659da | src.frontend.app | chroma_client_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-24 23:35:54,250 | INFO | tx=req-8984e11659da | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-24 23:35:54,783 | INFO | tx=req-8984e11659da | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-24 23:35:55,028 | INFO | tx=req-8984e11659da | src.frontend.app | document_options_chroma_read_completed | collection_name=test_dataset document_count=1
+2026-04-24 23:35:55,029 | INFO | tx=req-8984e11659da | src.frontend.app | db_transaction_open
+2026-04-24 23:35:57,758 | INFO | tx=req-8984e11659da | src.frontend.app | db_transaction_commit
+2026-04-24 23:35:57,759 | INFO | tx=req-8984e11659da | src.frontend.app | db_connection_closed
+2026-04-24 23:35:58,009 | INFO | tx=req-8984e11659da | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/user_Vastalya_documents "HTTP/1.1 200 OK"
+2026-04-24 23:35:58,305 | INFO | tx=req-8984e11659da | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/45d9fbdf-12b3-457c-b242-6378cd1744c4/get "HTTP/1.1 200 OK"
+2026-04-24 23:35:58,306 | INFO | tx=req-8984e11659da | src.frontend.app | document_options_chroma_read_completed | collection_name=user_Vastalya_documents document_count=1
+2026-04-24 23:35:58,306 | INFO | tx=req-8984e11659da | src.frontend.app | db_transaction_open
+2026-04-24 23:36:00,902 | INFO | tx=req-8984e11659da | src.frontend.app | db_transaction_commit
+2026-04-24 23:36:00,903 | INFO | tx=req-8984e11659da | src.frontend.app | db_connection_closed
+2026-04-24 23:36:00,915 | INFO | tx=req-8984e11659da | src.frontend.app | request_completed | method=GET path=/admin/all status_code=200 duration_ms=9773.16
+2026-04-24 23:36:00,978 | INFO | tx=req-988512bbbf7a | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-24 23:36:00,980 | INFO | tx=req-988512bbbf7a | src.frontend.app | db_transaction_open
+2026-04-24 23:36:04,460 | INFO | tx=req-988512bbbf7a | src.frontend.app | db_transaction_commit
+2026-04-24 23:36:04,461 | INFO | tx=req-988512bbbf7a | src.frontend.app | db_connection_closed
+2026-04-24 23:36:04,466 | INFO | tx=req-988512bbbf7a | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3488.53
+2026-04-24 23:36:27,937 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | request_started | method=POST path=/query client=127.0.0.1
+2026-04-24 23:36:27,942 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | query_step | step=query_started generated_preview=Who all are the actors in Dhurandhar 2? username=Vastalya scope=shared
+2026-04-24 23:36:27,945 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | db_transaction_open
+2026-04-24 23:36:30,544 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | db_transaction_commit
+2026-04-24 23:36:30,546 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | db_connection_closed
+2026-04-24 23:36:30,547 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | query_processing_started | username=Vastalya scope=shared
+2026-04-24 23:36:30,548 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | query_step | step=query_pipeline_entered generated_preview=Who all are the actors in Dhurandhar 2? username=Vastalya scope=shared
+2026-04-24 23:36:31,000 | INFO | tx=req-351b7bfcd7a7 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-24 23:36:31,000 | INFO | tx=req-351b7bfcd7a7 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-24 23:36:34,181 | INFO | tx=req-351b7bfcd7a7 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-24 23:36:35,343 | INFO | tx=req-351b7bfcd7a7 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-24 23:36:35,346 | INFO | tx=req-351b7bfcd7a7 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-24 23:36:36,487 | INFO | tx=req-351b7bfcd7a7 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-24 23:36:36,748 | INFO | tx=req-351b7bfcd7a7 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-24 23:36:36,823 | INFO | tx=req-351b7bfcd7a7 | retriever.retrival | retriever_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-24 23:36:36,826 | INFO | tx=req-351b7bfcd7a7 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-24 23:36:36,827 | INFO | tx=req-351b7bfcd7a7 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-24 23:36:42,271 | INFO | tx=req-351b7bfcd7a7 | orchestration.nodes_Chatgpt | tavily_initialized
+2026-04-24 23:36:42,278 | INFO | tx=req-351b7bfcd7a7 | orchestration.orchestrator_Chatgpt | langgraph_compiled
+2026-04-24 23:36:42,278 | INFO | tx=req-351b7bfcd7a7 | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared
+2026-04-24 23:36:42,281 | INFO | tx=req-351b7bfcd7a7 | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=39
+2026-04-24 23:36:42,282 | INFO | tx=req-351b7bfcd7a7 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_classification_started generated_preview=Who all are the actors in Dhurandhar 2?
+2026-04-24 23:36:43,618 | INFO | tx=req-351b7bfcd7a7 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:36:43,640 | INFO | tx=req-351b7bfcd7a7 | orchestration.classifier_Chatgpt | query_classified | route=direct
+2026-04-24 23:36:43,641 | INFO | tx=req-351b7bfcd7a7 | orchestration.classifier_Chatgpt | query_step | step=query_classification generated_preview=direct raw_model_output=direct
+2026-04-24 23:36:43,645 | INFO | tx=req-351b7bfcd7a7 | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=direct
+2026-04-24 23:36:43,645 | INFO | tx=req-351b7bfcd7a7 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_route_selected generated_preview=direct
+2026-04-24 23:36:43,650 | INFO | tx=req-351b7bfcd7a7 | orchestration.orchestrator_Chatgpt | orchestrator_direct_llm_started | query_length=39
+2026-04-24 23:36:46,162 | INFO | tx=req-351b7bfcd7a7 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:36:46,166 | INFO | tx=req-351b7bfcd7a7 | orchestration.nodes_Chatgpt | direct_llm_completed | answer_length=142
+2026-04-24 23:36:46,167 | INFO | tx=req-351b7bfcd7a7 | orchestration.nodes_Chatgpt | query_step | step=direct_llm_response generated_preview=I'm built for medical insurance policy questions. If you have inquiries about coverage, claims, benefits, or similar topics, feel free to ask! answer_length=142 direct_category=out_of_scope
+2026-04-24 23:36:46,169 | INFO | tx=req-351b7bfcd7a7 | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=direct_llm
+2026-04-24 23:36:46,170 | INFO | tx=req-351b7bfcd7a7 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_completed generated_preview=I'm built for medical insurance policy questions. If you have inquiries about coverage, claims, benefits, or similar topics, feel free to ask! route_taken=direct_llm success=True
+2026-04-24 23:36:46,173 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | query_orchestration_completed | username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:36:46,174 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | query_step | step=query_response_ready generated_preview=I'm built for medical insurance policy questions. If you have inquiries about coverage, claims, benefits, or similar topics, feel free to ask! username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:36:46,177 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | db_transaction_open
+2026-04-24 23:36:48,834 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | db_transaction_commit
+2026-04-24 23:36:48,836 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | db_connection_closed
+2026-04-24 23:36:48,837 | INFO | tx=req-351b7bfcd7a7 | src.frontend.app | request_completed | method=POST path=/query status_code=200 duration_ms=20899.95
+2026-04-24 23:36:48,857 | INFO | tx=req-735ba7fbbe79 | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-24 23:36:48,866 | INFO | tx=req-735ba7fbbe79 | src.frontend.app | db_transaction_open
+2026-04-24 23:36:52,401 | INFO | tx=req-735ba7fbbe79 | src.frontend.app | db_transaction_commit
+2026-04-24 23:36:52,402 | INFO | tx=req-735ba7fbbe79 | src.frontend.app | db_connection_closed
+2026-04-24 23:36:52,407 | INFO | tx=req-735ba7fbbe79 | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3550.05
+2026-04-24 23:39:27,469 | INFO | tx=req-747da097fe9f | src.frontend.app | request_started | method=POST path=/query client=127.0.0.1
+2026-04-24 23:39:27,473 | INFO | tx=req-747da097fe9f | src.frontend.app | query_step | step=query_started generated_preview=what is accounting? username=Vastalya scope=shared
+2026-04-24 23:39:27,476 | INFO | tx=req-747da097fe9f | src.frontend.app | db_transaction_open
+2026-04-24 23:39:30,067 | INFO | tx=req-747da097fe9f | src.frontend.app | db_transaction_commit
+2026-04-24 23:39:30,069 | INFO | tx=req-747da097fe9f | src.frontend.app | db_connection_closed
+2026-04-24 23:39:30,070 | INFO | tx=req-747da097fe9f | src.frontend.app | query_processing_started | username=Vastalya scope=shared
+2026-04-24 23:39:30,071 | INFO | tx=req-747da097fe9f | src.frontend.app | query_step | step=query_pipeline_entered generated_preview=what is accounting? username=Vastalya scope=shared
+2026-04-24 23:39:30,076 | INFO | tx=req-747da097fe9f | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared
+2026-04-24 23:39:30,081 | INFO | tx=req-747da097fe9f | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=19
+2026-04-24 23:39:30,082 | INFO | tx=req-747da097fe9f | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_classification_started generated_preview=what is accounting?
+2026-04-24 23:39:30,754 | INFO | tx=req-30c523d7e40a | src.frontend.app | request_started | method=POST path=/query client=127.0.0.1
+2026-04-24 23:39:30,758 | INFO | tx=req-30c523d7e40a | src.frontend.app | query_step | step=query_started generated_preview=what is accounting? username=Vastalya scope=shared
+2026-04-24 23:39:30,761 | INFO | tx=req-30c523d7e40a | src.frontend.app | db_transaction_open
+2026-04-24 23:39:31,331 | INFO | tx=req-747da097fe9f | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:39:31,334 | INFO | tx=req-747da097fe9f | orchestration.classifier_Chatgpt | query_classified | route=direct
+2026-04-24 23:39:31,335 | INFO | tx=req-747da097fe9f | orchestration.classifier_Chatgpt | query_step | step=query_classification generated_preview=direct raw_model_output=direct
+2026-04-24 23:39:33,466 | INFO | tx=req-30c523d7e40a | src.frontend.app | db_transaction_commit
+2026-04-24 23:39:33,469 | INFO | tx=req-30c523d7e40a | src.frontend.app | db_connection_closed
+2026-04-24 23:39:33,471 | INFO | tx=req-30c523d7e40a | src.frontend.app | query_processing_started | username=Vastalya scope=shared
+2026-04-24 23:39:33,472 | INFO | tx=req-30c523d7e40a | src.frontend.app | query_step | step=query_pipeline_entered generated_preview=what is accounting? username=Vastalya scope=shared
+2026-04-24 23:39:33,478 | INFO | tx=req-30c523d7e40a | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared
+2026-04-24 23:39:33,480 | INFO | tx=req-30c523d7e40a | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=19
+2026-04-24 23:39:33,481 | INFO | tx=req-30c523d7e40a | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_classification_started generated_preview=what is accounting?
+2026-04-24 23:39:33,482 | INFO | tx=req-747da097fe9f | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=direct
+2026-04-24 23:39:33,484 | INFO | tx=req-747da097fe9f | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_route_selected generated_preview=direct
+2026-04-24 23:39:33,494 | INFO | tx=req-747da097fe9f | orchestration.orchestrator_Chatgpt | orchestrator_direct_llm_started | query_length=19
+2026-04-24 23:39:34,727 | INFO | tx=req-30c523d7e40a | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:39:34,737 | INFO | tx=req-30c523d7e40a | orchestration.classifier_Chatgpt | query_classified | route=direct
+2026-04-24 23:39:34,738 | INFO | tx=req-30c523d7e40a | orchestration.classifier_Chatgpt | query_step | step=query_classification generated_preview=direct raw_model_output=direct
+2026-04-24 23:39:35,589 | INFO | tx=req-747da097fe9f | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:39:35,593 | INFO | tx=req-747da097fe9f | orchestration.nodes_Chatgpt | direct_llm_completed | answer_length=171
+2026-04-24 23:39:35,595 | INFO | tx=req-747da097fe9f | orchestration.nodes_Chatgpt | query_step | step=direct_llm_response generated_preview=I'm designed to assist with medical insurance policy questions. If you have inquiries about coverage, claims, benefits, or anything related to insurance, feel free to ask! answer_length=171 direct_category=out_of_scope
+2026-04-24 23:39:35,604 | INFO | tx=req-747da097fe9f | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=direct_llm
+2026-04-24 23:39:35,605 | INFO | tx=req-30c523d7e40a | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=direct
+2026-04-24 23:39:35,608 | INFO | tx=req-747da097fe9f | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_completed generated_preview=I'm designed to assist with medical insurance policy questions. If you have inquiries about coverage, claims, benefits, or anything related to insurance, feel free to ask! route_taken=direct_llm success=True
+2026-04-24 23:39:35,610 | INFO | tx=req-30c523d7e40a | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_route_selected generated_preview=direct
+2026-04-24 23:39:35,618 | INFO | tx=req-747da097fe9f | src.frontend.app | query_orchestration_completed | username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:39:35,621 | INFO | tx=req-747da097fe9f | src.frontend.app | query_step | step=query_response_ready generated_preview=I'm designed to assist with medical insurance policy questions. If you have inquiries about coverage, claims, benefits, or anything related to insurance, feel free to ask! username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:39:35,627 | INFO | tx=req-747da097fe9f | src.frontend.app | db_transaction_open
+2026-04-24 23:39:38,254 | INFO | tx=req-747da097fe9f | src.frontend.app | db_transaction_commit
+2026-04-24 23:39:38,256 | INFO | tx=req-747da097fe9f | src.frontend.app | db_connection_closed
+2026-04-24 23:39:38,258 | INFO | tx=req-747da097fe9f | src.frontend.app | request_completed | method=POST path=/query status_code=200 duration_ms=10788.78
+2026-04-24 23:39:38,268 | INFO | tx=req-30c523d7e40a | orchestration.orchestrator_Chatgpt | orchestrator_direct_llm_started | query_length=19
+2026-04-24 23:39:40,013 | INFO | tx=req-30c523d7e40a | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:39:40,020 | INFO | tx=req-30c523d7e40a | orchestration.nodes_Chatgpt | direct_llm_completed | answer_length=136
+2026-04-24 23:39:40,022 | INFO | tx=req-30c523d7e40a | orchestration.nodes_Chatgpt | query_step | step=direct_llm_response generated_preview=I'm here to assist with medical insurance policy questions. If you have inquiries about coverage, claims, or benefits, feel free to ask! answer_length=136 direct_category=out_of_scope
+2026-04-24 23:39:40,027 | INFO | tx=req-1f2568208e1c | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-24 23:39:40,033 | INFO | tx=req-1f2568208e1c | src.frontend.app | db_transaction_open
+2026-04-24 23:39:43,655 | INFO | tx=req-1f2568208e1c | src.frontend.app | db_transaction_commit
+2026-04-24 23:39:43,659 | INFO | tx=req-1f2568208e1c | src.frontend.app | db_connection_closed
+2026-04-24 23:39:43,669 | INFO | tx=req-30c523d7e40a | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=direct_llm
+2026-04-24 23:39:43,671 | INFO | tx=req-30c523d7e40a | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_completed generated_preview=I'm here to assist with medical insurance policy questions. If you have inquiries about coverage, claims, or benefits, feel free to ask! route_taken=direct_llm success=True
+2026-04-24 23:39:43,676 | INFO | tx=req-30c523d7e40a | src.frontend.app | query_orchestration_completed | username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:39:43,677 | INFO | tx=req-30c523d7e40a | src.frontend.app | query_step | step=query_response_ready generated_preview=I'm here to assist with medical insurance policy questions. If you have inquiries about coverage, claims, or benefits, feel free to ask! username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:39:43,679 | INFO | tx=req-30c523d7e40a | src.frontend.app | db_transaction_open
+2026-04-24 23:39:46,351 | INFO | tx=req-30c523d7e40a | src.frontend.app | db_transaction_commit
+2026-04-24 23:39:46,352 | INFO | tx=req-30c523d7e40a | src.frontend.app | db_connection_closed
+2026-04-24 23:39:46,354 | INFO | tx=req-1f2568208e1c | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=6326.16
+2026-04-24 23:39:46,358 | INFO | tx=req-30c523d7e40a | src.frontend.app | request_completed | method=POST path=/query status_code=200 duration_ms=15603.79
+2026-04-24 23:39:46,366 | INFO | tx=req-9ae638424039 | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-24 23:39:46,371 | INFO | tx=req-9ae638424039 | src.frontend.app | db_transaction_open
+2026-04-24 23:39:49,883 | INFO | tx=req-9ae638424039 | src.frontend.app | db_transaction_commit
+2026-04-24 23:39:49,884 | INFO | tx=req-9ae638424039 | src.frontend.app | db_connection_closed
+2026-04-24 23:39:49,890 | INFO | tx=req-9ae638424039 | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3523.55
+2026-04-24 23:43:18,295 | INFO | tx=- | src.frontend.app | db_transaction_open
+2026-04-24 23:43:25,669 | INFO | tx=- | src.frontend.app | db_transaction_commit
+2026-04-24 23:43:25,670 | INFO | tx=- | src.frontend.app | db_connection_closed
+2026-04-24 23:43:25,670 | INFO | tx=- | src.frontend.app | application_started | orchestration_enabled=True
+2026-04-24 23:43:25,693 | INFO | tx=req-527759d70889 | src.frontend.app | request_started | method=POST path=/query client=127.0.0.1
+2026-04-24 23:43:25,705 | INFO | tx=req-527759d70889 | src.frontend.app | query_step | step=query_started generated_preview=what is accounting? username=Vastalya scope=shared
+2026-04-24 23:43:25,716 | INFO | tx=req-527759d70889 | src.frontend.app | db_transaction_open
+2026-04-24 23:43:28,389 | INFO | tx=req-527759d70889 | src.frontend.app | db_transaction_commit
+2026-04-24 23:43:28,391 | INFO | tx=req-527759d70889 | src.frontend.app | db_connection_closed
+2026-04-24 23:43:28,392 | INFO | tx=req-527759d70889 | src.frontend.app | query_processing_started | username=Vastalya scope=shared
+2026-04-24 23:43:28,392 | INFO | tx=req-527759d70889 | src.frontend.app | query_step | step=query_pipeline_entered generated_preview=what is accounting? username=Vastalya scope=shared
+2026-04-24 23:43:28,881 | INFO | tx=req-527759d70889 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-24 23:43:28,882 | INFO | tx=req-527759d70889 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-24 23:43:32,191 | INFO | tx=req-527759d70889 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-24 23:43:33,517 | INFO | tx=req-527759d70889 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-24 23:43:33,518 | INFO | tx=req-527759d70889 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-24 23:43:34,627 | INFO | tx=req-527759d70889 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-24 23:43:34,890 | INFO | tx=req-527759d70889 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-24 23:43:34,957 | INFO | tx=req-527759d70889 | retriever.retrival | retriever_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-24 23:43:34,962 | INFO | tx=req-527759d70889 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-24 23:43:34,963 | INFO | tx=req-527759d70889 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-24 23:43:40,600 | INFO | tx=req-527759d70889 | orchestration.nodes_Chatgpt | tavily_initialized
+2026-04-24 23:43:40,606 | INFO | tx=req-527759d70889 | orchestration.orchestrator_Chatgpt | langgraph_compiled
+2026-04-24 23:43:40,606 | INFO | tx=req-527759d70889 | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared
+2026-04-24 23:43:40,609 | INFO | tx=req-527759d70889 | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=19
+2026-04-24 23:43:40,609 | INFO | tx=req-527759d70889 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_classification_started generated_preview=what is accounting?
+2026-04-24 23:43:42,317 | INFO | tx=req-527759d70889 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:43:42,325 | INFO | tx=req-527759d70889 | orchestration.classifier_Chatgpt | query_classified | route=direct
+2026-04-24 23:43:42,325 | INFO | tx=req-527759d70889 | orchestration.classifier_Chatgpt | query_step | step=query_classification generated_preview=direct raw_model_output=direct
+2026-04-24 23:43:42,327 | INFO | tx=req-527759d70889 | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=direct
+2026-04-24 23:43:42,327 | INFO | tx=req-527759d70889 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_route_selected generated_preview=direct
+2026-04-24 23:43:42,329 | INFO | tx=req-527759d70889 | orchestration.orchestrator_Chatgpt | orchestrator_direct_llm_started | query_length=19
+2026-04-24 23:43:43,849 | INFO | tx=req-527759d70889 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:43:43,851 | INFO | tx=req-527759d70889 | orchestration.nodes_Chatgpt | direct_llm_completed | answer_length=212
+2026-04-24 23:43:43,852 | INFO | tx=req-527759d70889 | orchestration.nodes_Chatgpt | query_step | step=direct_llm_response generated_preview=I appreciate your question! While accounting is an important field, I'm here to assist you with any medical insurance policy inquiries. If you have questions about coverage, claims, or benefits, feel free to ask! answer_length=212
+2026-04-24 23:43:43,854 | INFO | tx=req-527759d70889 | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=direct_llm
+2026-04-24 23:43:43,854 | INFO | tx=req-527759d70889 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_completed generated_preview=I appreciate your question! While accounting is an important field, I'm here to assist you with any medical insurance policy inquiries. If you have questions about coverage, claims, or benefits, feel free to ask! route_taken=direct_llm success=True
+2026-04-24 23:43:43,856 | INFO | tx=req-527759d70889 | src.frontend.app | query_orchestration_completed | username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:43:43,856 | INFO | tx=req-527759d70889 | src.frontend.app | query_step | step=query_response_ready generated_preview=I appreciate your question! While accounting is an important field, I'm here to assist you with any medical insurance policy inquiries. If you have questions about coverage, claims, or benefits, feel free to ask! username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:43:43,862 | INFO | tx=req-527759d70889 | src.frontend.app | db_transaction_open
+2026-04-24 23:43:46,555 | INFO | tx=req-527759d70889 | src.frontend.app | db_transaction_commit
+2026-04-24 23:43:46,556 | INFO | tx=req-527759d70889 | src.frontend.app | db_connection_closed
+2026-04-24 23:43:46,557 | INFO | tx=req-527759d70889 | src.frontend.app | request_completed | method=POST path=/query status_code=200 duration_ms=20864.48
+2026-04-24 23:43:46,569 | INFO | tx=req-039de2b0bf85 | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-24 23:43:46,574 | INFO | tx=req-039de2b0bf85 | src.frontend.app | db_transaction_open
+2026-04-24 23:43:50,044 | INFO | tx=req-039de2b0bf85 | src.frontend.app | db_transaction_commit
+2026-04-24 23:43:50,045 | INFO | tx=req-039de2b0bf85 | src.frontend.app | db_connection_closed
+2026-04-24 23:43:50,057 | INFO | tx=req-039de2b0bf85 | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3488.42
+2026-04-24 23:43:57,612 | INFO | tx=req-957aa3356be8 | src.frontend.app | request_started | method=POST path=/query client=127.0.0.1
+2026-04-24 23:43:57,615 | INFO | tx=req-957aa3356be8 | src.frontend.app | query_step | step=query_started generated_preview=Who all are the actors in Dhurandhar 2? username=Vastalya scope=shared
+2026-04-24 23:43:57,622 | INFO | tx=req-957aa3356be8 | src.frontend.app | db_transaction_open
+2026-04-24 23:44:00,218 | INFO | tx=req-957aa3356be8 | src.frontend.app | db_transaction_commit
+2026-04-24 23:44:00,219 | INFO | tx=req-957aa3356be8 | src.frontend.app | db_connection_closed
+2026-04-24 23:44:00,220 | INFO | tx=req-957aa3356be8 | src.frontend.app | query_processing_started | username=Vastalya scope=shared
+2026-04-24 23:44:00,220 | INFO | tx=req-957aa3356be8 | src.frontend.app | query_step | step=query_pipeline_entered generated_preview=Who all are the actors in Dhurandhar 2? username=Vastalya scope=shared
+2026-04-24 23:44:00,223 | INFO | tx=req-957aa3356be8 | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared
+2026-04-24 23:44:00,224 | INFO | tx=req-957aa3356be8 | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=39
+2026-04-24 23:44:00,225 | INFO | tx=req-957aa3356be8 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_classification_started generated_preview=Who all are the actors in Dhurandhar 2?
+2026-04-24 23:44:01,032 | INFO | tx=req-957aa3356be8 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:44:01,037 | INFO | tx=req-957aa3356be8 | orchestration.classifier_Chatgpt | query_classified | route=direct
+2026-04-24 23:44:01,038 | INFO | tx=req-957aa3356be8 | orchestration.classifier_Chatgpt | query_step | step=query_classification generated_preview=direct raw_model_output=direct
+2026-04-24 23:44:01,043 | INFO | tx=req-957aa3356be8 | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=direct
+2026-04-24 23:44:01,045 | INFO | tx=req-957aa3356be8 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_route_selected generated_preview=direct
+2026-04-24 23:44:01,054 | INFO | tx=req-957aa3356be8 | orchestration.orchestrator_Chatgpt | orchestrator_direct_llm_started | query_length=39
+2026-04-24 23:44:03,011 | INFO | tx=req-957aa3356be8 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:44:03,013 | INFO | tx=req-957aa3356be8 | orchestration.nodes_Chatgpt | direct_llm_completed | answer_length=200
+2026-04-24 23:44:03,014 | INFO | tx=req-957aa3356be8 | orchestration.nodes_Chatgpt | query_step | step=direct_llm_response generated_preview=I appreciate your interest in movies! However, I'm here to assist with questions related to medical insurance policies. If you have any questions about coverage, claims, or benefits, feel free to ask! answer_length=200
+2026-04-24 23:44:03,016 | INFO | tx=req-957aa3356be8 | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=direct_llm
+2026-04-24 23:44:03,016 | INFO | tx=req-957aa3356be8 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_completed generated_preview=I appreciate your interest in movies! However, I'm here to assist with questions related to medical insurance policies. If you have any questions about coverage, claims, or benefits, feel free to ask! route_taken=direct_llm success=True
+2026-04-24 23:44:03,019 | INFO | tx=req-957aa3356be8 | src.frontend.app | query_orchestration_completed | username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:44:03,019 | INFO | tx=req-957aa3356be8 | src.frontend.app | query_step | step=query_response_ready generated_preview=I appreciate your interest in movies! However, I'm here to assist with questions related to medical insurance policies. If you have any questions about coverage, claims, or benefits, feel free to ask! username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:44:03,021 | INFO | tx=req-957aa3356be8 | src.frontend.app | db_transaction_open
+2026-04-24 23:44:05,726 | INFO | tx=req-957aa3356be8 | src.frontend.app | db_transaction_commit
+2026-04-24 23:44:05,727 | INFO | tx=req-957aa3356be8 | src.frontend.app | db_connection_closed
+2026-04-24 23:44:05,728 | INFO | tx=req-957aa3356be8 | src.frontend.app | request_completed | method=POST path=/query status_code=200 duration_ms=8116.24
+2026-04-24 23:44:05,736 | INFO | tx=req-6da75e9be276 | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-24 23:44:05,738 | INFO | tx=req-6da75e9be276 | src.frontend.app | db_transaction_open
+2026-04-24 23:44:09,383 | INFO | tx=req-6da75e9be276 | src.frontend.app | db_transaction_commit
+2026-04-24 23:44:09,385 | INFO | tx=req-6da75e9be276 | src.frontend.app | db_connection_closed
+2026-04-24 23:44:09,393 | INFO | tx=req-6da75e9be276 | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3656.98
+2026-04-24 23:44:45,263 | INFO | tx=req-dfd39f569352 | src.frontend.app | request_started | method=POST path=/query client=127.0.0.1
+2026-04-24 23:44:45,266 | INFO | tx=req-dfd39f569352 | src.frontend.app | query_step | step=query_started generated_preview=how r u? username=Vastalya scope=shared
+2026-04-24 23:44:45,270 | INFO | tx=req-dfd39f569352 | src.frontend.app | db_transaction_open
+2026-04-24 23:44:47,962 | INFO | tx=req-dfd39f569352 | src.frontend.app | db_transaction_commit
+2026-04-24 23:44:47,963 | INFO | tx=req-dfd39f569352 | src.frontend.app | db_connection_closed
+2026-04-24 23:44:47,964 | INFO | tx=req-dfd39f569352 | src.frontend.app | query_processing_started | username=Vastalya scope=shared
+2026-04-24 23:44:47,964 | INFO | tx=req-dfd39f569352 | src.frontend.app | query_step | step=query_pipeline_entered generated_preview=how r u? username=Vastalya scope=shared
+2026-04-24 23:44:47,966 | INFO | tx=req-dfd39f569352 | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared
+2026-04-24 23:44:47,969 | INFO | tx=req-dfd39f569352 | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=8
+2026-04-24 23:44:47,970 | INFO | tx=req-dfd39f569352 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_classification_started generated_preview=how r u?
+2026-04-24 23:44:49,221 | INFO | tx=req-dfd39f569352 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:44:49,223 | INFO | tx=req-dfd39f569352 | orchestration.classifier_Chatgpt | query_classified | route=direct
+2026-04-24 23:44:49,224 | INFO | tx=req-dfd39f569352 | orchestration.classifier_Chatgpt | query_step | step=query_classification generated_preview=direct raw_model_output=direct
+2026-04-24 23:44:49,227 | INFO | tx=req-dfd39f569352 | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=direct
+2026-04-24 23:44:49,228 | INFO | tx=req-dfd39f569352 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_route_selected generated_preview=direct
+2026-04-24 23:44:49,233 | INFO | tx=req-dfd39f569352 | orchestration.orchestrator_Chatgpt | orchestrator_direct_llm_started | query_length=8
+2026-04-24 23:44:51,006 | INFO | tx=req-dfd39f569352 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-24 23:44:51,009 | INFO | tx=req-dfd39f569352 | orchestration.nodes_Chatgpt | direct_llm_completed | answer_length=97
+2026-04-24 23:44:51,009 | INFO | tx=req-dfd39f569352 | orchestration.nodes_Chatgpt | query_step | step=direct_llm_response generated_preview=I'm here and ready to assist you! How can I help you today with your medical insurance questions? answer_length=97
+2026-04-24 23:44:51,013 | INFO | tx=req-dfd39f569352 | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=direct_llm
+2026-04-24 23:44:51,014 | INFO | tx=req-dfd39f569352 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_completed generated_preview=I'm here and ready to assist you! How can I help you today with your medical insurance questions? route_taken=direct_llm success=True
+2026-04-24 23:44:51,017 | INFO | tx=req-dfd39f569352 | src.frontend.app | query_orchestration_completed | username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:44:51,017 | INFO | tx=req-dfd39f569352 | src.frontend.app | query_step | step=query_response_ready generated_preview=I'm here and ready to assist you! How can I help you today with your medical insurance questions? username=Vastalya route_taken=direct_llm source_count=0
+2026-04-24 23:44:51,023 | INFO | tx=req-dfd39f569352 | src.frontend.app | db_transaction_open
+2026-04-24 23:44:53,791 | INFO | tx=req-dfd39f569352 | src.frontend.app | db_transaction_commit
+2026-04-24 23:44:53,792 | INFO | tx=req-dfd39f569352 | src.frontend.app | db_connection_closed
+2026-04-24 23:44:53,792 | INFO | tx=req-dfd39f569352 | src.frontend.app | request_completed | method=POST path=/query status_code=200 duration_ms=8529.34
+2026-04-24 23:44:53,800 | INFO | tx=req-1c78385d65a6 | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-24 23:44:53,802 | INFO | tx=req-1c78385d65a6 | src.frontend.app | db_transaction_open
+2026-04-24 23:44:57,366 | INFO | tx=req-1c78385d65a6 | src.frontend.app | db_transaction_commit
+2026-04-24 23:44:57,367 | INFO | tx=req-1c78385d65a6 | src.frontend.app | db_connection_closed
+2026-04-24 23:44:57,373 | INFO | tx=req-1c78385d65a6 | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3573.4
+2026-04-25 00:15:54,807 | INFO | tx=phase-7e9e0e7f0c95 | __main__ | query_step | step=query_started generated_preview=What is the waiting period for cataract surgery? scope=shared collection_name=test_dataset
+2026-04-25 00:15:55,135 | INFO | tx=phase-7e9e0e7f0c95 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-25 00:15:55,135 | INFO | tx=phase-7e9e0e7f0c95 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-25 00:15:58,662 | INFO | tx=phase-7e9e0e7f0c95 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-25 00:15:59,873 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-25 00:15:59,874 | INFO | tx=phase-7e9e0e7f0c95 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-25 00:16:00,945 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-25 00:16:01,203 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-25 00:16:01,275 | INFO | tx=phase-7e9e0e7f0c95 | retriever.retrival | retriever_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-25 00:16:01,279 | INFO | tx=phase-7e9e0e7f0c95 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-25 00:16:01,279 | INFO | tx=phase-7e9e0e7f0c95 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-25 00:16:06,386 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.nodes_Chatgpt | tavily_initialized
+2026-04-25 00:16:06,392 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.orchestrator_Chatgpt | langgraph_compiled
+2026-04-25 00:16:06,393 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared collection_name=test_dataset
+2026-04-25 00:16:06,396 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=48
+2026-04-25 00:16:06,397 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_classification_started generated_preview=What is the waiting period for cataract surgery?
+2026-04-25 00:16:07,993 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 00:16:08,010 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.classifier_Chatgpt | query_classified | route=rag
+2026-04-25 00:16:08,011 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.classifier_Chatgpt | query_step | step=query_classification generated_preview=rag raw_model_output=rag
+2026-04-25 00:16:08,015 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=rag
+2026-04-25 00:16:08,015 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_route_selected generated_preview=rag
+2026-04-25 00:16:08,020 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.orchestrator_Chatgpt | orchestrator_rag_started | scope=shared collection_name=test_dataset
+2026-04-25 00:16:08,020 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.nodes_Chatgpt | rag_process_node_started | scope=shared collection_name=test_dataset
+2026-04-25 00:16:08,021 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.nodes_Chatgpt | query_step | step=rag_processing_started scope=shared collection_name=test_dataset
+2026-04-25 00:16:10,566 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 00:16:10,567 | INFO | tx=phase-7e9e0e7f0c95 | queryDecomposition.orchestrator_Chatgpt | query_decomposition_plan_created | should_decompose=False sub_query_count=1
+2026-04-25 00:16:10,569 | INFO | tx=phase-7e9e0e7f0c95 | queryDecomposition.orchestrator_Chatgpt | query_step | step=query_decomposition_plan generated_preview=[\n  "What is the waiting period for cataract surgery?"\n] should_decompose=False reason=The question is focused and specific, asking only about the waiting period for cataract surgery.
+2026-04-25 00:16:10,573 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.rag_pipeline_Chatgpt | subquery_processing_started | scope=shared collection_name=test_dataset
+2026-04-25 00:16:11,720 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 00:16:11,725 | INFO | tx=phase-7e9e0e7f0c95 | queryRewriter.rewriting_Chatgpt | query_rewrite_completed | original_length=48 rewritten_length=71
+2026-04-25 00:16:11,725 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.rag_pipeline_Chatgpt | query_step | step=query_rewrite generated_preview=What is the waiting period applicable for coverage of cataract surgery? original_query=What is the waiting period for cataract surgery?
+2026-04-25 00:16:11,727 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.rag_pipeline_Chatgpt | subquery_retrieval_started | rewritten_query_length=71
+2026-04-25 00:16:12,002 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-25 00:16:12,863 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/query "HTTP/1.1 200 OK"
+2026-04-25 00:16:12,864 | INFO | tx=phase-7e9e0e7f0c95 | retriever.retrival | semantic_search_completed | collection_name=test_dataset chunk_count=30
+2026-04-25 00:16:13,133 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-25 00:16:13,431 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-25 00:16:13,991 | INFO | tx=phase-7e9e0e7f0c95 | retriever.retrival | keyword_search_completed | collection_name=test_dataset chunk_count=30
+2026-04-25 00:16:13,991 | INFO | tx=phase-7e9e0e7f0c95 | retriever.retrival | hybrid_search_completed | collection_name=test_dataset chunk_count=15
+2026-04-25 00:16:13,992 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.rag_pipeline_Chatgpt | query_step | step=document_retrieval generated_preview=[\n  {\n    "document": "BAJHLIP23020V012223.pdf",\n    "section": "2) Specified disease/procedure waiting period (Code - Excl02)",\n    "distance": 0.89666593,\n    "hybrid_score": 0.03028233151183971,\n    "semantic_score... retrieved_count=15 rewritten_query=What is the waiting period applicable for coverage of cataract surgery?
+2026-04-25 00:16:13,994 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.rag_pipeline_Chatgpt | subquery_semantic_match_good | top_chunk_distance=0.4596
+2026-04-25 00:16:13,994 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.rag_pipeline_Chatgpt | subquery_reranking_started | chunk_count=15
+2026-04-25 00:16:14,766 | INFO | tx=phase-7e9e0e7f0c95 | retriever.reranking_Chatgpt | metadata_reranking_completed | chunk_count=15
+2026-04-25 00:16:15,845 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 00:16:15,848 | INFO | tx=phase-7e9e0e7f0c95 | retriever.reranking_Chatgpt | sync_llm_reranking_completed | selected_count=3
+2026-04-25 00:16:15,850 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.rag_pipeline_Chatgpt | query_step | step=chunk_reranking generated_preview=[\n  {\n    "document": "BAJHLIP23020V012223.pdf",\n    "section": "2) Specified disease/procedure waiting period (Code - Excl02)",\n    "distance": 0.45957604,\n    "hybrid_score": 0.01639344262295082,\n    "semantic_score... reranked_count=3
+2026-04-25 00:16:15,854 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.rag_pipeline_Chatgpt | subquery_answer_generation_started | reranked_count=3
+2026-04-25 00:16:17,384 | INFO | tx=phase-7e9e0e7f0c95 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 00:16:17,388 | INFO | tx=phase-7e9e0e7f0c95 | output.answerGeneration_Chatgpt | answer_generation_completed | source_count=3 chunk_count=3
+2026-04-25 00:16:17,389 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.rag_pipeline_Chatgpt | query_step | step=answer_generation generated_preview=The waiting period for coverage of cataract surgery is 2 years. justification=Referenced from Section: 2) Specified disease/procedure waiting period (Code - Excl02) source_count=3
+2026-04-25 00:16:17,396 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=rag
+2026-04-25 00:16:17,397 | INFO | tx=phase-7e9e0e7f0c95 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_completed generated_preview=The waiting period for coverage of cataract surgery is 2 years. route_taken=rag success=True
+2026-04-25 22:24:06,843 | INFO | tx=- | src.frontend.app | db_transaction_open
+2026-04-25 22:24:14,976 | INFO | tx=- | src.frontend.app | db_transaction_commit
+2026-04-25 22:24:14,979 | INFO | tx=- | src.frontend.app | db_connection_closed
+2026-04-25 22:24:14,981 | INFO | tx=- | src.frontend.app | application_started | orchestration_enabled=True
+2026-04-25 22:24:20,848 | INFO | tx=req-d073b4c66810 | src.frontend.app | request_started | method=GET path=/admin/all client=127.0.0.1
+2026-04-25 22:24:20,852 | INFO | tx=req-d073b4c66810 | src.frontend.app | request_completed | method=GET path=/admin/all status_code=401 duration_ms=4.37
+2026-04-25 22:24:21,143 | INFO | tx=req-f86310ad7a73 | src.frontend.app | request_started | method=GET path=/favicon.ico client=127.0.0.1
+2026-04-25 22:24:21,144 | INFO | tx=req-f86310ad7a73 | src.frontend.app | request_completed | method=GET path=/favicon.ico status_code=404 duration_ms=0.76
+2026-04-25 22:24:31,497 | INFO | tx=req-0c9c3f04091f | src.frontend.app | request_started | method=GET path=/admin/all client=127.0.0.1
+2026-04-25 22:24:31,499 | INFO | tx=req-0c9c3f04091f | src.frontend.app | request_completed | method=GET path=/admin/all status_code=401 duration_ms=1.65
+2026-04-25 22:24:35,594 | INFO | tx=req-d2d1d10f98ce | src.frontend.app | request_started | method=GET path=/ client=127.0.0.1
+2026-04-25 22:24:35,595 | INFO | tx=req-d2d1d10f98ce | src.frontend.app | request_completed | method=GET path=/ status_code=302 duration_ms=1.14
+2026-04-25 22:24:35,605 | INFO | tx=req-7621d215d9e2 | src.frontend.app | request_started | method=GET path=/login client=127.0.0.1
+2026-04-25 22:24:35,709 | INFO | tx=req-7621d215d9e2 | src.frontend.app | request_completed | method=GET path=/login status_code=200 duration_ms=104.21
+2026-04-25 22:24:41,612 | INFO | tx=req-ef8c72ece32b | src.frontend.app | request_started | method=POST path=/login client=127.0.0.1
+2026-04-25 22:24:41,615 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_transaction_open
+2026-04-25 22:24:44,284 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_transaction_commit
+2026-04-25 22:24:44,286 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_connection_closed
+2026-04-25 22:24:44,287 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_transaction_open
+2026-04-25 22:24:46,955 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_transaction_commit
+2026-04-25 22:24:46,956 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_connection_closed
+2026-04-25 22:24:47,071 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_transaction_open
+2026-04-25 22:24:49,655 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_transaction_commit
+2026-04-25 22:24:49,656 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_connection_closed
+2026-04-25 22:24:49,656 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_transaction_open
+2026-04-25 22:24:52,273 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_transaction_commit
+2026-04-25 22:24:52,274 | INFO | tx=req-ef8c72ece32b | src.frontend.app | db_connection_closed
+2026-04-25 22:24:52,277 | INFO | tx=req-ef8c72ece32b | src.frontend.app | request_completed | method=POST path=/login status_code=302 duration_ms=10664.35
+2026-04-25 22:24:52,280 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | request_started | method=POST path=/login client=127.0.0.1
+2026-04-25 22:24:52,284 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_transaction_open
+2026-04-25 22:24:54,863 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_transaction_commit
+2026-04-25 22:24:54,864 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_connection_closed
+2026-04-25 22:24:54,864 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_transaction_open
+2026-04-25 22:24:57,577 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_transaction_commit
+2026-04-25 22:24:57,578 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_connection_closed
+2026-04-25 22:24:57,724 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_transaction_open
+2026-04-25 22:25:00,301 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_transaction_commit
+2026-04-25 22:25:00,303 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_connection_closed
+2026-04-25 22:25:00,303 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_transaction_open
+2026-04-25 22:25:03,002 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_transaction_commit
+2026-04-25 22:25:03,003 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | db_connection_closed
+2026-04-25 22:25:03,005 | INFO | tx=req-d999d5d1cd13 | src.frontend.app | request_completed | method=POST path=/login status_code=302 duration_ms=10725.1
+2026-04-25 22:25:03,011 | INFO | tx=req-1f7e506d2d24 | src.frontend.app | request_started | method=GET path=/admin client=127.0.0.1
+2026-04-25 22:25:03,043 | INFO | tx=req-1f7e506d2d24 | src.frontend.app | request_completed | method=GET path=/admin status_code=200 duration_ms=32.29
+2026-04-25 22:25:05,537 | INFO | tx=req-cc9f08bab34a | src.frontend.app | request_started | method=GET path=/admin/all client=127.0.0.1
+2026-04-25 22:25:05,599 | INFO | tx=req-cc9f08bab34a | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-25 22:25:07,075 | INFO | tx=req-cc9f08bab34a | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-25 22:25:07,079 | INFO | tx=req-cc9f08bab34a | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-25 22:25:08,263 | INFO | tx=req-cc9f08bab34a | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-25 22:25:08,518 | INFO | tx=req-cc9f08bab34a | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-25 22:25:08,578 | INFO | tx=req-cc9f08bab34a | src.frontend.app | chroma_client_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-25 22:25:08,839 | INFO | tx=req-cc9f08bab34a | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-25 22:25:09,894 | INFO | tx=req-cc9f08bab34a | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-25 22:25:10,144 | INFO | tx=req-cc9f08bab34a | src.frontend.app | document_options_chroma_read_completed | collection_name=test_dataset document_count=1
+2026-04-25 22:25:10,145 | INFO | tx=req-cc9f08bab34a | src.frontend.app | db_transaction_open
+2026-04-25 22:25:12,809 | INFO | tx=req-cc9f08bab34a | src.frontend.app | db_transaction_commit
+2026-04-25 22:25:12,811 | INFO | tx=req-cc9f08bab34a | src.frontend.app | db_connection_closed
+2026-04-25 22:25:13,075 | INFO | tx=req-cc9f08bab34a | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/user_Vastalya_documents "HTTP/1.1 200 OK"
+2026-04-25 22:25:13,626 | INFO | tx=req-cc9f08bab34a | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/45d9fbdf-12b3-457c-b242-6378cd1744c4/get "HTTP/1.1 200 OK"
+2026-04-25 22:25:13,629 | INFO | tx=req-cc9f08bab34a | src.frontend.app | document_options_chroma_read_completed | collection_name=user_Vastalya_documents document_count=1
+2026-04-25 22:25:13,629 | INFO | tx=req-cc9f08bab34a | src.frontend.app | db_transaction_open
+2026-04-25 22:25:16,219 | INFO | tx=req-cc9f08bab34a | src.frontend.app | db_transaction_commit
+2026-04-25 22:25:16,220 | INFO | tx=req-cc9f08bab34a | src.frontend.app | db_connection_closed
+2026-04-25 22:25:16,315 | INFO | tx=req-cc9f08bab34a | src.frontend.app | request_completed | method=GET path=/admin/all status_code=200 duration_ms=10778.53
+2026-04-25 22:25:16,358 | INFO | tx=req-2eb99fc09a81 | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-25 22:25:16,360 | INFO | tx=req-2eb99fc09a81 | src.frontend.app | db_transaction_open
+2026-04-25 22:25:19,842 | INFO | tx=req-2eb99fc09a81 | src.frontend.app | db_transaction_commit
+2026-04-25 22:25:19,843 | INFO | tx=req-2eb99fc09a81 | src.frontend.app | db_connection_closed
+2026-04-25 22:25:19,846 | INFO | tx=req-2eb99fc09a81 | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3488.08
+2026-04-25 22:32:24,569 | INFO | tx=phase-e88243e2ae56 | __main__ | query_step | step=query_started generated_preview=What is the definition of a hospital under the policy, and what is the minimum duration required for hospitalization to be covered? scope=shared collection_name=test_dataset selected_document=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:24,976 | INFO | tx=phase-e88243e2ae56 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-25 22:32:24,976 | INFO | tx=phase-e88243e2ae56 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-25 22:32:28,848 | INFO | tx=phase-e88243e2ae56 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-25 22:32:29,971 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-25 22:32:29,972 | INFO | tx=phase-e88243e2ae56 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-25 22:32:31,054 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-25 22:32:31,320 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-25 22:32:31,388 | INFO | tx=phase-e88243e2ae56 | retriever.retrival | retriever_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-25 22:32:31,395 | INFO | tx=phase-e88243e2ae56 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-25 22:32:31,396 | INFO | tx=phase-e88243e2ae56 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-25 22:32:36,468 | INFO | tx=phase-e88243e2ae56 | orchestration.nodes_Chatgpt | tavily_initialized
+2026-04-25 22:32:36,474 | INFO | tx=phase-e88243e2ae56 | orchestration.orchestrator_Chatgpt | langgraph_compiled
+2026-04-25 22:32:36,475 | INFO | tx=phase-e88243e2ae56 | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared collection_name=test_dataset document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:36,483 | INFO | tx=phase-e88243e2ae56 | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=131
+2026-04-25 22:32:36,484 | INFO | tx=phase-e88243e2ae56 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_classification_started generated_preview=What is the definition of a hospital under the policy, and what is the minimum duration required for hospitalization to be covered?
+2026-04-25 22:32:38,542 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 22:32:38,567 | INFO | tx=phase-e88243e2ae56 | orchestration.classifier_Chatgpt | query_classified | route=rag
+2026-04-25 22:32:38,568 | INFO | tx=phase-e88243e2ae56 | orchestration.classifier_Chatgpt | query_step | step=query_classification generated_preview=rag raw_model_output=rag
+2026-04-25 22:32:38,574 | INFO | tx=phase-e88243e2ae56 | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=rag
+2026-04-25 22:32:38,576 | INFO | tx=phase-e88243e2ae56 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_route_selected generated_preview=rag
+2026-04-25 22:32:38,587 | INFO | tx=phase-e88243e2ae56 | orchestration.orchestrator_Chatgpt | orchestrator_rag_started | scope=shared collection_name=test_dataset document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:38,588 | INFO | tx=phase-e88243e2ae56 | orchestration.nodes_Chatgpt | rag_process_node_started | scope=shared collection_name=test_dataset document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:38,590 | INFO | tx=phase-e88243e2ae56 | orchestration.nodes_Chatgpt | query_step | step=rag_processing_started scope=shared collection_name=test_dataset document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:41,236 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 22:32:41,240 | INFO | tx=phase-e88243e2ae56 | queryDecomposition.orchestrator_Chatgpt | query_decomposition_plan_created | should_decompose=True sub_query_count=2
+2026-04-25 22:32:41,241 | INFO | tx=phase-e88243e2ae56 | queryDecomposition.orchestrator_Chatgpt | query_step | step=query_decomposition_plan generated_preview=[\n  "What is the definition of a hospital under the policy?",\n  "What is the minimum duration required for hospitalization to be covered?"\n] should_decompose=True reason=The question asks about two distinct aspects: the definition of a hospital and the minimum duration for hospitalization coverage.
+2026-04-25 22:32:41,253 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | subquery_processing_started | scope=shared collection_name=test_dataset document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:41,259 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | subquery_processing_started | scope=shared collection_name=test_dataset document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:42,294 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 22:32:42,297 | INFO | tx=phase-e88243e2ae56 | queryRewriter.rewriting_Chatgpt | query_rewrite_completed | original_length=54 rewritten_length=58
+2026-04-25 22:32:42,298 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | query_step | step=query_rewrite generated_preview=What constitutes a hospital as per the policy definitions? original_query=What is the definition of a hospital under the policy?
+2026-04-25 22:32:42,302 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | subquery_retrieval_started | rewritten_query_length=58
+2026-04-25 22:32:42,564 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-25 22:32:42,637 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 22:32:42,639 | INFO | tx=phase-e88243e2ae56 | queryRewriter.rewriting_Chatgpt | query_rewrite_completed | original_length=72 rewritten_length=97
+2026-04-25 22:32:42,639 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | query_step | step=query_rewrite generated_preview=What is the minimum duration of inpatient hospitalization required for coverage under the policy? original_query=What is the minimum duration required for hospitalization to be covered?
+2026-04-25 22:32:42,641 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | subquery_retrieval_started | rewritten_query_length=97
+2026-04-25 22:32:42,793 | INFO | tx=phase-e88243e2ae56 | retriever.retrival | semantic_search_filter_applied | collection_name=test_dataset document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:42,897 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-25 22:32:42,920 | INFO | tx=phase-e88243e2ae56 | retriever.retrival | semantic_search_filter_applied | collection_name=test_dataset document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:43,519 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/query "HTTP/1.1 200 OK"
+2026-04-25 22:32:43,764 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/query "HTTP/1.1 200 OK"
+2026-04-25 22:32:43,765 | INFO | tx=phase-e88243e2ae56 | retriever.retrival | semantic_search_completed | collection_name=test_dataset chunk_count=30 document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:43,767 | INFO | tx=phase-e88243e2ae56 | retriever.retrival | semantic_search_completed | collection_name=test_dataset chunk_count=30 document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:44,016 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-25 22:32:44,023 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/test_dataset "HTTP/1.1 200 OK"
+2026-04-25 22:32:44,292 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-25 22:32:44,304 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project/collections/09184617-827c-4de4-b1b7-7c8572367bea/get "HTTP/1.1 200 OK"
+2026-04-25 22:32:44,810 | INFO | tx=phase-e88243e2ae56 | retriever.retrival | keyword_search_completed | collection_name=test_dataset chunk_count=30 document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:44,811 | INFO | tx=phase-e88243e2ae56 | retriever.retrival | hybrid_search_completed | collection_name=test_dataset chunk_count=15 document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:44,813 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | query_step | step=document_retrieval generated_preview=[\n  {\n    "document": "BAJHLIP23020V012223.pdf",\n    "section": "17. Hospital:-",\n    "distance": 0.42618963,\n    "hybrid_score": 0.03131881575727918,\n    "semantic_score": 0.7011690303764163,\n    "keyword_score": 7.3... retrieved_count=15 rewritten_query=What constitutes a hospital as per the policy definitions?
+2026-04-25 22:32:44,844 | INFO | tx=phase-e88243e2ae56 | retriever.retrival | keyword_search_completed | collection_name=test_dataset chunk_count=30 document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:44,845 | INFO | tx=phase-e88243e2ae56 | retriever.retrival | hybrid_search_completed | collection_name=test_dataset chunk_count=15 document_filter=BAJHLIP23020V012223.pdf
+2026-04-25 22:32:44,849 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | query_step | step=document_retrieval generated_preview=[\n  {\n    "document": "BAJHLIP23020V012223.pdf",\n    "section": "10. Rehabilitation",\n    "distance": 0.77791363,\n    "hybrid_score": 0.030679156908665108,\n    "semantic_score": 0.562457018792302,\n    "keyword_score":... retrieved_count=15 rewritten_query=What is the minimum duration of inpatient hospitalization required for coverage under the policy?
+2026-04-25 22:32:44,849 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | subquery_semantic_match_good | top_chunk_distance=0.4262
+2026-04-25 22:32:44,850 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | subquery_reranking_started | chunk_count=15
+2026-04-25 22:32:44,857 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | subquery_semantic_match_good | top_chunk_distance=0.6638
+2026-04-25 22:32:44,858 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | subquery_reranking_started | chunk_count=15
+2026-04-25 22:32:45,842 | INFO | tx=phase-e88243e2ae56 | retriever.reranking_Chatgpt | metadata_reranking_completed | chunk_count=15
+2026-04-25 22:32:45,908 | INFO | tx=phase-e88243e2ae56 | retriever.reranking_Chatgpt | metadata_reranking_completed | chunk_count=15
+2026-04-25 22:32:46,582 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 22:32:46,583 | INFO | tx=phase-e88243e2ae56 | retriever.reranking_Chatgpt | sync_llm_reranking_completed | selected_count=2
+2026-04-25 22:32:46,584 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | query_step | step=chunk_reranking generated_preview=[\n  {\n    "document": "BAJHLIP23020V012223.pdf",\n    "section": "17. Hospital:-",\n    "distance": 0.42618963,\n    "hybrid_score": 0.03131881575727918,\n    "semantic_score": 0.7011690303764163,\n    "keyword_score": 7.3... reranked_count=2
+2026-04-25 22:32:46,586 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | subquery_answer_generation_started | reranked_count=2
+2026-04-25 22:32:46,756 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 22:32:46,759 | INFO | tx=phase-e88243e2ae56 | retriever.reranking_Chatgpt | sync_llm_reranking_completed | selected_count=1
+2026-04-25 22:32:46,761 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | query_step | step=chunk_reranking generated_preview=[\n  {\n    "document": "BAJHLIP23020V012223.pdf",\n    "section": "18. Hospitalization:-",\n    "distance": 0.66376543,\n    "hybrid_score": 0.029051670471052088,\n    "semantic_score": 0.6010462664800049,\n    "keyword_sco... reranked_count=1
+2026-04-25 22:32:46,766 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | subquery_answer_generation_started | reranked_count=1
+2026-04-25 22:32:49,174 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 22:32:49,178 | INFO | tx=phase-e88243e2ae56 | output.answerGeneration_Chatgpt | answer_generation_completed | source_count=1 chunk_count=1
+2026-04-25 22:32:49,180 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | query_step | step=answer_generation generated_preview=The minimum duration of inpatient hospitalization required for coverage under the policy is 24 consecutive hours. However, there are exceptions for certain specified procedures or treatments that may require less than... justification=Referenced from Section: 18. Hospitalization source_count=1
+2026-04-25 22:32:49,189 | INFO | tx=phase-e88243e2ae56 | queryDecomposition.orchestrator_Chatgpt | query_step | step=sub_query_processed generated_preview={\n  "sub_query": "What is the minimum duration required for hospitalization to be covered?",\n  "rewritten_query": "What is the minimum duration of inpatient hospitalization required for coverage under the policy?",\n  ... success=True needs_web_scraping=False
+2026-04-25 22:32:49,661 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 22:32:49,666 | INFO | tx=phase-e88243e2ae56 | output.answerGeneration_Chatgpt | answer_generation_completed | source_count=2 chunk_count=2
+2026-04-25 22:32:49,667 | INFO | tx=phase-e88243e2ae56 | orchestration.rag_pipeline_Chatgpt | query_step | step=answer_generation generated_preview=A hospital, according to the policy, is defined as an institution that provides inpatient care and day care treatment for illnesses and injuries. It must be registered with local authorities under the Clinical Establi... justification=Referenced from Section: 17. Hospital and Section: 19. Hospital (for International Cover) source_count=2
+2026-04-25 22:32:49,669 | INFO | tx=phase-e88243e2ae56 | queryDecomposition.orchestrator_Chatgpt | query_step | step=sub_query_processed generated_preview={\n  "sub_query": "What is the definition of a hospital under the policy?",\n  "rewritten_query": "What constitutes a hospital as per the policy definitions?",\n  "answer": "A hospital, according to the policy, is define... success=True needs_web_scraping=False
+2026-04-25 22:32:54,251 | INFO | tx=phase-e88243e2ae56 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 22:32:54,257 | INFO | tx=phase-e88243e2ae56 | queryDecomposition.orchestrator_Chatgpt | query_step | step=sub_query_synthesis generated_preview=A hospital, as defined by the policy, is an institution that provides inpatient care and day care treatment for illnesses and injuries. It must be registered with local authorities under the Clinical Establishments (R... sub_query_count=2 justification=This answer synthesizes the definitions and requirements from the sub-query results, specifically referencing Section 17 for the definition of a hospital and Section 18 for the minimum hospitalization duration.
+2026-04-25 22:32:54,270 | INFO | tx=phase-e88243e2ae56 | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=rag
+2026-04-25 22:32:54,272 | INFO | tx=phase-e88243e2ae56 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_completed generated_preview=A hospital, as defined by the policy, is an institution that provides inpatient care and day care treatment for illnesses and injuries. It must be registered with local authorities under the Clinical Establishments (R... route_taken=rag success=True
+2026-04-25 22:39:00,378 | INFO | tx=req-37049e876154 | src.frontend.app | request_started | method=POST path=/query client=127.0.0.1
+2026-04-25 22:39:00,382 | INFO | tx=req-37049e876154 | src.frontend.app | query_step | step=query_started generated_preview=What is vastalya's brothers name?\n username=Vastalya scope=shared
+2026-04-25 22:39:00,386 | INFO | tx=req-37049e876154 | src.frontend.app | db_transaction_open
+2026-04-25 22:39:03,726 | INFO | tx=req-37049e876154 | src.frontend.app | db_transaction_commit
+2026-04-25 22:39:03,727 | INFO | tx=req-37049e876154 | src.frontend.app | db_connection_closed
+2026-04-25 22:39:03,728 | INFO | tx=req-37049e876154 | src.frontend.app | query_processing_started | username=Vastalya scope=shared
+2026-04-25 22:39:03,730 | INFO | tx=req-37049e876154 | src.frontend.app | query_step | step=query_pipeline_entered generated_preview=What is vastalya's brothers name?\n username=Vastalya scope=shared
+2026-04-25 22:39:04,319 | INFO | tx=req-37049e876154 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-25 22:39:04,322 | INFO | tx=req-37049e876154 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-25 22:39:08,041 | INFO | tx=req-37049e876154 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-25 22:39:09,158 | INFO | tx=req-37049e876154 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/auth/identity "HTTP/1.1 200 OK"
+2026-04-25 22:39:09,160 | INFO | tx=req-37049e876154 | chromadb.telemetry.product.posthog | Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-04-25 22:39:10,234 | INFO | tx=req-37049e876154 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60 "HTTP/1.1 200 OK"
+2026-04-25 22:39:10,489 | INFO | tx=req-37049e876154 | httpx | HTTP Request: GET https://api.trychroma.com/api/v2/tenants/a92961b0-ea65-4a82-a7ad-321a4baaaa60/databases/Major-Project "HTTP/1.1 200 OK"
+2026-04-25 22:39:10,542 | INFO | tx=req-37049e876154 | retriever.retrival | retriever_initialized | tenant=a92961b0-ea65-4a82-a7ad-321a4baaaa60 database=Major-Project
+2026-04-25 22:39:10,546 | INFO | tx=req-37049e876154 | sentence_transformers.SentenceTransformer | Use pytorch device_name: cpu
+2026-04-25 22:39:10,546 | INFO | tx=req-37049e876154 | sentence_transformers.SentenceTransformer | Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2026-04-25 22:39:15,846 | INFO | tx=req-37049e876154 | orchestration.nodes_Chatgpt | tavily_initialized
+2026-04-25 22:39:15,853 | INFO | tx=req-37049e876154 | orchestration.orchestrator_Chatgpt | langgraph_compiled
+2026-04-25 22:39:15,853 | INFO | tx=req-37049e876154 | orchestration.orchestrator_Chatgpt | orchestrator_processing_started | scope=shared
+2026-04-25 22:39:15,856 | INFO | tx=req-37049e876154 | orchestration.orchestrator_Chatgpt | orchestrator_classification_started | query_length=35
+2026-04-25 22:39:15,856 | INFO | tx=req-37049e876154 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_classification_started generated_preview=What is vastalya's brothers name?\n
+2026-04-25 22:39:17,340 | INFO | tx=req-37049e876154 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 22:39:17,351 | INFO | tx=req-37049e876154 | orchestration.classifier_Chatgpt | query_classified | route=direct
+2026-04-25 22:39:17,351 | INFO | tx=req-37049e876154 | orchestration.classifier_Chatgpt | query_step | step=query_classification generated_preview=direct raw_model_output=direct
+2026-04-25 22:39:17,354 | INFO | tx=req-37049e876154 | orchestration.orchestrator_Chatgpt | orchestrator_route_selected | route=direct
+2026-04-25 22:39:17,354 | INFO | tx=req-37049e876154 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_route_selected generated_preview=direct
+2026-04-25 22:39:17,356 | INFO | tx=req-37049e876154 | orchestration.orchestrator_Chatgpt | orchestrator_direct_llm_started | query_length=35
+2026-04-25 22:39:18,437 | INFO | tx=req-37049e876154 | httpx | HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-25 22:39:18,439 | INFO | tx=req-37049e876154 | orchestration.nodes_Chatgpt | direct_llm_completed | answer_length=170
+2026-04-25 22:39:18,439 | INFO | tx=req-37049e876154 | orchestration.nodes_Chatgpt | query_step | step=direct_llm_response generated_preview=I can't provide information on that topic, but if you have any questions about medical insurance policies, such as coverage options or claims processes, feel free to ask! answer_length=170
+2026-04-25 22:39:18,442 | INFO | tx=req-37049e876154 | orchestration.orchestrator_Chatgpt | orchestrator_processing_completed | route_taken=direct_llm
+2026-04-25 22:39:18,442 | INFO | tx=req-37049e876154 | orchestration.orchestrator_Chatgpt | query_step | step=orchestrator_completed generated_preview=I can't provide information on that topic, but if you have any questions about medical insurance policies, such as coverage options or claims processes, feel free to ask! route_taken=direct_llm success=True
+2026-04-25 22:39:18,443 | INFO | tx=req-37049e876154 | src.frontend.app | query_orchestration_completed | username=Vastalya route_taken=direct_llm source_count=0
+2026-04-25 22:39:18,444 | INFO | tx=req-37049e876154 | src.frontend.app | query_step | step=query_response_ready generated_preview=I can't provide information on that topic, but if you have any questions about medical insurance policies, such as coverage options or claims processes, feel free to ask! username=Vastalya route_taken=direct_llm source_count=0
+2026-04-25 22:39:18,445 | INFO | tx=req-37049e876154 | src.frontend.app | db_transaction_open
+2026-04-25 22:39:21,096 | INFO | tx=req-37049e876154 | src.frontend.app | db_transaction_commit
+2026-04-25 22:39:21,097 | INFO | tx=req-37049e876154 | src.frontend.app | db_connection_closed
+2026-04-25 22:39:21,097 | INFO | tx=req-37049e876154 | src.frontend.app | request_completed | method=POST path=/query status_code=200 duration_ms=20719.6
+2026-04-25 22:39:21,104 | INFO | tx=req-878e567c8ead | src.frontend.app | request_started | method=GET path=/history client=127.0.0.1
+2026-04-25 22:39:21,106 | INFO | tx=req-878e567c8ead | src.frontend.app | db_transaction_open
+2026-04-25 22:39:24,573 | INFO | tx=req-878e567c8ead | src.frontend.app | db_transaction_commit
+2026-04-25 22:39:24,574 | INFO | tx=req-878e567c8ead | src.frontend.app | db_connection_closed
+2026-04-25 22:39:24,578 | INFO | tx=req-878e567c8ead | src.frontend.app | request_completed | method=GET path=/history status_code=200 duration_ms=3474.5

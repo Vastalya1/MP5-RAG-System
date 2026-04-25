@@ -1,0 +1,89 @@
+====================================================================================================
+time: 2026-04-24T18:13:25.714+00:00
+level: INFO
+transaction_id: req-527759d70889
+query_id: req-527759d70889
+logger: src.frontend.app
+step: query_started
+details:
+username: Vastalya
+scope: shared
+generated:
+what is accounting?
+====================================================================================================
+time: 2026-04-24T18:13:28.394+00:00
+level: INFO
+transaction_id: req-527759d70889
+query_id: req-527759d70889
+logger: src.frontend.app
+step: query_pipeline_entered
+details:
+username: Vastalya
+scope: shared
+generated:
+what is accounting?
+====================================================================================================
+time: 2026-04-24T18:13:40.610+00:00
+level: INFO
+transaction_id: req-527759d70889
+query_id: req-527759d70889
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_classification_started
+generated:
+what is accounting?
+====================================================================================================
+time: 2026-04-24T18:13:42.326+00:00
+level: INFO
+transaction_id: req-527759d70889
+query_id: req-527759d70889
+logger: orchestration.classifier_Chatgpt
+step: query_classification
+details:
+raw_model_output: direct
+generated:
+direct
+====================================================================================================
+time: 2026-04-24T18:13:42.328+00:00
+level: INFO
+transaction_id: req-527759d70889
+query_id: req-527759d70889
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_route_selected
+generated:
+direct
+====================================================================================================
+time: 2026-04-24T18:13:43.853+00:00
+level: INFO
+transaction_id: req-527759d70889
+query_id: req-527759d70889
+logger: orchestration.nodes_Chatgpt
+step: direct_llm_response
+details:
+answer_length: 212
+generated:
+I appreciate your question! While accounting is an important field, I'm here to assist you with any medical insurance policy inquiries. If you have questions about coverage, claims, or benefits, feel free to ask!
+====================================================================================================
+time: 2026-04-24T18:13:43.855+00:00
+level: INFO
+transaction_id: req-527759d70889
+query_id: req-527759d70889
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_completed
+details:
+route_taken: direct_llm
+success: True
+generated:
+I appreciate your question! While accounting is an important field, I'm here to assist you with any medical insurance policy inquiries. If you have questions about coverage, claims, or benefits, feel free to ask!
+====================================================================================================
+time: 2026-04-24T18:13:43.861+00:00
+level: INFO
+transaction_id: req-527759d70889
+query_id: req-527759d70889
+logger: src.frontend.app
+step: query_response_ready
+details:
+username: Vastalya
+route_taken: direct_llm
+source_count: 0
+generated:
+I appreciate your question! While accounting is an important field, I'm here to assist you with any medical insurance policy inquiries. If you have questions about coverage, claims, or benefits, feel free to ask!

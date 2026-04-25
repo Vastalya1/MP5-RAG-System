@@ -1,0 +1,617 @@
+====================================================================================================
+time: 2026-04-24T17:54:51.264+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: src.frontend.app
+step: query_started
+details:
+username: Vastalya
+scope: shared
+generated:
+What are the pre-hospitalization and post-hospitalization coverage durations under the policy, and what expenses are covered under in-patient hospitalization treatment?
+====================================================================================================
+time: 2026-04-24T17:54:54.041+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: src.frontend.app
+step: query_pipeline_entered
+details:
+username: Vastalya
+scope: shared
+generated:
+What are the pre-hospitalization and post-hospitalization coverage durations under the policy, and what expenses are covered under in-patient hospitalization treatment?
+====================================================================================================
+time: 2026-04-24T17:55:06.347+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_classification_started
+generated:
+What are the pre-hospitalization and post-hospitalization coverage durations under the policy, and what expenses are covered under in-patient hospitalization treatment?
+====================================================================================================
+time: 2026-04-24T17:55:09.676+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.classifier_Chatgpt
+step: query_classification
+details:
+raw_model_output: rag
+generated:
+rag
+====================================================================================================
+time: 2026-04-24T17:55:09.680+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_route_selected
+generated:
+rag
+====================================================================================================
+time: 2026-04-24T17:55:09.686+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.nodes_Chatgpt
+step: rag_processing_started
+details:
+scope: shared
+====================================================================================================
+time: 2026-04-24T17:55:11.768+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: queryDecomposition.orchestrator_Chatgpt
+step: query_decomposition_plan
+details:
+should_decompose: True
+reason: The question asks about distinct aspects of the policy: coverage durations for pre-hospitalization and post-hospitalization, and expenses covered during in-patient hospitalization.
+generated:
+[
+  "What are the pre-hospitalization coverage durations under the policy?",
+  "What are the post-hospitalization coverage durations under the policy?",
+  "What expenses are covered under in-patient hospitalization treatment?"
+]
+====================================================================================================
+time: 2026-04-24T17:55:13.067+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: query_rewrite
+details:
+original_query: What expenses are covered under in-patient hospitalization treatment?
+generated:
+What expenses are covered under inpatient hospitalization treatment as per the policy terms?
+====================================================================================================
+time: 2026-04-24T17:55:13.505+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: query_rewrite
+details:
+original_query: What are the pre-hospitalization coverage durations under the policy?
+generated:
+What are the coverage durations for pre-hospitalization expenses under the policy?
+====================================================================================================
+time: 2026-04-24T17:55:13.906+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: query_rewrite
+details:
+original_query: What are the post-hospitalization coverage durations under the policy?
+generated:
+What are the coverage durations for post-hospitalization expenses under the policy?
+====================================================================================================
+time: 2026-04-24T17:55:15.467+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: document_retrieval
+details:
+retrieved_count: 15
+rewritten_query: What expenses are covered under inpatient hospitalization treatment as per the policy terms?
+generated:
+[
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "5. Day Care Procedures",
+    "distance": 0.5860926,
+    "hybrid_score": 0.031544957774465976,
+    "semantic_score": 0.6304802128198568,
+    "keyword_score": 9.573867777959062,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "We will pay You the medical expenses as listed under Section C, Part B,I-1 - In-patient Hospitalization Treatment for Day Care Procedures / Surgeries taken as an Inpatient in a Hospital or Day Care Centre but not in the "
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "3. Post-Hospitalization",
+    "distance": 0.6363485,
+    "hybrid_score": 0.03131881575727918,
+    "semantic_score": 0.6111167639411775,
+    "keyword_score": 12.644427176765252,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "The Medical Expenses incurred during the 90 days immediately after You were discharged post Hospitalization provided that: Such costs are incurred in respect of the same Illness/Injury for which the earlier Hospitalizati"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "2. Pre-Hospitalization",
+    "distance": 0.68854403,
+    "hybrid_score": 0.029116045245077504,
+    "semantic_score": 0.5922261914603435,
+    "keyword_score": 11.73623157501331,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "The Medical Expenses incurred during the 45 days immediately before You were Hospitalized, provided that: Such Medical Expenses were incurred for the same Illness/Injury for which subsequent Hospitalization was required,"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "immediately after the Insured is discharged from the Hospital provided that",
+    "distance": 0.6689649,
+    "hybrid_score": 0.029083245521601686,
+    "semantic_score": 0.5991737753142682,
+    "keyword_score": 10.049693318693288,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "i. Such Medical Expenses are for the same condition for which the Insured’s Hospitalization was required, and ii. The Inpatient Hospitalization claim for such Hospitalization is admissible by the Insurance Company."
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "5. Day Care Procedures",
+    "distance": 0.671433,
+    "hybrid_score": 0.02684684684684685,
+    "semantic_score": 0.5982890130803927,
+    "keyword_score": 8.609591668970781,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "We will pay You the medical expenses as listed under Section C, Part A I-1- In-patient Hospitalization Treatment for Day care procedures / Surgeries taken as an Inpatient in a Hospital or Day Care Centre but not in the o"
+  }
+]
+====================================================================================================
+time: 2026-04-24T17:55:15.595+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: document_retrieval
+details:
+retrieved_count: 15
+rewritten_query: What are the coverage durations for post-hospitalization expenses under the policy?
+generated:
+[
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "3. Post-Hospitalization",
+    "distance": 0.65376985,
+    "hybrid_score": 0.031099324975891997,
+    "semantic_score": 0.6046790609950955,
+    "keyword_score": 18.240963193844586,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "The Medical Expenses incurred during the 180 days immediately after You were discharged post Hospitalization provided that: Such costs are incurred in respect of the same Illness/Injury for which the earlier Hospitalizat"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "3. Post-Hospitalization",
+    "distance": 0.624831,
+    "hybrid_score": 0.031054405392392875,
+    "semantic_score": 0.6154486220413077,
+    "keyword_score": 16.927496985876736,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "The Medical Expenses incurred during the 90 days immediately after You were discharged post Hospitalization provided that: Such costs are incurred in respect of the same Illness/Injury for which the earlier Hospitalizati"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "39. Post-Hospitalization Medical Expenses:-",
+    "distance": 0.6142292,
+    "hybrid_score": 0.03076923076923077,
+    "semantic_score": 0.6194907142058884,
+    "keyword_score": 12.038248078519826,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "Post-Hospitalization Medical Expenses means medical expenses incurred during pre-defined number of days"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "3) 30-day waiting period (Code - Excl03)",
+    "distance": 0.57485783,
+    "hybrid_score": 0.028693528693528692,
+    "semantic_score": 0.6349779522637926,
+    "keyword_score": 9.993997114314757,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "a. Expenses related to the treatment of any Illness within 30 days from the first Policy commencement date shall be excluded except claims arising due to an Accident, provided the same are covered. b. This exclusion shal"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "3) 30-day waiting period (Code-Excl03)",
+    "distance": 0.57485783,
+    "hybrid_score": 0.028283227848101264,
+    "semantic_score": 0.6349779522637926,
+    "keyword_score": 9.993997114314757,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "a. Expenses related to the treatment of any Illness within 30 days from the first Policy commencement date shall be excluded except claims arising due to an Accident, provided the same are covered. b. This exclusion shal"
+  }
+]
+====================================================================================================
+time: 2026-04-24T17:55:15.624+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: document_retrieval
+details:
+retrieved_count: 15
+rewritten_query: What are the coverage durations for pre-hospitalization expenses under the policy?
+generated:
+[
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "2. Pre-Hospitalization",
+    "distance": 0.6729533,
+    "hybrid_score": 0.029910714285714284,
+    "semantic_score": 0.5977453166206134,
+    "keyword_score": 13.60132145866546,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "The Medical Expenses incurred during the 45 days immediately before You were Hospitalized, provided that: Such Medical Expenses were incurred for the same Illness/Injury for which subsequent Hospitalization was required,"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "1) Pre-Existing Diseases (Code -Excl01)",
+    "distance": 0.7022821,
+    "hybrid_score": 0.029726775956284153,
+    "semantic_score": 0.5874466987580965,
+    "keyword_score": 15.074246387041951,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "a. Expenses related to the treatment of a Pre-Existing Disease (PED) and its direct complications shall be excluded until the expiry of 36 months of continuous coverage after the date of inception of the first Global Hea"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "1) Pre-Existing Diseases (Code-Excl01)",
+    "distance": 0.70901453,
+    "hybrid_score": 0.02928692699490662,
+    "semantic_score": 0.5851325324893522,
+    "keyword_score": 15.074246387041951,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "a. Expenses related to the treatment of a Pre-Existing Disease (PED) and its direct complications shall be excluded until the expiry of 36 months of continuous coverage after the date of inception of the first Global Hea"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "3) 30-day waiting period (Code - Excl03)",
+    "distance": 0.5464609,
+    "hybrid_score": 0.028531243721117136,
+    "semantic_score": 0.6466377520440381,
+    "keyword_score": 9.993997114314757,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "a. Expenses related to the treatment of any Illness within 30 days from the first Policy commencement date shall be excluded except claims arising due to an Accident, provided the same are covered. b. This exclusion shal"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "38. Pre-Hospitalization Medical Expenses:-",
+    "distance": 0.5917288,
+    "hybrid_score": 0.028484848484848488,
+    "semantic_score": 0.6282477266227764,
+    "keyword_score": 10.46891893936334,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "Pre-Hospitalization Medical Expenses means medical expenses incurred during pre-defined number of days"
+  }
+]
+====================================================================================================
+time: 2026-04-24T17:55:17.794+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: chunk_reranking
+details:
+reranked_count: 3
+generated:
+[
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "1. In-patient Hospitalization Treatment",
+    "distance": 0.6230583,
+    "hybrid_score": 0.015151515151515152,
+    "semantic_score": 0.6161208134051624,
+    "keyword_score": null,
+    "matched_by": [
+      "semantic"
+    ],
+    "text_preview": "If You are advised Hospitalization by a Medical Practitioner as defined under Policy because of Illness or Accidental Bodily Injury sustained or contracted during the Policy Period, then We will pay You, Reasonable and C"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "3. Post-Hospitalization",
+    "distance": 0.6363485,
+    "hybrid_score": 0.03131881575727918,
+    "semantic_score": 0.6111167639411775,
+    "keyword_score": 12.644427176765252,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "The Medical Expenses incurred during the 90 days immediately after You were discharged post Hospitalization provided that: Such costs are incurred in respect of the same Illness/Injury for which the earlier Hospitalizati"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "2. Pre-Hospitalization",
+    "distance": 0.68854403,
+    "hybrid_score": 0.029116045245077504,
+    "semantic_score": 0.5922261914603435,
+    "keyword_score": 11.73623157501331,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "The Medical Expenses incurred during the 45 days immediately before You were Hospitalized, provided that: Such Medical Expenses were incurred for the same Illness/Injury for which subsequent Hospitalization was required,"
+  }
+]
+====================================================================================================
+time: 2026-04-24T17:55:17.884+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: chunk_reranking
+details:
+reranked_count: 3
+generated:
+[
+  {
+    "document": "Health Companion-Health Insurance Plan_GEN617.pdf",
+    "section": "2.4. Post-hospitalization Medical Expenses",
+    "distance": 0.5036295,
+    "hybrid_score": 0.01639344262295082,
+    "semantic_score": 0.6650574493251163,
+    "keyword_score": null,
+    "matched_by": [
+      "semantic"
+    ],
+    "text_preview": "We will cover Medical Expenses incurred due to Illness up to 60 days immediately after an Insured Person’s discharge from Hospital for the same Illness as long as We have accepted an In-patient Hospitalisation claim unde"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "3. Post-Hospitalization",
+    "distance": 0.624831,
+    "hybrid_score": 0.031054405392392875,
+    "semantic_score": 0.6154486220413077,
+    "keyword_score": 16.927496985876736,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "The Medical Expenses incurred during the 90 days immediately after You were discharged post Hospitalization provided that: Such costs are incurred in respect of the same Illness/Injury for which the earlier Hospitalizati"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "3. Post-Hospitalization",
+    "distance": 0.65376985,
+    "hybrid_score": 0.031099324975891997,
+    "semantic_score": 0.6046790609950955,
+    "keyword_score": 18.240963193844586,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "The Medical Expenses incurred during the 180 days immediately after You were discharged post Hospitalization provided that: Such costs are incurred in respect of the same Illness/Injury for which the earlier Hospitalizat"
+  }
+]
+====================================================================================================
+time: 2026-04-24T17:55:18.514+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: chunk_reranking
+details:
+reranked_count: 3
+generated:
+[
+  {
+    "document": "Health Companion-Health Insurance Plan_GEN617.pdf",
+    "section": "2.3. Pre-hospitalization Medical Expenses",
+    "distance": 0.5027529,
+    "hybrid_score": 0.01639344262295082,
+    "semantic_score": 0.6654453969112287,
+    "keyword_score": null,
+    "matched_by": [
+      "semantic"
+    ],
+    "text_preview": "We will cover Medical Expenses incurred due to Illness up to 30 days immediately before an Insured Person’s admission to a Hospital for the same Illness as long as We have accepted an In-patient Hospitalisation claim und"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "2. Pre-Hospitalization",
+    "distance": 0.6729533,
+    "hybrid_score": 0.029910714285714284,
+    "semantic_score": 0.5977453166206134,
+    "keyword_score": 13.60132145866546,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "The Medical Expenses incurred during the 45 days immediately before You were Hospitalized, provided that: Such Medical Expenses were incurred for the same Illness/Injury for which subsequent Hospitalization was required,"
+  },
+  {
+    "document": "BAJHLIP23020V012223.pdf",
+    "section": "2. Pre-Hospitalization",
+    "distance": 0.72824967,
+    "hybrid_score": 0.028373015873015873,
+    "semantic_score": 0.5786201018050824,
+    "keyword_score": 14.0791614326935,
+    "matched_by": [
+      "keyword",
+      "semantic"
+    ],
+    "text_preview": "The Medical Expenses incurred during the 60 days immediately before You were Hospitalized, provided that: Such Medical Expenses were incurred for the same Illness/Injury for which subsequent Hospitalization was required,"
+  }
+]
+====================================================================================================
+time: 2026-04-24T17:55:19.457+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: answer_generation
+details:
+justification: Referenced from Section: 2.4. Post-hospitalization Medical Expenses and Section 3. Post-Hospitalization.
+source_count: 3
+generated:
+The coverage duration for post-hospitalization expenses under the policy varies. According to the policy, expenses can be covered for up to 60 days, 90 days, or 180 days after discharge from the hospital, depending on the specific terms of your plan.
+====================================================================================================
+time: 2026-04-24T17:55:19.458+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: queryDecomposition.orchestrator_Chatgpt
+step: sub_query_processed
+details:
+success: True
+needs_web_scraping: False
+generated:
+{
+  "sub_query": "What are the post-hospitalization coverage durations under the policy?",
+  "rewritten_query": "What are the coverage durations for post-hospitalization expenses under the policy?",
+  "answer": "The coverage duration for post-hospitalization expenses under the policy varies. According to the policy, expenses can be covered for up to 60 days, 90 days, or 180 days after discharge from the hospital, depending on the specific terms of your plan."
+}
+====================================================================================================
+time: 2026-04-24T17:55:20.253+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: answer_generation
+details:
+justification: Referenced from Section: 1. In-patient Hospitalization Treatment
+source_count: 3
+generated:
+Inpatient hospitalization treatment covers various medical expenses incurred when you are hospitalized due to an illness or injury. These include costs for room and boarding in a private air-conditioned room, ICU expenses if applicable, nursing fees, and fees for surgeons, anesthetists, and other medical professionals. It also covers costs for anesthesia, blood, oxygen, operation theatre charges, dialysis, chemotherapy, physiotherapy, prescription drugs, artificial limbs, and necessary diagnostic tests like X-rays.
+====================================================================================================
+time: 2026-04-24T17:55:20.254+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: queryDecomposition.orchestrator_Chatgpt
+step: sub_query_processed
+details:
+success: True
+needs_web_scraping: False
+generated:
+{
+  "sub_query": "What expenses are covered under in-patient hospitalization treatment?",
+  "rewritten_query": "What expenses are covered under inpatient hospitalization treatment as per the policy terms?",
+  "answer": "Inpatient hospitalization treatment covers various medical expenses incurred when you are hospitalized due to an illness or injury. These include costs for room and boarding in a private air-conditioned room, ICU expenses if applicable, nursing fees, and fees for surgeons, anesthetists, and other medical professionals. It also covers costs for anesthesia, blood, oxygen, operation theatre charges, dialysis, chemotherapy, physiotherapy, prescription drugs, artificial limbs, and necessary diagnostic tests like X-rays."
+}
+====================================================================================================
+time: 2026-04-24T17:55:20.846+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.rag_pipeline_Chatgpt
+step: answer_generation
+details:
+justification: Referenced from Section: 2.3. Pre-hospitalization Medical Expenses.
+source_count: 3
+generated:
+The coverage duration for pre-hospitalization expenses under the policy is up to 30 days immediately before your admission to the hospital for the same illness, as long as an inpatient hospitalization claim has been accepted.
+====================================================================================================
+time: 2026-04-24T17:55:20.847+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: queryDecomposition.orchestrator_Chatgpt
+step: sub_query_processed
+details:
+success: True
+needs_web_scraping: False
+generated:
+{
+  "sub_query": "What are the pre-hospitalization coverage durations under the policy?",
+  "rewritten_query": "What are the coverage durations for pre-hospitalization expenses under the policy?",
+  "answer": "The coverage duration for pre-hospitalization expenses under the policy is up to 30 days immediately before your admission to the hospital for the same illness, as long as an inpatient hospitalization claim has been accepted."
+}
+====================================================================================================
+time: 2026-04-24T17:55:24.706+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: queryDecomposition.orchestrator_Chatgpt
+step: sub_query_synthesis
+details:
+sub_query_count: 3
+justification: This answer synthesizes information from the sub-query results regarding pre-hospitalization (Section 2.3), post-hospitalization (Sections 2.4 and 3), and inpatient hospitalization treatment (Section 1).
+generated:
+Under the policy, the coverage duration for pre-hospitalization expenses is up to 30 days immediately before your admission to the hospital for the same illness, provided that an inpatient hospitalization claim has been accepted. For post-hospitalization expenses, the coverage duration can vary, allowing for expenses to be covered for up to 60 days, 90 days, or 180 days after discharge from the hospital, depending on the specific terms of your plan. Inpatient hospitalization treatment covers a range of medical expenses, including room and boarding in a private air-conditioned room, ICU expenses, nursing fees, fees for surgeons and anesthetists, costs for anesthesia, blood, oxygen, operation theatre charges, dialysis, chemotherapy, physiotherapy, prescription drugs, artificial limbs, and necessary diagnostic tests like X-rays.
+====================================================================================================
+time: 2026-04-24T17:55:24.717+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: orchestration.orchestrator_Chatgpt
+step: orchestrator_completed
+details:
+route_taken: rag
+success: True
+generated:
+Under the policy, the coverage duration for pre-hospitalization expenses is up to 30 days immediately before your admission to the hospital for the same illness, provided that an inpatient hospitalization claim has been accepted. For post-hospitalization expenses, the coverage duration can vary, allowing for expenses to be covered for up to 60 days, 90 days, or 180 days after discharge from the hospital, depending on the specific terms of your plan. Inpatient hospitalization treatment covers a range of medical expenses, including room and boarding in a private air-conditioned room, ICU expenses, nursing fees, fees for surgeons and anesthetists, costs for anesthesia, blood, oxygen, operation theatre charges, dialysis, chemotherapy, physiotherapy, prescription drugs, artificial limbs, and necessary diagnostic tests like X-rays.
+====================================================================================================
+time: 2026-04-24T17:55:24.728+00:00
+level: INFO
+transaction_id: req-31b95fd65ca3
+query_id: req-31b95fd65ca3
+logger: src.frontend.app
+step: query_response_ready
+details:
+username: Vastalya
+route_taken: rag
+source_count: 7
+justification: This answer synthesizes information from the sub-query results regarding pre-hospitalization (Section 2.3), post-hospitalization (Sections 2.4 and 3), and inpatient hospitalization treatment (Section 1).
+generated:
+Under the policy, the coverage duration for pre-hospitalization expenses is up to 30 days immediately before your admission to the hospital for the same illness, provided that an inpatient hospitalization claim has been accepted. For post-hospitalization expenses, the coverage duration can vary, allowing for expenses to be covered for up to 60 days, 90 days, or 180 days after discharge from the hospital, depending on the specific terms of your plan. Inpatient hospitalization treatment covers a range of medical expenses, including room and boarding in a private air-conditioned room, ICU expenses, nursing fees, fees for surgeons and anesthetists, costs for anesthesia, blood, oxygen, operation theatre charges, dialysis, chemotherapy, physiotherapy, prescription drugs, artificial limbs, and necessary diagnostic tests like X-rays.

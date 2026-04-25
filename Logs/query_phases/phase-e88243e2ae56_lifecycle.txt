@@ -1,0 +1,380 @@
+QUERY LIFECYCLE REPORT
+================================================================================
+query_id: phase-e88243e2ae56
+scope: shared
+username: -
+collection_name: test_dataset
+document_filter: BAJHLIP23020V012223.pdf
+
+ORIGINAL QUESTION
+--------------------------------------------------------------------------------
+What is the definition of a hospital under the policy, and what is the minimum duration required for hospitalization to be covered?
+
+FINAL RESULT
+--------------------------------------------------------------------------------
+route_taken: rag
+success: True
+needs_web_scraping: False
+
+response:
+A hospital, as defined by the policy, is an institution that provides inpatient care and day care treatment for illnesses and injuries. It must be registered with local authorities under the Clinical Establishments (Registration and Regulation) Act, 2010, or under specific laws listed in the policy. For international coverage, it is described as a licensed medical or surgical establishment in the country where it operates, where patients are continuously supervised by a doctor. The minimum duration of inpatient hospitalization required for coverage under the policy is 24 consecutive hours, although there are exceptions for certain specified procedures or treatments that may require less than 24 hours of admission.
+
+justification:
+This answer synthesizes the definitions and requirements from the sub-query results, specifically referencing Section 17 for the definition of a hospital and Section 18 for the minimum hospitalization duration.
+
+raw_query_log:
+D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\Logs\queries\phase-e88243e2ae56.log
+
+QUERY PHASES
+--------------------------------------------------------------------------------
+1. query_started
+   time: 2026-04-25T17:02:24.570+00:00
+   level: INFO
+   logger: __main__
+   details:
+   - scope: shared
+   - collection_name: test_dataset
+   - selected_document: BAJHLIP23020V012223.pdf
+   generated:
+     What is the definition of a hospital under the policy, and what is the minimum duration required for hospitalization to be covered?
+
+2. orchestrator_classification_started
+   time: 2026-04-25T17:02:36.486+00:00
+   level: INFO
+   logger: orchestration.orchestrator_Chatgpt
+   generated:
+     What is the definition of a hospital under the policy, and what is the minimum duration required for hospitalization to be covered?
+
+3. query_classification
+   time: 2026-04-25T17:02:38.570+00:00
+   level: INFO
+   logger: orchestration.classifier_Chatgpt
+   details:
+   - raw_model_output: rag
+   generated:
+     rag
+
+4. orchestrator_route_selected
+   time: 2026-04-25T17:02:38.581+00:00
+   level: INFO
+   logger: orchestration.orchestrator_Chatgpt
+   generated:
+     rag
+
+5. rag_processing_started
+   time: 2026-04-25T17:02:38.592+00:00
+   level: INFO
+   logger: orchestration.nodes_Chatgpt
+   details:
+   - scope: shared
+   - collection_name: test_dataset
+   - document_filter: BAJHLIP23020V012223.pdf
+
+6. query_decomposition_plan
+   time: 2026-04-25T17:02:41.246+00:00
+   level: INFO
+   logger: queryDecomposition.orchestrator_Chatgpt
+   details:
+   - should_decompose: True
+   - reason: The question asks about two distinct aspects: the definition of a hospital and the minimum duration for hospitalization coverage.
+   generated:
+     [
+       "What is the definition of a hospital under the policy?",
+       "What is the minimum duration required for hospitalization to be covered?"
+     ]
+
+7. query_rewrite
+   time: 2026-04-25T17:02:42.301+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - original_query: What is the definition of a hospital under the policy?
+   generated:
+     What constitutes a hospital as per the policy definitions?
+
+8. query_rewrite
+   time: 2026-04-25T17:02:42.640+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - original_query: What is the minimum duration required for hospitalization to be covered?
+   generated:
+     What is the minimum duration of inpatient hospitalization required for coverage under the policy?
+
+9. document_retrieval
+   time: 2026-04-25T17:02:44.845+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - retrieved_count: 15
+   - rewritten_query: What constitutes a hospital as per the policy definitions?
+   generated:
+     [
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "17. Hospital:-",
+         "distance": 0.42618963,
+         "hybrid_score": 0.03131881575727918,
+         "semantic_score": 0.7011690303764163,
+         "keyword_score": 7.376452478331847,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "A Hospital means any institution established for Inpatient care and Day Care Treatment of Illness and/or injuries and which has been registered as a Hospital with the local authorities under the Clinical Establishments ("
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "19. Hospital (for International Cover):-",
+         "distance": 0.93051964,
+         "hybrid_score": 0.030776515151515152,
+         "semantic_score": 0.5179952481602311,
+         "keyword_score": 7.534444800834859,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "Hospital for international practice is any establishment which is licensed as a medical or surgical Hospital in the country where it operates and where the patient is permanently supervised by a Doctor."
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "10. Rehabilitation",
+         "distance": 0.98719674,
+         "hybrid_score": 0.027598020555767037,
+         "semantic_score": 0.5032214374506271,
+         "keyword_score": 7.2191917953700635,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "We have accepted an Inpatient Hospitalization claim for the Insured under In Patient Hospitalization Treatment and rehabilitation starts within 14 days of discharge from Hospital following acute medical and/or surgical t"
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "5. Day Care Procedures",
+         "distance": 1.0895905,
+         "hybrid_score": 0.026988636363636364,
+         "semantic_score": 0.4785626657471883,
+         "keyword_score": 7.884722773526432,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "We will pay You the medical expenses as listed under Section C, Part B,I-1 - In-patient Hospitalization Treatment for Day Care Procedures / Surgeries taken as an Inpatient in a Hospital or Day Care Centre but not in the "
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "16. Palliative care (Applicable to Imperial Plus Plan only)",
+         "distance": 1.0899982,
+         "hybrid_score": 0.02456928838951311,
+         "semantic_score": 0.47846931160036404,
+         "keyword_score": 6.665537712403772,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "We will pay the Reasonable and Customary expenses incurred, up to the limit specified in the Policy Schedule, on diagnosis of a Terminal Illness, for any ongoing treatment, given on the advice of a Medical Practitioner, "
+       }
+     ]
+
+10. document_retrieval
+   time: 2026-04-25T17:02:44.854+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - retrieved_count: 15
+   - rewritten_query: What is the minimum duration of inpatient hospitalization required for coverage under the policy?
+   generated:
+     [
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "10. Rehabilitation",
+         "distance": 0.77791363,
+         "hybrid_score": 0.030679156908665108,
+         "semantic_score": 0.562457018792302,
+         "keyword_score": 17.23603528231535,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "We have accepted an Inpatient Hospitalization claim for the Insured under In Patient Hospitalization Treatment and rehabilitation starts within 14 days of discharge from Hospital following acute medical and/or surgical t"
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "18. Hospitalization:-",
+         "distance": 0.66376543,
+         "hybrid_score": 0.029051670471052088,
+         "semantic_score": 0.6010462664800049,
+         "keyword_score": 12.211174135570786,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "Hospitalization means admission in a Hospital for a minimum period of 24 consecutive In-patient Care hours except for specified procedures/ treatments, where such admission could be for a period of less than 24 consecuti"
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "1) Pre-Existing Diseases (Code-Excl01)",
+         "distance": 0.7933693,
+         "hybrid_score": 0.027783137179239824,
+         "semantic_score": 0.557609634557701,
+         "keyword_score": 13.306977200240324,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "a. Expenses related to the treatment of a Pre-Existing Disease (PED) and its direct complications shall be excluded until the expiry of 36 months of continuous coverage after the date of inception of the first Global Hea"
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "2. Pre-Hospitalization",
+         "distance": 0.8682774,
+         "hybrid_score": 0.027651515151515153,
+         "semantic_score": 0.5352524202241059,
+         "keyword_score": 14.972373653165064,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "The Medical Expenses incurred during the 45 days immediately before You were Hospitalized, provided that: Such Medical Expenses were incurred for the same Illness/Injury for which subsequent Hospitalization was required,"
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "1) Pre-Existing Diseases (Code -Excl01)",
+         "distance": 0.79464746,
+         "hybrid_score": 0.02758751902587519,
+         "semantic_score": 0.5572125012229422,
+         "keyword_score": 13.306977200240324,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "a. Expenses related to the treatment of a Pre-Existing Disease (PED) and its direct complications shall be excluded until the expiry of 36 months of continuous coverage after the date of inception of the first Global Hea"
+       }
+     ]
+
+11. chunk_reranking
+   time: 2026-04-25T17:02:46.585+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - reranked_count: 2
+   generated:
+     [
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "17. Hospital:-",
+         "distance": 0.42618963,
+         "hybrid_score": 0.03131881575727918,
+         "semantic_score": 0.7011690303764163,
+         "keyword_score": 7.376452478331847,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "A Hospital means any institution established for Inpatient care and Day Care Treatment of Illness and/or injuries and which has been registered as a Hospital with the local authorities under the Clinical Establishments ("
+       },
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "19. Hospital (for International Cover):-",
+         "distance": 0.93051964,
+         "hybrid_score": 0.030776515151515152,
+         "semantic_score": 0.5179952481602311,
+         "keyword_score": 7.534444800834859,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "Hospital for international practice is any establishment which is licensed as a medical or surgical Hospital in the country where it operates and where the patient is permanently supervised by a Doctor."
+       }
+     ]
+
+12. chunk_reranking
+   time: 2026-04-25T17:02:46.764+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - reranked_count: 1
+   generated:
+     [
+       {
+         "document": "BAJHLIP23020V012223.pdf",
+         "section": "18. Hospitalization:-",
+         "distance": 0.66376543,
+         "hybrid_score": 0.029051670471052088,
+         "semantic_score": 0.6010462664800049,
+         "keyword_score": 12.211174135570786,
+         "matched_by": [
+           "keyword",
+           "semantic"
+         ],
+         "text_preview": "Hospitalization means admission in a Hospital for a minimum period of 24 consecutive In-patient Care hours except for specified procedures/ treatments, where such admission could be for a period of less than 24 consecuti"
+       }
+     ]
+
+13. answer_generation
+   time: 2026-04-25T17:02:49.186+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - justification: Referenced from Section: 18. Hospitalization
+   - source_count: 1
+   generated:
+     The minimum duration of inpatient hospitalization required for coverage under the policy is 24 consecutive hours. However, there are exceptions for certain specified procedures or treatments that may require less than 24 hours of admission.
+
+14. sub_query_processed
+   time: 2026-04-25T17:02:49.195+00:00
+   level: INFO
+   logger: queryDecomposition.orchestrator_Chatgpt
+   details:
+   - success: True
+   - needs_web_scraping: False
+   generated:
+     {
+       "sub_query": "What is the minimum duration required for hospitalization to be covered?",
+       "rewritten_query": "What is the minimum duration of inpatient hospitalization required for coverage under the policy?",
+       "answer": "The minimum duration of inpatient hospitalization required for coverage under the policy is 24 consecutive hours. However, there are exceptions for certain specified procedures or treatments that may require less than 24 hours of admission."
+     }
+
+15. answer_generation
+   time: 2026-04-25T17:02:49.668+00:00
+   level: INFO
+   logger: orchestration.rag_pipeline_Chatgpt
+   details:
+   - justification: Referenced from Section: 17. Hospital and Section: 19. Hospital (for International Cover)
+   - source_count: 2
+   generated:
+     A hospital, according to the policy, is defined as an institution that provides inpatient care and day care treatment for illnesses and injuries. It must be registered with local authorities under the Clinical Establishments (Registration and Regulation) Act, 2010, or under specific laws listed in the policy. For international coverage, a hospital is described as a licensed medical or surgical establishment in the country where it operates, where patients are continuously supervised by a doctor.
+
+16. sub_query_processed
+   time: 2026-04-25T17:02:49.671+00:00
+   level: INFO
+   logger: queryDecomposition.orchestrator_Chatgpt
+   details:
+   - success: True
+   - needs_web_scraping: False
+   generated:
+     {
+       "sub_query": "What is the definition of a hospital under the policy?",
+       "rewritten_query": "What constitutes a hospital as per the policy definitions?",
+       "answer": "A hospital, according to the policy, is defined as an institution that provides inpatient care and day care treatment for illnesses and injuries. It must be registered with local authorities under the Clinical Establishments (Registration and Regulation) Act, 2010, or under specific laws listed in the policy. For international coverage, a hospital is described as a licensed medical or surgical establishment in the country where it operates, where patients are continuously supervised by a doctor."
+     }
+
+17. sub_query_synthesis
+   time: 2026-04-25T17:02:54.261+00:00
+   level: INFO
+   logger: queryDecomposition.orchestrator_Chatgpt
+   details:
+   - sub_query_count: 2
+   - justification: This answer synthesizes the definitions and requirements from the sub-query results, specifically referencing Section 17 for the definition of a hospital and Section 18 for the minimum hospitalization duration.
+   generated:
+S
+18. orchestrator_completed
+   time: 2026-04-25T17:02:54.278+00:00
+   level: INFO
+   logger: orchestration.orchestrator_Chatgpt
+   details:
+   - route_taken: rag
+   - success: True
+   generated:
+     A hospital, as defined by the policy, is an institution that provides inpatient care and day care treatment for illnesses and injuries. It must be registered with local authorities under the Clinical Establishments (Registration and Regulation) Act, 2010, or under specific laws listed in the policy. For international coverage, it is described as a licensed medical or surgical establishment in the country where it operates, where patients are continuously supervised by a doctor. The minimum duration of inpatient hospitalization required for coverage under the policy is 24 consecutive hours, although there are exceptions for certain specified procedures or treatments that may require less than 24 hours of admission.
