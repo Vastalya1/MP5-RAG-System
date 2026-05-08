@@ -130,7 +130,7 @@ class RAGSubQueryProcessor:
     Reusable RAG pipeline for processing one query or decomposed sub-query.
     """
 
-    DISTANCE_THRESHOLD = 1.3
+    DISTANCE_THRESHOLD = 1.1
 
     def __init__(
         self,
