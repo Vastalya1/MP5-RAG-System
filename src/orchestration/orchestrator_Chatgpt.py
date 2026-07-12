@@ -6,44 +6,30 @@ It routes queries between Direct LLM and RAG processing paths based on
 classification performed BEFORE query rewriting.
 """
 
-from typing import Literal, Optional, Any, Dict, List
+from typing import Any, Dict, List, Literal, Optional
 from typing_extensions import TypedDict
 
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import END, START, StateGraph
 
-from .classifier import QueryClassifier
-from .nodes import DirectLLMNode, RAGProcessNode, WebScrapingNode
+from .classifier_Chatgpt import QueryClassifier
+from .nodes_Chatgpt import DirectLLMNode, RAGProcessNode, WebScrapingNode
+from shared.logging_utils import get_logger, log_error, log_info, log_query_error, log_query_step
 
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from queryRewriter.rewriting import QueryRewriter
+from output.answerGeneration_Chatgpt import AnswerGenerator
+from queryRewriter.rewriting_Chatgpt import QueryRewriter
+from retriever.reranking_Chatgpt import ChunkReranker
 from retriever.retrival import retrivalModel
-from retriever.reranking_mistral import ChunkReranker
-from output.answerGeneration_mistral import AnswerGenerator
+
+
+logger = get_logger(__name__)
 
 
 class GraphState(TypedDict):
-    """
-    State schema for the LangGraph orchestration.
-    
-    Attributes:
-        query: The original user query
-        rewritten_query: Query after rewriting (for RAG path)
-        scope: Search scope (shared, personal, combined)
-        username: Username for personal document access
-        collection_name: Optional specific collection name
-        route: The classified route (rag or direct)
-        answer: The generated answer
-        justification: Justification for the answer
-        sources: Source chunks used for the answer
-        success: Whether the processing was successful
-        route_taken: Which route was actually taken
-        needs_web_scraping: Flag for low similarity scenarios
-        error: Error message if any
-        metadata: Additional metadata
-    """
     query: str
     rewritten_query: Optional[str]
     scope: str
@@ -63,38 +49,15 @@ class GraphState(TypedDict):
 
 
 class QueryOrchestrator:
-    """
-    Main orchestrator class that uses LangGraph to route and process queries.
-    
-    The orchestration flow:
-    1. Classify the query (before any rewriting)
-    2. Route to either:
-       - Direct LLM: For general queries
-       - RAG Process: For document-related queries
-    3. (Future) Web Scraping: For low similarity RAG results
-    """
-    
     def __init__(
         self,
         api_key: str,
         rewriter: Optional[QueryRewriter] = None,
         retriever: Optional[retrivalModel] = None,
         reranker: Optional[ChunkReranker] = None,
-        answer_generator: Optional[AnswerGenerator] = None
+        answer_generator: Optional[AnswerGenerator] = None,
     ):
-        """
-        Initialize the Query Orchestrator.
-        
-        Args:
-            api_key: Mistral API key
-            rewriter: Optional pre-initialized QueryRewriter
-            retriever: Optional pre-initialized retrivalModel
-            reranker: Optional pre-initialized ChunkReranker
-            answer_generator: Optional pre-initialized AnswerGenerator
-        """
         self.api_key = api_key
-        
-        # Initialize components
         self.classifier = QueryClassifier(api_key)
         self.direct_llm_node = DirectLLMNode(api_key)
         self.rag_node = RAGProcessNode(
@@ -102,96 +65,51 @@ class QueryOrchestrator:
             rewriter=rewriter,
             retriever=retriever,
             reranker=reranker,
-            answer_generator=answer_generator
+            answer_generator=answer_generator,
         )
         self.web_scraping_node = WebScrapingNode(api_key)
-        
-        # Build the graph
         self.graph = self._build_graph()
-    
-        
+
     def _build_graph(self) -> StateGraph:
-        """
-        Build the LangGraph state graph with nodes and edges.
-        
-        Graph Structure:
-            START
-              |
-              v
-        [classifier_node]
-              |
-              +-- "rag" --> [rag_node] --> END
-              |
-              +-- "direct" --> [direct_llm_node] --> END
-        
-        Note: Web scraping node is defined but not connected in edges yet.
-        """
         builder = StateGraph(GraphState)
 
-        # Add nodes
         builder.add_node("classifier_node", self._classifier_node)
         builder.add_node("direct_llm_node", self._direct_llm_node)
         builder.add_node("rag_node", self._rag_node)
         builder.add_node("web_scraping_node", self._web_scraping_node)
 
-        # START → classifier
         builder.add_edge(START, "classifier_node")
-
-        # classifier → (direct | rag)
         builder.add_conditional_edges(
             "classifier_node",
             self._route_query,
-            {
-                "direct": "direct_llm_node",
-                "rag": "rag_node"
-            }
+            {"direct": "direct_llm_node", "rag": "rag_node"},
         )
-
-        # rag → (end | web_scraping)
         builder.add_conditional_edges(
             "rag_node",
             self._check_similarity_threshold,
-            {
-                "proceed": END,
-                "web_scrape": "web_scraping_node"
-            }
+            {"proceed": END, "web_scrape": "web_scraping_node"},
         )
-
-        # web_scraping → END
         builder.add_edge("web_scraping_node", END)
-
-        # direct → END
         builder.add_edge("direct_llm_node", END)
 
         compiled_graph = builder.compile()
-        print("[Orchestrator] LangGraph compiled successfully")
+        log_info(logger, "langgraph_compiled")
         return compiled_graph
 
-    
     def _classifier_node(self, state: GraphState) -> dict:
-        """
-        Node that classifies the query to determine routing.
-        This happens BEFORE any query rewriting.
-        """
         query = state["query"]
-        print(f"[Orchestrator] Classifying query: {query[:50]}...")
-        
+        log_info(logger, "orchestrator_classification_started", query_length=len(query))
+        log_query_step(logger, "orchestrator_classification_started", generated=query)
         route = self.classifier.classify(query)
-        
         return {
             "route": route,
-            "metadata": {**state.get("metadata", {}), "classified_route": route}
+            "metadata": {**state.get("metadata", {}), "classified_route": route},
         }
-    
+
     async def _direct_llm_node(self, state: GraphState) -> dict:
-        """
-        Node that processes queries using direct LLM response.
-        """
         query = state["query"]
-        print(f"[Orchestrator] Processing via Direct LLM...")
-        
+        log_info(logger, "orchestrator_direct_llm_started", query_length=len(query))
         result = await self.direct_llm_node.process(query)
-        
         return {
             "answer": result.get("answer"),
             "justification": result.get("justification"),
@@ -199,21 +117,16 @@ class QueryOrchestrator:
             "success": result.get("success", False),
             "route_taken": "direct_llm",
             "needs_web_scraping": False,
-            "error": result.get("error")
+            "error": result.get("error"),
         }
-    
+
     async def _rag_node(self, state: GraphState) -> dict:
-        """
-        Node that processes queries using the full RAG pipeline.
-        """
         query = state["query"]
         scope = state.get("scope", "shared")
         username = state.get("username")
         collection_name = state.get("collection_name")
         document_filter = state.get("document_filter")
-        
-        print(f"[Orchestrator] Processing via RAG pipeline...")
-        
+        log_info(logger, "orchestrator_rag_started", scope=scope, collection_name=collection_name, document_filter=document_filter)
         result = await self.rag_node.process(
             query=query,
             scope=scope,
@@ -221,7 +134,6 @@ class QueryOrchestrator:
             collection_name=collection_name,
             document_filter=document_filter,
         )
-        
         return {
             "answer": result.get("answer"),
             "justification": result.get("justification"),
@@ -237,71 +149,47 @@ class QueryOrchestrator:
                 **state.get("metadata", {}),
                 "top_chunk_distance": result.get("top_chunk_distance"),
                 "sub_query_results": result.get("sub_query_results", []),
-            }
+            },
         }
-    
+
     async def _web_scraping_node(self, state: GraphState) -> dict:
         metadata = state.get("metadata", {})
-        rewritten_query = state["query"] if metadata.get("decomposition_used") else (state.get("rewritten_query") or state["query"])
-
-        print("[Orchestrator] Falling back to Tavily web search")
-
-        result = await self.web_scraping_node.process(
-            query=rewritten_query,
-            context=state
+        rewritten_query = (
+            state["query"]
+            if metadata.get("decomposition_used")
+            else (state.get("rewritten_query") or state["query"])
         )
 
+        log_info(logger, "orchestrator_web_fallback_started")
+        result = await self.web_scraping_node.process(query=rewritten_query, context=state)
         return {
             "answer": result.get("answer"),
             "justification": result.get("justification"),
             "sources": result.get("sources", []),
             "success": result.get("success", False),
             "route_taken": "tavily_web_search",
-            "error": result.get("error")
+            "error": result.get("error"),
         }
 
-
-    
     def _route_query(self, state: GraphState) -> Literal["direct", "rag"]:
-        """
-        Routing function for conditional edges.
-        Returns the route determined by the classifier.
-        """
         route = state.get("route", "rag")
-        print(f"[Orchestrator] Routing to: {route}")
+        log_info(logger, "orchestrator_route_selected", route=route)
+        log_query_step(logger, "orchestrator_route_selected", generated=route)
         return route
-    
+
     def _check_similarity_threshold(self, state: GraphState) -> Literal["proceed", "web_scrape"]:
-        """
-        Check if similarity score is below threshold.
-        Used for future web scraping routing.
-        """
         if state.get("needs_web_scraping", False):
             return "web_scrape"
         return "proceed"
-    
+
     async def process_query(
         self,
         query: str,
         scope: str = "shared",
         username: Optional[str] = None,
         collection_name: Optional[str] = None,
-        document_filter: Optional[str] = None
+        document_filter: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """
-        Process a query through the orchestration graph.
-        
-        Args:
-            query: The user's query
-            scope: Search scope (shared, personal, combined)
-            username: Username for personal document access
-            collection_name: Optional specific collection name
-            document_filter: Optional document name to filter within a collection
-            
-        Returns:
-            Dict containing the answer, justification, sources, and metadata
-        """
-        # Initialize the state
         initial_state: GraphState = {
             "query": query,
             "rewritten_query": None,
@@ -318,16 +206,21 @@ class QueryOrchestrator:
             "needs_web_scraping": False,
             "error": None,
             "sub_query_results": [],
-            "metadata": {}
+            "metadata": {},
         }
-        
+
         try:
-            # Invoke the graph
-            print(f"[Orchestrator] Starting query processing...")
+            log_info(logger, "orchestrator_processing_started", scope=scope, collection_name=collection_name, document_filter=document_filter)
             result = await self.graph.ainvoke(initial_state)
-            
-            print(f"[Orchestrator] Processing complete. Route: {result.get('route_taken')}")
-            
+
+            log_info(logger, "orchestrator_processing_completed", route_taken=result.get("route_taken"))
+            log_query_step(
+                logger,
+                "orchestrator_completed",
+                generated=result.get("answer", ""),
+                route_taken=result.get("route_taken"),
+                success=result.get("success", False),
+            )
             return {
                 "response": result.get("answer", ""),
                 "justification": result.get("justification"),
@@ -337,54 +230,27 @@ class QueryOrchestrator:
                 "retrieval_debug": result.get("retrieval_debug"),
                 "success": result.get("success", False),
                 "needs_web_scraping": result.get("needs_web_scraping", False),
-                "metadata": result.get("metadata", {})
+                "metadata": result.get("metadata", {}),
             }
-            
+
         except Exception as e:
-            print(f"[Orchestrator] Error during processing: {str(e)}")
+            log_error(logger, "orchestrator_processing_failed", error_type=type(e).__name__, error=str(e))
+            log_query_error(
+                logger,
+                "orchestrator_processing",
+                generated=str(e),
+                error_type=type(e).__name__,
+                error=str(e),
+            )
+            logger.exception("orchestrator_processing_exception")
             return {
                 "response": f"An error occurred: {str(e)}",
                 "justification": None,
                 "sources": [],
                 "route_taken": "error",
                 "success": False,
-                "error": str(e)
+                "error": str(e),
             }
-    
-    def get_graph_visualization(self) -> str:
-        """
-        Get a text representation of the graph structure.
-        
-        Returns:
-            String representation of the graph
-        """
-        return """
-        LangGraph Orchestration Flow:
-        =============================
-        
-                    START
-                      |
-                      v
-              [classifier_node]
-                      |
-            +---------+---------+
-            |                   |
-            v                   v
-     (route="direct")    (route="rag")
-            |                   |
-            v                   v
-    [direct_llm_node]    [rag_node]
-            |                   |
-            +---------+---------+
-                      |
-                      v
-                     END
-        
-        [web_scraping_node] - Defined but not connected (placeholder)
-        
-        Future Enhancement:
-        - Connect web_scraping_node after rag_node when similarity < threshold
-        """
 
 
 def create_orchestrator(
@@ -392,25 +258,12 @@ def create_orchestrator(
     rewriter: Optional[QueryRewriter] = None,
     retriever: Optional[retrivalModel] = None,
     reranker: Optional[ChunkReranker] = None,
-    answer_generator: Optional[AnswerGenerator] = None
+    answer_generator: Optional[AnswerGenerator] = None,
 ) -> QueryOrchestrator:
-    """
-    Factory function to create a QueryOrchestrator instance.
-    
-    Args:
-        api_key: Mistral API key
-        rewriter: Optional pre-initialized QueryRewriter
-        retriever: Optional pre-initialized retrivalModel
-        reranker: Optional pre-initialized ChunkReranker
-        answer_generator: Optional pre-initialized AnswerGenerator
-        
-    Returns:
-        Configured QueryOrchestrator instance
-    """
     return QueryOrchestrator(
         api_key=api_key,
         rewriter=rewriter,
         retriever=retriever,
         reranker=reranker,
-        answer_generator=answer_generator
+        answer_generator=answer_generator,
     )

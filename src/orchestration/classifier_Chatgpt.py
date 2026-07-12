@@ -7,28 +7,33 @@ This classifier determines whether a query:
 """
 
 from typing import Literal
-from mistralai import Mistral
+
+from openai import OpenAI
+from shared.logging_utils import get_logger, log_error, log_info, log_query_error, log_query_step
+
+
+logger = get_logger(__name__)
 
 
 class QueryClassifier:
     """
     Classifies user queries to determine the appropriate processing path.
-    Uses Mistral's lightweight model for fast classification.
+    Uses OpenAI's lightweight model for fast classification.
     """
-    
+
     ROUTE_RAG = "rag"
     ROUTE_DIRECT = "direct"
-    
+
     def __init__(self, api_key: str):
         """
-        Initialize the Query Classifier with Mistral API.
-        
+        Initialize the Query Classifier with OpenAI API.
+
         Args:
-            api_key: Mistral API key
+            api_key: OpenAI API key
         """
-        self.client = Mistral(api_key=api_key)
-        self.model = "mistral-tiny"  # Fastest model for quick classification
-        
+        self.client = OpenAI(api_key=api_key)
+        self.model = "gpt-4o-mini"
+
         self.CLASSIFICATION_PROMPT = """You are a query router for a medical insurance policy assistant.
 
 Your task is to classify whether a user query requires looking up information from medical insurance policy documents or can be answered directly.
@@ -59,10 +64,10 @@ Do not add any explanation, punctuation, or additional text."""
     def classify(self, query: str) -> Literal["rag", "direct"]:
         """
         Classify a query to determine the routing path.
-        
+
         Args:
             query: The user's query string
-            
+
         Returns:
             "rag" if the query needs document retrieval
             "direct" if the query can be answered directly by LLM
@@ -72,47 +77,77 @@ Do not add any explanation, punctuation, or additional text."""
                 {"role": "system", "content": self.CLASSIFICATION_PROMPT},
                 {"role": "user", "content": f"Query: {query}"},
             ]
-            
-            response = self.client.chat.complete(
+
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                temperature=0.0,  # Deterministic for classification
-                max_tokens=10     # Only need one word
+                temperature=0.0,
+                max_tokens=10,
             )
-            
+
             if response and response.choices:
-                classification = response.choices[0].message.content.strip().lower()
-                
-                # Normalize response
+                classification = (response.choices[0].message.content or "").strip().lower()
+
                 if "rag" in classification:
-                    print(f"[Classifier] Query routed to: RAG")
+                    log_info(logger, "query_classified", route=self.ROUTE_RAG)
+                    log_query_step(
+                        logger,
+                        "query_classification",
+                        generated=self.ROUTE_RAG,
+                        raw_model_output=classification,
+                    )
                     return self.ROUTE_RAG
-                elif "direct" in classification:
-                    print(f"[Classifier] Query routed to: DIRECT LLM")
+                if "direct" in classification:
+                    log_info(logger, "query_classified", route=self.ROUTE_DIRECT)
+                    log_query_step(
+                        logger,
+                        "query_classification",
+                        generated=self.ROUTE_DIRECT,
+                        raw_model_output=classification,
+                    )
                     return self.ROUTE_DIRECT
-                else:
-                    # Default to RAG for safety (better to search than miss info)
-                    print(f"[Classifier] Uncertain classification '{classification}', defaulting to RAG")
-                    return self.ROUTE_RAG
-            else:
-                print("[Classifier] Empty response, defaulting to RAG")
+
+                log_error(logger, "query_classification_uncertain", classification=classification, fallback=self.ROUTE_RAG)
+                log_query_error(
+                    logger,
+                    "query_classification",
+                    generated=self.ROUTE_RAG,
+                    raw_model_output=classification,
+                    fallback=self.ROUTE_RAG,
+                )
                 return self.ROUTE_RAG
-                
+
+            log_error(logger, "query_classification_empty_response", fallback=self.ROUTE_RAG)
+            log_query_error(
+                logger,
+                "query_classification",
+                generated=self.ROUTE_RAG,
+                fallback=self.ROUTE_RAG,
+                reason="empty_response",
+            )
+            return self.ROUTE_RAG
+
         except Exception as e:
-            print(f"[Classifier] Error in classification: {str(e)}, defaulting to RAG")
+            log_error(logger, "query_classification_failed", error_type=type(e).__name__, error=str(e), fallback=self.ROUTE_RAG)
+            log_query_error(
+                logger,
+                "query_classification",
+                generated=self.ROUTE_RAG,
+                error_type=type(e).__name__,
+                error=str(e),
+                fallback=self.ROUTE_RAG,
+            )
             return self.ROUTE_RAG
 
     async def classify_async(self, query: str) -> Literal["rag", "direct"]:
         """
         Async version of classify for use in async contexts.
-        
+
         Args:
             query: The user's query string
-            
+
         Returns:
             "rag" if the query needs document retrieval
             "direct" if the query can be answered directly by LLM
         """
-        # Mistral's sync client works in async contexts
-        # For true async, consider using httpx or aiohttp
         return self.classify(query)

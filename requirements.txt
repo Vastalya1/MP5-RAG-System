@@ -19,6 +19,7 @@ pdfplumber
 pillow
 reportlab
 mistralai
+openai
 langgraph
 langchain-core
 tavily-python

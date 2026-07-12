@@ -1,0 +1,1802 @@
+MP5-RAG-System Technical Documentation
+======================================
+
+1. Purpose and Scope
+--------------------
+This repository implements a medical-insurance policy assistant built on a Retrieval-Augmented Generation (RAG) architecture.
+Its main job is to:
+
+- ingest policy PDFs into a searchable vector store,
+- let admins and end users upload documents,
+- answer policy questions with grounded context,
+- maintain login state, audit logs, and query history,
+- optionally fall back to Tavily web search for low-confidence results.
+
+The current active runtime path is the OpenAI-backed path imported from the `_Chatgpt` modules. Despite the names, these modules are not tied to the ChatGPT product UI; they use the OpenAI Python SDK and `gpt-4o-mini` through Chat Completions.
+
+This document covers:
+
+- application architecture,
+- code organization,
+- startup and configuration,
+- upload and query lifecycles,
+- persistence layout,
+- major data structures,
+- frontend and backend behavior,
+- evaluation and utility scripts,
+- implementation caveats that affect real runtime behavior.
+
+
+2. High-Level Architecture
+--------------------------
+The application has five main layers:
+
+1. Web layer
+   - FastAPI app in `src/frontend/app.py`
+   - Jinja2 templates for login, dashboards, chat, shared library, and activity pages
+   - Session-based authentication and CSRF protection
+
+2. Ingestion layer
+   - PDF text chunking from prose
+   - table extraction from PDFs
+   - table-to-natural-language conversion
+   - embedding and storage in Chroma Cloud
+
+3. Retrieval and answer layer
+   - query rewriting
+   - hybrid retrieval: semantic + BM25 keyword
+   - metadata-aware reranking
+   - LLM reranking
+   - answer generation with citations
+
+4. Orchestration layer
+   - LangGraph-based classifier/router
+   - direct-answer path for non-RAG queries
+   - RAG path with optional query decomposition
+   - optional Tavily fallback when retrieval confidence is low
+
+5. Persistence and observability layer
+   - PostgreSQL tables for users, uploads, audit events, query history
+   - file storage under `dataset/`
+   - application log and per-query lifecycle logs under `Logs/`
+
+
+3. Active Runtime Entry Points
+------------------------------
+Primary launcher:
+
+- `run_server.py`
+  - adds project root to `sys.path`
+  - configures logging
+  - runs `uvicorn` against `src.frontend.app:app`
+  - host: `127.0.0.1`
+  - port: `8000`
+  - reload controlled by `UVICORN_RELOAD`
+
+Secondary launcher:
+
+- `src/run_server.py`
+  - similar intent, but uses `frontend.app:app`
+  - host: `0.0.0.0`
+  - port: `8000`
+  - reload hardcoded `False`
+  - appears to be an older or alternate runner
+
+Other top-level files:
+
+- `README.md`: usage/setup summary
+- `requirements.txt`: package list
+- `PROMPTS_INVENTORY.md`: non-runtime inventory of prompt templates
+- `src/main.py`: currently empty placeholder
+
+
+4. Repository Layout
+--------------------
+Main runtime folders:
+
+- `src/frontend`
+  - FastAPI app and Jinja templates
+
+- `src/ingestion`
+  - chunking, embedding, ingestion pipeline, optional file-to-PDF conversion
+
+- `src/retriever`
+  - hybrid retrieval and reranking
+
+- `src/queryRewriter`
+  - query rewriting LLM wrappers
+
+- `src/output`
+  - answer generation LLM wrappers
+
+- `src/orchestration`
+  - classifier, nodes, LangGraph orchestrator, reusable RAG processor
+
+- `src/queryDecomposition`
+  - decomposition planner and synthesis pipeline
+
+- `src/shared`
+  - logging helpers, heading detection, collection naming
+
+- `src/tavily_fallback`
+  - Tavily client/service wrappers
+
+Supporting and analysis folders:
+
+- `src/tableHandling`
+  - advanced table extraction and table sentence generation
+
+- `src/rag_evaluation`
+  - offline evaluation, dataset preparation, chunk export
+
+- `src/query_phases`
+  - lifecycle reporting from per-query logs
+
+Data and storage:
+
+- `dataset/`
+  - shared PDFs
+  - personal PDFs
+  - local Chroma remnants from past experiments
+
+- `Logs/`
+  - application log
+  - query logs
+  - query phase lifecycle reports
+
+
+5. Runtime Configuration
+------------------------
+Environment variables observed in code:
+
+- `OPENAI_API_KEY`
+  - required for active rewriting, reranking, answer generation, orchestration, table sentence generation
+
+- `DATABASE_URL`
+  - required for PostgreSQL access
+
+- `SESSION_SECRET`
+  - FastAPI session signing secret
+
+- `SESSION_MAX_AGE`
+  - session duration in seconds, default `1800`
+
+- `SESSION_HTTPS_ONLY`
+  - secure cookie flag, default `false`
+
+- `DISABLE_CSRF`
+  - disables CSRF validation if truthy
+
+- `MAX_FAILED_ATTEMPTS`
+  - login lockout threshold, default `5`
+
+- `LOCKOUT_MINUTES`
+  - lock duration after repeated failures, default `15`
+
+- `PASSWORD_MIN_LENGTH`
+  - registration minimum length, default `8`
+
+- `USE_ORCHESTRATION`
+  - controls whether LangGraph orchestration is used, default `true`
+
+- `CHROMA_CLOUD_API_KEY`
+  - required by active embedder/retriever/collection inspection paths
+
+- `CHROMA_CLOUD_TENANT`
+  - used by the frontend Chroma client helper, default set in code
+
+- `CHROMA_CLOUD_DATABASE`
+  - used by the frontend Chroma client helper, default `Major-Project`
+
+- `CHROMA_SHARED_COLLECTION_NAME`
+  - default shared collection name, fallback `dataset`
+
+- `CHROMA_PERSONAL_COLLECTION_PREFIX`
+  - fallback `user_`
+
+- `CHROMA_PERSONAL_COLLECTION_SUFFIX`
+  - fallback `_documents`
+
+- `TAVILY_API_KEY`
+  - required for Tavily fallback
+
+- `UVICORN_RELOAD`
+  - used by top-level `run_server.py`
+
+Legacy/alternate-path environment variables:
+
+- `MISTRAL_API_KEY`
+- `GEMINI_API_KEY`
+- `NVIDIA_API_KEY`
+- `NVIDIA_NIM_API_KEY`
+- `NGC_API_KEY`
+- `TABLE_DEBUG_ROWS`
+
+Important configuration note:
+
+- `src/frontend/app.py` reads `CHROMA_CLOUD_TENANT` and `CHROMA_CLOUD_DATABASE`, but `src/ingestion/embedder.py` and `src/retriever/retrival.py` hardcode the tenant and database values rather than reading those env vars. In practice, the embedder/retriever are pinned to the hardcoded Chroma Cloud target unless those files are changed.
+
+
+6. Dependencies and Their Roles
+-------------------------------
+Core runtime packages:
+
+- `fastapi`, `uvicorn`
+  - web application and ASGI server
+
+- `jinja2`
+  - HTML templating
+
+- `python-multipart`
+  - form/file upload handling
+
+- `itsdangerous`
+  - session infrastructure dependency
+
+- `psycopg2-binary`
+  - PostgreSQL connectivity
+
+- `passlib[argon2]`
+  - strong password hashing
+
+- `python-dotenv`
+  - `.env` loading
+
+- `chromadb`
+  - vector store client
+
+- `sentence-transformers`
+  - embeddings and semantic similarity
+
+- `rank-bm25`
+  - keyword retrieval
+
+- `transformers`, `torch`
+  - tokenizer and model runtime dependencies
+
+- `langgraph`, `langchain-core`
+  - orchestration graph
+
+- `openai`
+  - active LLM provider
+
+- `tavily-python`
+  - optional web-search fallback
+
+Document and table processing:
+
+- `pdfplumber`
+  - PDF text and table extraction
+
+- `pillow`, `reportlab`
+  - optional file-to-PDF conversion
+
+Data processing:
+
+- `pandas`, `openpyxl`
+  - evaluation dataset loading and result generation
+
+Legacy providers:
+
+- `mistralai`
+  - older query rewriting/reranking/orchestration path
+
+
+7. Active Model Choices
+-----------------------
+The currently active runtime imports in `src/frontend/app.py` point to:
+
+- Query rewriting: `src/queryRewriter/rewriting_Chatgpt.py`
+- Reranking: `src/retriever/reranking_Chatgpt.py`
+- Answer generation: `src/output/answerGeneration_Chatgpt.py`
+- Orchestration: `src/orchestration/orchestrator_Chatgpt.py`
+- Ingestion: `src/ingestion/ingestionPipeline_Chatgpt.py`
+- Query decomposition: transitively used via the orchestrator
+- Table NL generation: `src/tableHandling/trialNLSentence_Chatgpt.py`
+
+Active model identifiers:
+
+- `gpt-4o-mini` for:
+  - query classification
+  - query rewriting
+  - chunk reranking
+  - answer generation
+  - query decomposition planning
+  - sub-query answer synthesis
+  - table row sentence generation
+
+- `sentence-transformers/all-MiniLM-L6-v2` for:
+  - chunk embeddings at ingestion time
+  - query embedding at retrieval time
+  - metadata/content cosine similarity in reranking
+  - tokenization for chunk sizing
+
+
+8. Application Startup Flow
+---------------------------
+Startup behavior is concentrated in `src/frontend/app.py`.
+
+Startup sequence:
+
+1. `.env` is loaded via `load_dotenv()`.
+2. print interception is enabled through `capture_print()`.
+3. FastAPI app is created.
+4. request middleware is registered.
+5. session middleware is added.
+6. template/static directories are configured.
+7. upload directories are created if missing.
+8. lazy singletons are prepared for:
+   - retriever
+   - rewriter
+   - reranker
+   - answer generator
+   - orchestrator
+   - Chroma client
+9. on FastAPI startup, `_init_db()` is called.
+10. `_init_db()` creates tables and upserts default admin users.
+
+Request middleware behavior:
+
+- assigns a transaction id from `x-transaction-id` header or generates one,
+- stores it in `request.state.transaction_id`,
+- pushes it into a context variable for logs,
+- logs request start and completion,
+- adds `X-Transaction-Id` to the response,
+- logs exceptions with timing and type.
+
+
+9. Authentication, Sessions, and Security Controls
+--------------------------------------------------
+Authentication is session-based, not token-based.
+
+Session behavior:
+
+- `SessionMiddleware` stores the user object inside the signed session
+- `same_site="strict"`
+- `https_only` is env-controlled
+- max age is env-controlled
+
+User object stored in session:
+
+- `{"username": ..., "role": ...}`
+
+Password behavior:
+
+- New users are stored with Argon2 hashes via `passlib`.
+- Older PBKDF2 hashes are still supported for verification.
+- On successful login of a PBKDF2 account, the password is transparently upgraded to Argon2.
+
+Registration password rules:
+
+- minimum length from `PASSWORD_MIN_LENGTH`
+- must contain:
+  - one lowercase letter
+  - one uppercase letter
+  - one digit
+
+CSRF:
+
+- every form POST is expected to carry `csrf_token`
+- `_ensure_csrf_token()` creates a session token if missing
+- `_require_csrf()` validates form token against session token
+- CSRF can be disabled with `DISABLE_CSRF=true`
+
+Lockout logic:
+
+- failed attempts increment in `users.failed_attempts`
+- after `MAX_FAILED_ATTEMPTS`, account is locked until `now + LOCKOUT_MINUTES`
+- successful login resets `failed_attempts` and `locked_until`
+
+Important behavioral note:
+
+- Default admin users are seeded on every startup using `INSERT ... ON CONFLICT DO UPDATE`.
+- That means the hardcoded default admin passwords are effectively reset on every app startup unless the code is changed.
+
+Path safety:
+
+- `_safe_file_path()` resolves paths and ensures the requested file is inside the intended base directory before serving/deleting it.
+
+Log redaction:
+
+- `src/shared/logging_utils.py` redacts:
+  - password-like keys
+  - bearer tokens
+  - OpenAI keys
+  - DSNs
+  - generic long secret-looking tokens
+
+
+10. PostgreSQL Schema and Persistence Model
+-------------------------------------------
+Database tables are created in `_init_db()` in `src/frontend/app.py`.
+
+10.1 users
+----------
+Columns:
+
+- `username TEXT PRIMARY KEY`
+- `role TEXT NOT NULL`
+- `salt TEXT`
+- `password_hash TEXT NOT NULL`
+- `password_algo TEXT DEFAULT 'pbkdf2_sha256'`
+- `failed_attempts INTEGER DEFAULT 0`
+- `locked_until TIMESTAMPTZ`
+- `last_login_at TIMESTAMPTZ`
+- `created_at TIMESTAMPTZ DEFAULT NOW()`
+
+Usage:
+
+- stores both admin and regular users
+- supports migration from PBKDF2 to Argon2
+- stores lockout state
+
+10.2 uploaded_files
+-------------------
+Columns:
+
+- `id BIGSERIAL PRIMARY KEY`
+- `filename TEXT NOT NULL`
+- `scope TEXT NOT NULL`
+- `username TEXT`
+- `size_bytes BIGINT`
+- `uploaded_at TIMESTAMPTZ DEFAULT NOW()`
+
+Index:
+
+- `(scope, username)`
+
+Usage:
+
+- tracks uploaded shared and personal PDFs
+- supports file listings in the UI
+
+10.3 audit_events
+-----------------
+Columns:
+
+- `id BIGSERIAL PRIMARY KEY`
+- `username TEXT`
+- `role TEXT`
+- `event_type TEXT NOT NULL`
+- `resource_type TEXT`
+- `resource_id TEXT`
+- `metadata JSONB`
+- `ip TEXT`
+- `user_agent TEXT`
+- `created_at TIMESTAMPTZ DEFAULT NOW()`
+
+Usage:
+
+- login success/failure/lockouts
+- register
+- logout
+- uploads
+- deletions
+- query submission
+
+10.4 query_history
+------------------
+Columns:
+
+- `id BIGSERIAL PRIMARY KEY`
+- `username TEXT NOT NULL`
+- `role TEXT`
+- `scope TEXT`
+- `question TEXT NOT NULL`
+- `answer TEXT`
+- `justification TEXT`
+- `sources JSONB`
+- `created_at TIMESTAMPTZ DEFAULT NOW()`
+
+Index:
+
+- `(username, created_at DESC)`
+
+Usage:
+
+- populates the right-side history panel in chat pages
+- persists answer text and source list returned by the pipeline
+
+
+11. File Storage Layout
+-----------------------
+Disk storage directories:
+
+- shared uploads:
+  - `dataset/uploads`
+
+- personal uploads:
+  - `dataset/user_uploads/<username>`
+
+- logs:
+  - `Logs/application.log`
+  - `Logs/queries/<query_id>.log`
+  - `Logs/query_phases/<query_id>_lifecycle.txt`
+
+Important implementation note:
+
+- deleting a file from disk does not remove its embedded vectors from Chroma Cloud
+- personal uploads remove previous local files from the user's folder before saving the new file
+- however, there is no collection cleanup step that deletes old personal vectors from Chroma before re-ingestion
+- so "one personal file per user" is enforced at the filesystem/UI level, not strictly at the vector-store level
+
+
+12. Chroma Collection Naming
+----------------------------
+Collection naming is centralized in `src/shared/chroma_config.py`.
+
+Shared collection:
+
+- `get_shared_collection_name()`
+- default: `dataset`
+
+Personal collection:
+
+- `get_personal_collection_name(username)`
+- default pattern: `user_<username>_documents`
+
+Scopes used by the app:
+
+- `shared`
+- `personal`
+- `combined`
+
+Resolution rules:
+
+- selected document filters can override the effective scope
+- when a document selector value is set, it is parsed as `scope::filename`
+
+
+13. Data Structures Used Across the Pipeline
+--------------------------------------------
+13.1 Base chunk record
+----------------------
+Generated by chunking or table sentence conversion:
+
+- `chunk_id`
+- `text`
+- `metadata`
+
+Standard metadata fields:
+
+- `document_name`
+- `section_heading`
+- `clause_id`
+
+Table-sentence records add:
+
+- `content_type = "table_sentence"`
+- `table_heading`
+- `table_index`
+- `page_number`
+- `end_page`
+- `row_index`
+- `spans_pages`
+- `nl_status`
+
+13.2 Retrieved chunk record
+---------------------------
+Retrieval adds scoring fields such as:
+
+- `distance`
+- `semantic_score`
+- `keyword_score`
+- `hybrid_score`
+- `matched_by`
+
+13.3 Source item returned to the frontend
+-----------------------------------------
+Answer generation returns source previews shaped like:
+
+- `chunk_id`
+- `document`
+- `section`
+- `text`
+
+13.4 retrieval_debug object
+---------------------------
+Used in orchestration and the legacy path:
+
+- `top_chunk_count`
+- `source_counts`
+  - `semantic`
+  - `keyword`
+  - `both`
+- `top_chunks`
+  - document
+  - section
+  - matched_by
+  - hybrid_score
+  - semantic_score
+  - keyword_score
+
+For decomposed queries, the aggregated version also includes:
+
+- `decomposition_used`
+- `subquery_count`
+- `sub_queries`
+
+
+14. Frontend: FastAPI App Responsibilities
+------------------------------------------
+`src/frontend/app.py` is the operational center of the system.
+
+Major responsibilities:
+
+- app construction and middleware
+- session setup
+- singleton lifecycle for RAG components
+- DB initialization
+- auth and authorization
+- upload/save/delete file operations
+- query execution
+- history and activity retrieval
+- template rendering
+- audit logging
+- retrieval debug formatting
+
+Active singleton factories:
+
+- `_get_retriever()`
+- `_get_rewriter()`
+- `_get_reranker()`
+- `_get_answer_generator()`
+- `_get_orchestrator()`
+- `_get_chroma_client()`
+
+These lazily instantiate and cache the corresponding objects for the process lifetime.
+
+Important implementation note:
+
+- the retriever has an internal BM25 cache keyed by `(collection_name, document_filter)`
+- that cache is not invalidated after new uploads
+- if a collection has already been queried, later uploads may not appear in keyword-search results until the process restarts or the retriever instance is recreated
+- semantic search will still see newly inserted Chroma records because it queries Chroma live
+
+
+15. HTTP Endpoints
+------------------
+15.1 HTML routes
+----------------
+- `GET /`
+  - redirect based on session role
+
+- `GET /login`
+  - render login page
+
+- `GET /admin`
+  - admin dashboard
+
+- `GET /admin/all`
+  - admin chat page
+
+- `GET /admin/shared`
+  - shared library page
+
+- `GET /app`
+  - user dashboard
+
+- `GET /app/all`
+  - user chat page
+
+- `GET /app/shared`
+  - shared library page for users
+
+- `GET /activity`
+  - activity page
+
+15.2 auth endpoints
+-------------------
+- `POST /login`
+  - validates CSRF
+  - checks lockout
+  - verifies password
+  - updates last-login state
+  - stores session user
+  - writes audit event
+
+- `POST /register`
+  - validates CSRF
+  - creates a non-admin user
+  - supports both HTML form response and JSON fetch response
+
+- `GET /logout`
+  - writes audit event
+  - clears session
+
+15.3 upload and file endpoints
+------------------------------
+- `POST /upload-policy`
+  - admin only
+  - stores shared PDF
+  - runs ingestion pipeline
+  - writes uploaded_files row
+  - writes audit event
+
+- `POST /upload-personal`
+  - authenticated user
+  - clears old local personal files
+  - stores new personal PDF
+  - runs ingestion pipeline into personal collection
+  - writes uploaded_files row
+  - writes audit event
+
+- `GET /files/shared/{filename}`
+  - returns shared PDF
+
+- `GET /files/personal/{filename}`
+  - returns personal PDF for current user
+
+- `POST /delete/shared/{filename}`
+  - admin only
+  - deletes file from disk and row from `uploaded_files`
+  - does not delete vectors from Chroma
+
+- `POST /delete/personal/{filename}`
+  - authenticated user
+  - deletes personal file and DB row
+  - does not delete vectors from Chroma
+
+15.4 query and history endpoints
+--------------------------------
+- `POST /query`
+  - main chat API
+  - validates CSRF
+  - starts a per-query log
+  - writes audit event
+  - executes orchestration or legacy RAG path
+  - stores query history
+  - returns JSON response
+
+- `GET /history`
+  - returns query history for current user
+
+
+16. Query Request Lifecycle
+---------------------------
+This is the most important runtime flow.
+
+16.1 Input resolution
+---------------------
+On `/query`, the backend receives:
+
+- `query`
+- `scope`
+- `selected_document`
+- session user
+
+`selected_document` is parsed as `scope::filename`.
+If present, it can effectively override the generic scope and directly bind the request to:
+
+- shared collection + specific filename
+- personal collection + specific filename
+
+16.2 Query logging and audit
+----------------------------
+Before retrieval starts, the app:
+
+- creates a query log id using the current transaction id
+- writes `QUERY` into `audit_events`
+- logs query metadata such as scope and selected document
+
+16.3 Orchestration path
+-----------------------
+If `USE_ORCHESTRATION=true`, the request goes through `QueryOrchestrator`.
+
+Flow:
+
+1. classifier node
+   - classify raw query as `direct` or `rag`
+   - classification happens before rewriting
+
+2. direct path
+   - short in-scope general answer using the LLM
+   - no retrieval
+
+3. rag path
+   - delegated to `RAGProcessNode`
+   - that delegates to `QueryDecompositionOrchestrator`
+
+4. query decomposition
+   - planner decides whether the question should be split into up to 3 sub-queries
+   - if no decomposition, one sub-query is processed
+   - if decomposed, sub-queries run in parallel via `ThreadPoolExecutor`
+
+5. per-sub-query RAG processing
+   - rewrite query
+   - retrieve chunks
+   - compute low-confidence flag from semantic distances
+   - rerank chunks
+   - generate answer
+
+6. synthesis
+   - if multiple sub-queries exist, answers are synthesized into one final answer
+
+7. web fallback decision
+   - if `needs_web_scraping` is true, LangGraph routes into the Tavily node
+   - for decomposed queries, this only becomes true when all sub-query results are marked low-confidence
+
+8. final response assembly
+   - response
+   - justification
+   - sources
+   - route_taken
+   - retrieval_debug
+
+9. query history persistence
+   - saved in PostgreSQL
+
+10. query log teardown
+   - query context variable is reset
+
+16.4 Legacy non-orchestrated path
+---------------------------------
+If `USE_ORCHESTRATION=false`, the app uses a simpler direct RAG flow:
+
+1. rewrite query
+2. retrieve chunks by scope
+3. rerank chunks
+4. generate answer
+5. build `retrieval_debug`
+6. save query history
+
+The older Tavily fallback block in this branch is commented out in the legacy path.
+
+
+17. Query Rewriting
+-------------------
+Active file: `src/queryRewriter/rewriting_Chatgpt.py`
+
+Responsibilities:
+
+- normalize user wording into insurance-domain terminology
+- keep intent intact
+- output a single rewritten sentence
+
+Implementation:
+
+- OpenAI client initialized once per instance
+- model: `gpt-4o-mini`
+- sync method:
+  - `rewrite_query_sync(query)`
+- async wrapper:
+  - `rewrite_query(query)` simply calls the sync method
+
+Practical effect:
+
+- improves retrieval by substituting user-friendly phrases with policy terminology such as:
+  - doctor fees -> consultation charges
+  - hospital stay -> inpatient hospitalization
+  - time before coverage starts -> waiting period
+
+
+18. Retrieval Layer
+-------------------
+Active file: `src/retriever/retrival.py`
+
+This class is named `retrivalModel` in the code.
+
+18.1 Initialization
+-------------------
+At construction it:
+
+- loads `.env`
+- creates a `SentenceTransformer` embedding model
+- creates a Chroma Cloud client
+- initializes an in-memory BM25 cache
+
+18.2 Semantic search
+--------------------
+Method:
+
+- `semantic_search(rewritten_query, collection_name=None, top_k=15, document_filter=None)`
+
+Behavior:
+
+- encodes the query into an embedding
+- queries Chroma by vector similarity
+- asks Chroma for documents, metadata, and distances
+- computes `semantic_score = 1 / (1 + distance)`
+- tags the chunk with `matched_by = ["semantic"]`
+
+18.3 Keyword search
+-------------------
+Method:
+
+- `keyword_search(...)`
+
+Behavior:
+
+- fetches all chunks from Chroma for the collection/document filter
+- builds a BM25 corpus from:
+  - document name
+  - section heading
+  - clause id
+  - chunk text
+- tokenizes with a regex over lowercase alphanumerics
+- scores query tokens with BM25
+- returns top positive-scoring chunks tagged `matched_by = ["keyword"]`
+
+18.4 Hybrid search
+------------------
+Method:
+
+- `hybrid_search(...)`
+
+Behavior:
+
+- runs semantic and keyword retrieval separately
+- uses reciprocal rank fusion with `rrf_k = 60`
+- merges by `chunk_id`
+- preserves both semantic and keyword score fields when available
+
+18.5 Public retrieval method
+----------------------------
+Method:
+
+- `retrive_Chunks(...)`
+
+Behavior:
+
+- thin wrapper over `hybrid_search`
+
+18.6 Context formatting helper
+------------------------------
+Method:
+
+- `get_context_string(chunks)`
+
+Behavior:
+
+- converts retrieved chunks into a readable string containing document, section, and content
+
+
+19. Chunking and PDF Text Processing
+------------------------------------
+Active file: `src/ingestion/chunker.py`
+
+This module handles prose extraction and section-aware chunk generation.
+
+19.1 Text extraction strategy
+-----------------------------
+Key behavior:
+
+- `pdfplumber` extracts page content
+- table bounding boxes are detected first
+- words inside tables are excluded from the prose extraction path
+- repeated headers/footers and page numbers are removed
+- TOC-like pages can be skipped
+
+This matters because tables are handled separately and later converted into row sentences, reducing duplicate indexing.
+
+19.2 Heading detection
+----------------------
+Section building depends on `src/shared/heading_detection.py`.
+
+That helper recognizes probable headings using:
+
+- structured patterns like "Section 4 ..."
+- numeric patterns like `1.2.3 ...`
+- uppercase headings
+- title-case short headings
+- lines ending in `:`
+
+19.3 Section model
+------------------
+`_build_sections(text)` produces tuples of:
+
+- `section_heading`
+- `clause_id`
+- `section_text`
+
+This makes chunk metadata more useful during retrieval and answer justification.
+
+19.4 Sentence-aware chunking
+----------------------------
+`_chunk_section_text()`:
+
+- splits text near sentence boundaries
+- respects a max token budget
+- creates overlap by carrying trailing sentences into the next chunk
+- hard-splits overlong sentences if required
+
+Current defaults:
+
+- `DEFAULT_MAX_TOKENS = 240`
+- `DEFAULT_OVERLAP = 0.15`
+
+19.5 Small-chunk merge
+----------------------
+`_merge_small_chunks()` merges adjacent chunks if:
+
+- they belong to the same section heading
+- they share the same clause id
+- combined token size stays within the max budget
+
+19.6 Final chunk IDs
+--------------------
+Chunk IDs are generated as:
+
+- `<document_name>_<index>`
+
+
+20. Embedding Layer
+-------------------
+Active file: `src/ingestion/embedder.py`
+
+Responsibilities:
+
+- create embeddings with `all-MiniLM-L6-v2`
+- sanitize metadata for Chroma
+- upsert records into Chroma Cloud
+
+Important behavior:
+
+- `upsert()` is used, not `add()`
+- this avoids duplicate-id failures when the same chunk IDs are re-ingested
+
+Batching:
+
+- default batch size is `300`
+
+Metadata sanitization rules:
+
+- `None` becomes empty string
+- non-primitive values are stringified
+- missing document name becomes `unknown_document`
+- missing section heading becomes `General`
+- missing clause id becomes empty string
+
+
+21. Ingestion Pipeline
+----------------------
+Active file: `src/ingestion/ingestionPipeline_Chatgpt.py`
+
+The ingestion pipeline combines prose chunking and table processing.
+
+21.1 Inputs
+-----------
+Constructor accepts:
+
+- `dataset_dir`
+- `collection_name`
+- `chunk_output_dir`
+- `file_paths`
+- `table_sentence_model`
+
+21.2 File resolution
+--------------------
+Modes:
+
+- explicit `file_paths`
+- all PDFs inside `dataset_dir`
+
+Only `.pdf` files are accepted by this active path.
+
+21.3 Parallel per-document processing
+-------------------------------------
+For each PDF, `_process_single_document()` creates a two-thread executor:
+
+- one thread processes prose chunks
+- one thread extracts tables and generates table sentences
+
+21.4 Prose path
+---------------
+`_process_document_chunks()`:
+
+- chunk PDF text
+- optionally write chunk JSON
+- embed chunks into Chroma
+
+21.5 Table path
+---------------
+`_process_document_tables()`:
+
+- extract tables from PDF
+- optionally save raw table JSON
+- convert table rows into natural-language sentences
+- optionally save enriched table JSON
+- convert table sentences into chunk-like records
+- embed those records into Chroma
+
+21.6 Aggregate outputs
+----------------------
+If `chunk_output_dir` is set, aggregate files can be written:
+
+- `chunks.json`
+- `tables.json`
+- `tables_nl.json`
+
+21.7 Table sentence record IDs
+------------------------------
+Generated as:
+
+- `<file_name>_table_<table_position>_sentence_<sentence_index>`
+
+
+22. Table Extraction and Table-to-Sentence Conversion
+----------------------------------------------------
+22.1 Table extraction
+---------------------
+Active file inspected: `src/tableHandling/tablePdfRead.py`
+
+Key capabilities:
+
+- multi-strategy table detection
+  - lattice lines
+  - loose lattice
+  - text-stream strategy
+
+- table quality scoring
+  - density
+  - row/column counts
+  - consistency
+  - structured cell ratio
+  - heading/header quality
+
+- boilerplate filtering
+- heading association
+- multi-page continuation detection and merging
+- markdown rendering for tables
+- JSON export of extracted tables
+
+22.2 Table-to-sentence generation
+---------------------------------
+Active runtime file: `src/tableHandling/trialNLSentence_Chatgpt.py`
+
+Purpose:
+
+- convert each table row into exactly one natural-language sentence
+- preserve row order and column-value relationships
+- avoid summarization/hallucination
+
+Flow:
+
+1. parse markdown table into headers and rows
+2. prompt OpenAI with strict one-row-one-sentence rules
+3. normalize model output into line-delimited sentences
+4. if needed, fall back to chunked table processing
+5. store:
+   - `nl_sentences`
+   - `nl_status`
+   - `nl_error_type`
+   - `nl_error_detail`
+   - expected/generated row counts
+
+Why this exists:
+
+- many policy benefits/limits are tabular
+- prose-only chunking would miss or degrade these facts
+- table sentence embeddings make those rows retrievable by natural language
+
+
+23. Reranking Layer
+-------------------
+Active file: `src/retriever/reranking_Chatgpt.py`
+
+The reranking pipeline is two-stage.
+
+23.1 Metadata-enhanced similarity reranking
+-------------------------------------------
+For each chunk:
+
+- embed the query
+- embed chunk text
+- embed section heading
+- compute cosine similarity for:
+  - query vs chunk text
+  - query vs heading
+- combine scores with weights:
+  - chunk content: `0.7`
+  - heading: `0.3`
+
+Result:
+
+- chunks sorted by `combined_score`
+
+23.2 LLM reranking
+------------------
+The top metadata-ranked chunks are then passed to `gpt-4o-mini`.
+
+Prompt instructs the model to:
+
+- select only truly relevant chunks
+- return chunk indices only
+
+Parser behavior:
+
+- takes first output line
+- strips everything except digits and commas
+- parses indices
+- validates bounds
+- falls back to default order if parsing fails
+
+Async note:
+
+- the public async method is only a wrapper around synchronous logic
+- there is no true async network concurrency inside this class
+
+
+24. Answer Generation
+---------------------
+Active file: `src/output/answerGeneration_Chatgpt.py`
+
+Responsibilities:
+
+- turn reranked chunks into a user-facing answer
+- produce simple policy-grounded text
+- return source previews
+
+Flow:
+
+1. format chunks as prompt sections
+2. call `gpt-4o-mini`
+3. parse output around:
+   - `Answer:`
+   - `Justification:`
+4. build response object
+
+Returned object:
+
+- `answer`
+- `justification`
+- `source_chunks`
+- `metadata`
+
+Source preview fields:
+
+- `chunk_id`
+- `document`
+- `section`
+- truncated `text`
+
+Important note:
+
+- the frontend chat pages currently display source chunk ids and section names from `sources`
+- they do not directly render the answer generator's textual justification string in a rich citation format
+
+
+25. LangGraph Orchestration
+---------------------------
+Active file: `src/orchestration/orchestrator_Chatgpt.py`
+
+The orchestration graph uses the following nodes:
+
+- `classifier_node`
+- `direct_llm_node`
+- `rag_node`
+- `web_scraping_node`
+
+Graph shape:
+
+- START -> classifier
+- classifier -> direct or rag
+- direct -> END
+- rag -> similarity/fallback check
+- rag -> END or web_scraping
+- web_scraping -> END
+
+State fields include:
+
+- original query
+- rewritten query
+- scope
+- username
+- collection name
+- document filter
+- route
+- answer
+- justification
+- sources
+- success flag
+- route_taken
+- needs_web_scraping
+- error
+- sub_query_results
+- metadata
+
+Classifier behavior:
+
+- LLM-based
+- default/fallback route is `rag`
+
+Direct node behavior:
+
+- answers only in medical-insurance product scope
+- unrelated topics are redirected rather than answered directly
+
+RAG node behavior:
+
+- uses `RAGSubQueryProcessor` through `RAGProcessNode`
+- wraps query decomposition orchestration
+
+Web node behavior:
+
+- uses Tavily if available
+- returns answer plus list of web sources
+
+
+26. Query Decomposition
+-----------------------
+Active file: `src/queryDecomposition/orchestrator_Chatgpt.py`
+
+Purpose:
+
+- split complex multi-part questions before retrieval
+- improve retrieval focus and final synthesis
+
+Planner output schema:
+
+- `should_decompose`
+- `sub_queries`
+- `reason`
+
+Rules enforced by prompt:
+
+- max 3 sub-queries
+- only decompose when aspects are distinct
+- each sub-query must be standalone
+
+Execution behavior:
+
+- if no decomposition, run one query directly
+- if decomposed, sub-queries are run in parallel threads
+
+Parallelism detail:
+
+- `ThreadPoolExecutor`
+- `contextvars.copy_context()` is used so logging context survives into worker threads
+
+Synthesis:
+
+- a dedicated LLM call combines sub-query answers into one final answer
+
+Aggregated retrieval debug:
+
+- sums source-type counts across sub-queries
+- attaches which sub-query each top chunk came from
+
+
+27. Reusable RAG Sub-Query Processor
+------------------------------------
+Active file: `src/orchestration/rag_pipeline_Chatgpt.py`
+
+This class is the core reusable RAG executor for one question or one decomposed sub-question.
+
+Flow inside `process_sync()`:
+
+1. rewrite query
+2. retrieve chunks by scope/collection/filter
+3. if no chunks:
+   - return "No relevant policy content found for this question."
+4. inspect semantic distances
+5. compute low-confidence flag
+6. rerank chunks
+7. generate answer
+8. return answer, justification, sources, rewritten query, retrieval_debug, distance metadata
+
+Low-confidence heuristic:
+
+- `DISTANCE_THRESHOLD = 1.1`
+- if best semantic distance is greater than `1.1`, `needs_web_scraping=True`
+
+Scope resolution logic:
+
+- explicit `collection_name` wins
+- else `shared` -> shared collection
+- else `personal` -> personal collection
+- else `combined` -> concatenates shared and personal retrieval results
+
+Combined-scope note:
+
+- shared and personal results are concatenated before reranking
+- there is no explicit deduplication step before reranking in the combined retrieval path
+
+
+28. Tavily Fallback
+-------------------
+Files:
+
+- `src/tavily_fallback/tavily_client.py`
+- `src/tavily_fallback/tavily_service.py`
+
+Client behavior:
+
+- requires `TAVILY_API_KEY`
+- uses Tavily advanced search
+- includes direct answer
+- requests up to 5 results
+
+Service output shape:
+
+- `answer`
+- `sources`
+  - `document`: result title
+  - `section`: result URL
+
+Integration note:
+
+- the LangGraph path can reach Tavily fallback
+- the older manual fallback code inside `/query` is currently commented out
+
+
+29. Frontend Templates and User Experience
+------------------------------------------
+The active UI is server-rendered Jinja with embedded JavaScript.
+
+29.1 Login and registration
+---------------------------
+File:
+
+- `src/frontend/templates/login.html`
+
+Features:
+
+- sign-in form
+- create-account form
+- fetch-based registration with JSON success/error handling
+- hidden CSRF tokens
+
+29.2 Admin dashboard
+--------------------
+File:
+
+- `src/frontend/templates/admin.html`
+
+Features:
+
+- links to:
+  - admin chat
+  - shared library
+  - activity log
+  - user module
+
+29.3 User dashboard
+-------------------
+File:
+
+- `src/frontend/templates/user.html`
+
+Observed purpose:
+
+- landing dashboard for the user module
+- parallel to the admin dashboard
+
+29.4 Shared library page
+------------------------
+File:
+
+- `src/frontend/templates/shared.html`
+
+Features:
+
+- list shared PDFs
+- view/download links
+- admin-only delete buttons
+- admin-only shared upload form
+
+29.5 Chat pages
+---------------
+Files:
+
+- `src/frontend/templates/admin_all.html`
+- `src/frontend/templates/user_all.html`
+
+Common features:
+
+- upload form
+  - shared upload for admin page
+  - personal upload for user page
+
+- query form
+  - sends `query`, `scope`, `selected_document`, `csrf_token`
+
+- document selector
+  - "All policy documents"
+  - specific shared or personal PDFs
+
+- voice input
+  - Web Speech API via `SpeechRecognition`/`webkitSpeechRecognition`
+  - browser support note for Chrome/Edge
+
+- response panel
+- justification panel
+- history sidebar loaded from `/history`
+- replay of historical questions/answers into the page
+
+29.6 Activity page
+------------------
+File:
+
+- `src/frontend/templates/activity.html`
+
+Features:
+
+- tabular view over `audit_events`
+
+29.7 Legacy template artifacts
+------------------------------
+Files:
+
+- `src/frontend/templates/index.html`
+- `src/frontend/templates/result.html`
+- `src/frontend/static/style.css`
+
+Observed status:
+
+- these appear to be older UI artifacts
+- current route wiring uses `login.html`, `admin.html`, `user.html`, `shared.html`, `activity.html`, `admin_all.html`, and `user_all.html`
+- `result.html` still references `style.css`, but this page does not appear to be used by the current FastAPI routes
+
+
+30. Logging and Observability
+-----------------------------
+Active file: `src/shared/logging_utils.py`
+
+Logging system capabilities:
+
+- root logger configuration
+- rotating file log
+- console log
+- secret redaction
+- request transaction ids
+- per-query query ids
+- query-specific log files
+- print interception
+
+Application log:
+
+- `Logs/application.log`
+
+Per-query logs:
+
+- `Logs/queries/<query_id>.log`
+
+Per-query log entry sections:
+
+- time
+- level
+- transaction id
+- query id
+- logger
+- step
+- details
+- generated
+
+Why this matters:
+
+- the app logs intermediate pipeline steps such as:
+  - query rewrite
+  - retrieval
+  - reranking
+  - answer generation
+  - orchestration route decisions
+  - sub-query processing
+
+
+31. Query Phase Lifecycle Reports
+---------------------------------
+Active file: `src/query_phases/runner.py`
+
+Purpose:
+
+- run the full query pipeline from the command line
+- parse the raw query log
+- write a human-readable lifecycle report
+
+Output:
+
+- `Logs/query_phases/<query_id>_lifecycle.txt`
+
+What it includes:
+
+- original question
+- scope/collection/filter
+- final route taken
+- final answer and justification
+- every parsed query phase from the raw query log
+
+This is useful for debugging routing, retrieval, reranking, and decomposition behavior end-to-end.
+
+
+32. Evaluation and Offline Tooling
+----------------------------------
+The `src/rag_evaluation` folder contains offline evaluation support.
+
+Inspected scripts:
+
+- `documentIngestion.py`
+  - ingests PDFs from `sampleDataset` for evaluation
+
+- `RagTestPipelineWithScores_Chatgpt.py`
+  - batch-runs questions from `golden_dataset.xlsx`
+  - optionally filters by policy/document name
+  - writes:
+    - rewritten query
+    - answer
+    - retrieved chunk ids
+    - chunk contents
+    - distances
+    - similarity estimates
+
+- `CombineDatasets.py`
+  - merges golden dataset answers with RAG outputs
+  - looks up reference chunk content from `dataset_chunks.md`
+  - produces `combined_evaluation_dataset.json`
+
+- `chromaToMd.py`
+  - exports all chunks from a Chroma collection to markdown
+
+Folder contents also indicate:
+
+- golden dataset spreadsheets
+- precomputed JSON result files
+- split datasets by policy
+
+
+33. Optional File Conversion Utility
+------------------------------------
+Active file: `src/ingestion/document_loader.py`
+
+Purpose:
+
+- convert source material to PDF before ingestion
+
+Supported inputs:
+
+- existing PDFs: copied through
+- `.docx`: converted to text-based PDF
+- `.png`, `.jpg`, `.jpeg`: converted to image PDF
+
+Notes:
+
+- this utility is not part of the active upload path in `src/frontend/app.py`
+- it is a support tool for preparing datasets
+- `.docx` conversion requires `python-docx`, which is optional and not listed in `requirements.txt`
+
+
+34. Alternate and Legacy Model-Specific Implementations
+------------------------------------------------------
+The repo contains parallel implementations for earlier experiments.
+
+Examples:
+
+- `src/queryRewriter/rewriting.py`
+  - Mistral-based query rewriting
+
+- `src/retriever/reranking_mistral.py`
+  - Mistral-based reranking
+
+- `src/output/answerGeneration.py`
+  - Gemini-based answer generation
+
+- `src/orchestration/*.py`
+  - non-Chatgpt variants of classifier/nodes/orchestrator/rag_pipeline
+
+- `src/tableHandling/trialNLSentence.py`
+  - Mistral table sentence generation
+
+- `src/tableHandling/trialNLsentence_Gemini.py`
+  - Gemini table sentence generation
+
+- `src/tableHandling/trailNLSentence_llama.py`
+  - NVIDIA/Llama table sentence generation
+
+Current status:
+
+- these are not the active runtime path imported by `src/frontend/app.py`
+- they serve as reference implementations, experiments, or fallbacks from prior development phases
+
+
+35. Miscellaneous Top-Level Utilities
+-------------------------------------
+- `checkChroma.py`
+  - ad hoc Chroma Cloud utility
+  - currently deletes and recreates a collection named `temp_dataset`
+  - this is a manual utility, not part of normal runtime
+
+- `apiTest.py`
+  - ad hoc Gemini model-listing script
+  - not used by the application runtime
+
+
+36. Important Behavioral Notes and Caveats
+------------------------------------------
+The following are not design guesses; they are direct consequences of the current code.
+
+1. The active production path is OpenAI-based.
+   - The frontend imports the `_Chatgpt` modules, not the Mistral/Gemini ones.
+
+2. Query classification happens before query rewriting.
+   - Small-talk and direct informational questions can bypass retrieval entirely.
+
+3. Async wrappers are mostly sync under the hood.
+   - Many `async def` methods simply call synchronous SDK methods.
+   - Real concurrency in the RAG path mainly comes from thread pools during sub-query decomposition and per-document ingestion fan-out.
+
+4. Shared/personal file deletion does not delete embeddings.
+   - Chroma cleanup is not implemented in delete endpoints.
+
+5. Personal re-upload does not clear prior vectors.
+   - The old local file is removed, but the personal collection is not purged first.
+
+6. BM25 cache can become stale after ingestion.
+   - The retriever caches keyword corpora in memory and does not invalidate them on upload.
+
+7. Default admin passwords are reseeded at startup.
+   - This is operationally important and security-relevant.
+
+8. The frontend "justification" box in chat pages shows source chunk ids and sections, not a polished citation explanation.
+
+9. The app maintains two parallel sources of document visibility.
+   - uploaded-files metadata in Postgres
+   - actual chunk metadata in Chroma
+   - `_get_document_options()` merges both sources
+
+10. The current document selector can scope a query to one shared or personal PDF.
+
+11. Logs are a first-class debugging surface.
+   - request logs, query-step logs, and lifecycle reports are all intentionally structured.
+
+12. The shared Chroma helper in the frontend is env-driven, but embedder/retriever tenant/database are hardcoded.
+
+
+37. End-to-End Mental Model
+---------------------------
+If you want to understand "what is happening and how it is happening" in one pass, the most accurate mental model is:
+
+1. A user signs in through a FastAPI/Jinja session app backed by Postgres.
+2. Admins upload shared PDFs; users upload one personal PDF.
+3. Upload triggers an ingestion pipeline that:
+   - extracts prose,
+   - identifies headings,
+   - chunks text,
+   - extracts tables,
+   - converts table rows to natural-language sentences,
+   - embeds both prose chunks and table sentences into Chroma Cloud.
+4. A user asks a question.
+5. The app logs the request and writes an audit event.
+6. LangGraph classifies whether the question needs RAG or can be answered directly.
+7. If it needs RAG, the system may decompose the question into smaller parts.
+8. Each query/sub-query is rewritten into insurance terminology.
+9. Retrieval uses both vector similarity and BM25 keyword matching.
+10. Results are fused, reranked by semantic metadata similarity, then reranked again by the LLM.
+11. The answer generator reads the top chunks and returns a plain-text answer plus cited source previews.
+12. If retrieval confidence is poor, the orchestrator can fall back to Tavily web search.
+13. The final answer, sources, and route are returned to the browser and saved into query history.
+14. All major phases are logged for debugging and evaluation.
+
+
+38. Best Files to Read First
+----------------------------
+For a quick but accurate code walkthrough, read in this order:
+
+1. `src/frontend/app.py`
+2. `src/orchestration/orchestrator_Chatgpt.py`
+3. `src/queryDecomposition/orchestrator_Chatgpt.py`
+4. `src/orchestration/rag_pipeline_Chatgpt.py`
+5. `src/retriever/retrival.py`
+6. `src/retriever/reranking_Chatgpt.py`
+7. `src/output/answerGeneration_Chatgpt.py`
+8. `src/ingestion/ingestionPipeline_Chatgpt.py`
+9. `src/ingestion/chunker.py`
+10. `src/tableHandling/tablePdfRead.py`
+11. `src/tableHandling/trialNLSentence_Chatgpt.py`
+12. `src/shared/logging_utils.py`
+
+
+39. Final Summary
+-----------------
+This project is not just a simple "ask an LLM over PDFs" app. It is a full-stack policy-assistant system with:
+
+- a session-authenticated FastAPI web interface,
+- Postgres-backed user/audit/history persistence,
+- a Chroma Cloud vector backend,
+- hybrid semantic + keyword retrieval,
+- section-aware chunking,
+- special handling for policy tables,
+- LangGraph routing and decomposition,
+- optional web-search fallback,
+- structured logging and offline evaluation tooling.
+
+The single most important architectural fact is that the live application is driven by `src/frontend/app.py`, and that file wires the OpenAI `_Chatgpt` modules into the end-to-end upload and query flows.

@@ -6,13 +6,17 @@ from typing import Any, Dict, List, Optional, Tuple
 from .chunker import chunk_pdf_files, DEFAULT_MAX_TOKENS, DEFAULT_OVERLAP
 from .embedder import DocumentEmbedder
 from shared.chroma_config import get_shared_collection_name
+from shared.logging_utils import get_logger, log_error, log_info
+
+
+logger = get_logger(__name__)
 
 try:
     from ..tableHandling.tablePdfRead import extract_tables_from_pdf
-    from ..tableHandling.trialNLSentence import enrich_tables_with_sentences
+    from ..tableHandling.trialNLSentence_Chatgpt import enrich_tables_with_sentences
 except ImportError:
     from src.tableHandling.tablePdfRead import extract_tables_from_pdf
-    from src.tableHandling.trialNLSentence import enrich_tables_with_sentences
+    from src.tableHandling.trialNLSentence_Chatgpt import enrich_tables_with_sentences
 
 
 class IngestionPipeline:
@@ -22,18 +26,8 @@ class IngestionPipeline:
         collection_name: Optional[str] = None,
         chunk_output_dir: Optional[str] = None,
         file_paths: Optional[List[str]] = None,
-        table_sentence_model: str = "mistral-medium-latest",
+        table_sentence_model: str = "gpt-4o-mini",
     ):
-        """
-        Initialize the ingestion pipeline.
-
-        Args:
-            dataset_dir: Directory containing PDF files
-            collection_name: Name for the ChromaDB collection
-            chunk_output_dir: Optional directory to save JSON outputs
-            file_paths: Optional list of PDF file paths to ingest
-            table_sentence_model: Mistral model used for table sentence generation
-        """
         self.dataset_dir = Path(dataset_dir)
         self.chunk_output_dir = Path(chunk_output_dir) if chunk_output_dir else None
         self.collection_name = collection_name or get_shared_collection_name()
@@ -51,10 +45,10 @@ class IngestionPipeline:
         for file_path in self.file_paths or []:
             path = Path(file_path)
             if not path.exists():
-                print(f"Skipping missing file: {file_path}")
+                log_error(logger, "ingestion_file_missing", file_path=file_path)
                 continue
             if path.suffix.lower() != ".pdf":
-                print(f"Skipping non-PDF file: {file_path}")
+                log_error(logger, "ingestion_non_pdf_skipped", file_path=file_path)
                 continue
             valid_paths.append(str(path))
         return valid_paths
@@ -141,7 +135,7 @@ class IngestionPipeline:
 
     def _process_document_chunks(self, file_path: str) -> List[Dict[str, Any]]:
         file_name = Path(file_path).name
-        print(f"[{file_name}] Thread 1 -> chunking + embedding prose")
+        log_info(logger, "ingestion_prose_started", file_name=file_name)
         chunk_output_file = self._json_output_path("chunks", file_name)
         chunks = chunk_pdf_files(
             file_paths=[file_path],
@@ -155,11 +149,11 @@ class IngestionPipeline:
         file_path: str,
     ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]]]:
         file_name = Path(file_path).name
-        print(f"[{file_name}] Thread 2 -> extracting tables")
+        log_info(logger, "ingestion_table_extraction_started", file_name=file_name)
         tables = extract_tables_from_pdf(file_path)
         self._save_json(self._json_output_path("tables", file_name), tables)
 
-        print(f"[{file_name}] Thread 2 -> generating NL sentences for tables")
+        log_info(logger, "ingestion_table_sentence_generation_started", file_name=file_name, table_count=len(tables))
         enriched_tables = enrich_tables_with_sentences(
             tables=tables,
             model=self.table_sentence_model,
@@ -168,16 +162,16 @@ class IngestionPipeline:
 
         sentence_records = self._build_table_sentence_records(file_name, enriched_tables)
         if sentence_records:
-            print(f"[{file_name}] Thread 2 -> embedding {len(sentence_records)} table sentences")
+            log_info(logger, "ingestion_table_embedding_started", file_name=file_name, sentence_count=len(sentence_records))
             self.embedder.embed_records(sentence_records)
         else:
-            print(f"[{file_name}] Thread 2 -> no table sentences to embed")
+            log_info(logger, "ingestion_no_table_sentences", file_name=file_name)
 
         return tables, enriched_tables, sentence_records
 
     def _process_single_document(self, file_path: str) -> None:
         file_name = Path(file_path).name
-        print(f"Processing document: {file_name}")
+        log_info(logger, "document_ingestion_started", file_name=file_name, collection_name=self.collection_name)
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             chunk_future = executor.submit(self._process_document_chunks, file_path)
@@ -191,9 +185,13 @@ class IngestionPipeline:
         self.document_table_sentences[file_name] = enriched_tables
         self.document_table_sentence_records[file_name] = sentence_records
 
-        print(
-            f"Completed {file_name} -> prose_chunks={len(chunks)}, "
-            f"tables={len(tables)}, table_sentences={len(sentence_records)}"
+        log_info(
+            logger,
+            "document_ingestion_completed",
+            file_name=file_name,
+            prose_chunks=len(chunks),
+            tables=len(tables),
+            table_sentences=len(sentence_records),
         )
 
     def _save_aggregate_outputs(self) -> None:
@@ -211,22 +209,21 @@ class IngestionPipeline:
         self._save_json(self.chunk_output_dir / "tables_nl.json", all_table_sentences)
 
     def run(self) -> None:
-        """
-        Run the ingestion pipeline per document:
-        1. Thread 1: chunk text and embed chunks
-        2. Thread 2: extract tables, generate NL sentences, and embed table sentences
-        """
         input_files = self._resolve_input_files()
         if self.file_paths:
-            print(f"Processing PDFs: {len(input_files)} file(s)")
+            log_info(logger, "ingestion_input_files_resolved", file_count=len(input_files), mode="explicit_paths")
         else:
-            print(f"Processing PDFs from: {self.dataset_dir}")
-        print(
-            f"Chunking config - max_tokens: {DEFAULT_MAX_TOKENS}, overlap: {int(DEFAULT_OVERLAP * 100)}%"
+            log_info(logger, "ingestion_input_directory_resolved", dataset_dir=self.dataset_dir, file_count=len(input_files))
+        log_info(
+            logger,
+            "ingestion_configuration",
+            max_tokens=DEFAULT_MAX_TOKENS,
+            overlap_percent=int(DEFAULT_OVERLAP * 100),
+            collection_name=self.collection_name,
         )
 
         if not input_files:
-            print("No valid PDF files to process.")
+            log_info(logger, "ingestion_skipped_no_valid_files")
             return
 
         self.document_chunks.clear()
@@ -243,25 +240,16 @@ class IngestionPipeline:
 
             total_chunks = sum(len(chunks) for chunks in self.document_chunks.values())
             total_tables = sum(len(tables) for tables in self.document_tables.values())
-            total_table_sentences = sum(
-                len(records) for records in self.document_table_sentence_records.values()
-            )
-            print(
-                "Ingestion pipeline completed successfully. "
-                f"Prose chunks: {total_chunks}, tables: {total_tables}, "
-                f"table sentences: {total_table_sentences}"
+            total_table_sentences = sum(len(records) for records in self.document_table_sentence_records.values())
+            log_info(
+                logger,
+                "ingestion_pipeline_completed",
+                prose_chunks=total_chunks,
+                tables=total_tables,
+                table_sentences=total_table_sentences,
+                collection_name=self.collection_name,
             )
         except Exception as e:
-            print(f"Error during ingestion: {str(e)}")
+            log_error(logger, "ingestion_pipeline_failed", error_type=type(e).__name__, error=str(e), collection_name=self.collection_name)
+            logger.exception("ingestion_pipeline_exception")
             raise
-
-
-if __name__ == "__main__":
-    # Example usage
-    dataset_dir = r"D:\_official_\_MIT ADT_\_SEMESTER 7_\MP5\MP5-RAG-System\src\ingestion\temp_dataset"
-    pipeline = IngestionPipeline(
-        dataset_dir=dataset_dir,
-        collection_name=get_shared_collection_name(),
-        chunk_output_dir=None,
-    )
-    pipeline.run()

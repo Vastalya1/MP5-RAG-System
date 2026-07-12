@@ -6,6 +6,8 @@ from starlette.middleware.sessions import SessionMiddleware
 import shutil
 import os
 from pathlib import Path
+import chromadb
+import time
 import hashlib
 import hmac
 import psycopg2
@@ -17,25 +19,90 @@ from passlib.context import CryptContext
 from dotenv import load_dotenv
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from queryRewriter.rewriting import QueryRewriter
+from shared.chroma_config import get_personal_collection_name, get_shared_collection_name
+from shared.logging_utils import (
+    capture_print,
+    current_transaction_id,
+    get_logger,
+    log_error,
+    log_info,
+    log_query_error,
+    log_query_step,
+    new_transaction_id,
+    reset_query_id,
+    reset_transaction_id,
+    set_transaction_id,
+    start_query_log,
+)
+# from queryRewriter.rewriting import QueryRewriter
+from queryRewriter.rewriting_Chatgpt import QueryRewriter
 from retriever.retrival import retrivalModel
-from retriever.reranking_mistral import ChunkReranker
-from output.answerGeneration_mistral import AnswerGenerator
+# from retriever.reranking_mistral import ChunkReranker
+from retriever.reranking_Chatgpt import ChunkReranker
+# from output.answerGeneration_mistral import AnswerGenerator
+from output.answerGeneration_Chatgpt import AnswerGenerator
 # Import LangGraph orchestrator
-from orchestration.orchestrator import QueryOrchestrator, create_orchestrator
+# from orchestration.orchestrator import QueryOrchestrator, create_orchestrator
+from orchestration.orchestrator_Chatgpt import QueryOrchestrator, create_orchestrator
 # Import your ingestion pipeline and other necessary components
-from ingestion.ingestionPipeline import IngestionPipeline
+# from ingestion.ingestionPipeline import IngestionPipeline
+from ingestion.ingestionPipeline_Chatgpt import IngestionPipeline
 from tavily_fallback.tavily_client import TavilySearchClient
 from tavily_fallback.tavily_service import TavilyService
 
 
 # Load environment variables from .env (if present)
 load_dotenv()
+capture_print()
+logger = get_logger(__name__)
 
 # Get the base directory
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 app = FastAPI()
+
+
+@app.middleware("http")
+async def log_request_middleware(request: Request, call_next):
+    transaction_id = request.headers.get("x-transaction-id") or new_transaction_id("req")
+    request.state.transaction_id = transaction_id
+    token = set_transaction_id(transaction_id)
+    start = time.perf_counter()
+    log_info(
+        logger,
+        "request_started",
+        method=request.method,
+        path=request.url.path,
+        client=request.client.host if request.client else None,
+    )
+    try:
+        response = await call_next(request)
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        response.headers["X-Transaction-Id"] = transaction_id
+        log_info(
+            logger,
+            "request_completed",
+            method=request.method,
+            path=request.url.path,
+            status_code=response.status_code,
+            duration_ms=duration_ms,
+        )
+        return response
+    except Exception as exc:
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        log_error(
+            logger,
+            "request_failed",
+            method=request.method,
+            path=request.url.path,
+            duration_ms=duration_ms,
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+        logger.exception("request_exception")
+        raise
+    finally:
+        reset_transaction_id(token)
 
 # Session middleware for login state
 SESSION_SECRET = os.getenv("SESSION_SECRET", "dev-secret-change-me")
@@ -65,14 +132,18 @@ MAX_FAILED_ATTEMPTS = int(os.getenv("MAX_FAILED_ATTEMPTS", "5"))
 LOCKOUT_MINUTES = int(os.getenv("LOCKOUT_MINUTES", "15"))
 PASSWORD_MIN_LENGTH = int(os.getenv("PASSWORD_MIN_LENGTH", "8"))
 PWD_CONTEXT = CryptContext(schemes=["argon2"], deprecated="auto")
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 DISABLE_CSRF = os.getenv("DISABLE_CSRF", "false").lower() in {"1", "true", "yes"}
+CHROMA_SHARED_COLLECTION_NAME = get_shared_collection_name()
+CHROMA_CLOUD_TENANT = os.getenv("CHROMA_CLOUD_TENANT", "a92961b0-ea65-4a82-a7ad-321a4baaaa60")
+CHROMA_CLOUD_DATABASE = os.getenv("CHROMA_CLOUD_DATABASE", "Major-Project")
 
 _retriever_instance: retrivalModel | None = None
 _rewriter_instance: QueryRewriter | None = None
 _reranker_instance: ChunkReranker | None = None
 _answer_generator_instance: AnswerGenerator | None = None
 _orchestrator_instance: QueryOrchestrator | None = None
+_chroma_client_instance = None
 
 # Flag to enable/disable orchestration (set to True to use LangGraph orchestration)
 USE_ORCHESTRATION = os.getenv("USE_ORCHESTRATION", "true").lower() in {"1", "true", "yes"}
@@ -85,42 +156,61 @@ def _get_retriever() -> retrivalModel:
 
 def _get_rewriter() -> QueryRewriter:
     global _rewriter_instance
-    if not MISTRAL_API_KEY:
-        raise RuntimeError("MISTRAL_API_KEY is required for query rewriting.")
+    if not OPENAI_API_KEY:
+        raise RuntimeError("OPENAI_API_KEY is required for query rewriting.")
     if _rewriter_instance is None:
-        _rewriter_instance = QueryRewriter(MISTRAL_API_KEY)
+        _rewriter_instance = QueryRewriter(OPENAI_API_KEY)
     return _rewriter_instance
 
 def _get_reranker() -> ChunkReranker:
     global _reranker_instance
-    if not MISTRAL_API_KEY:
-        raise RuntimeError("MISTRAL_API_KEY is required for reranking.")
+    if not OPENAI_API_KEY:
+        raise RuntimeError("OPENAI_API_KEY is required for reranking.")
     if _reranker_instance is None:
-        _reranker_instance = ChunkReranker(MISTRAL_API_KEY)
+        _reranker_instance = ChunkReranker(OPENAI_API_KEY)
     return _reranker_instance
 
 def _get_answer_generator() -> AnswerGenerator:
     global _answer_generator_instance
-    if not MISTRAL_API_KEY:
-        raise RuntimeError("MISTRAL_API_KEY is required for answer generation.")
+    if not OPENAI_API_KEY:
+        raise RuntimeError("OPENAI_API_KEY is required for answer generation.")
     if _answer_generator_instance is None:
-        _answer_generator_instance = AnswerGenerator(MISTRAL_API_KEY)
+        _answer_generator_instance = AnswerGenerator(OPENAI_API_KEY)
     return _answer_generator_instance
 
 def _get_orchestrator() -> QueryOrchestrator:
     """Get or create the LangGraph query orchestrator instance."""
     global _orchestrator_instance
-    if not MISTRAL_API_KEY:
-        raise RuntimeError("MISTRAL_API_KEY is required for orchestration.")
+    if not OPENAI_API_KEY:
+        raise RuntimeError("OPENAI_API_KEY is required for orchestration.")
     if _orchestrator_instance is None:
         _orchestrator_instance = create_orchestrator(
-            api_key=MISTRAL_API_KEY,
+            api_key=OPENAI_API_KEY,
             rewriter=_get_rewriter(),
             retriever=_get_retriever(),
             reranker=_get_reranker(),
             answer_generator=_get_answer_generator()
         )
     return _orchestrator_instance
+
+def _get_chroma_client():
+    global _chroma_client_instance
+    if _chroma_client_instance is None:
+        api_key = os.getenv("CHROMA_CLOUD_API_KEY")
+        if not api_key:
+            raise RuntimeError("CHROMA_CLOUD_API_KEY is required for Chroma access.")
+        _chroma_client_instance = chromadb.CloudClient(
+            api_key=api_key,
+            tenant=CHROMA_CLOUD_TENANT,
+            database=CHROMA_CLOUD_DATABASE,
+        )
+        log_info(
+            logger,
+            "chroma_client_initialized",
+            tenant=CHROMA_CLOUD_TENANT,
+            database=CHROMA_CLOUD_DATABASE,
+        )
+    return _chroma_client_instance
 
 def _hash_password(password: str, salt: str) -> str:
     return hashlib.pbkdf2_hmac(
@@ -158,15 +248,20 @@ ADMIN_PASSWORDS = {
 def _db_conn():
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL must be set for Postgres access.")
+    log_info(logger, "db_transaction_open")
     conn = psycopg2.connect(DATABASE_URL)
     try:
         yield conn
         conn.commit()
+        log_info(logger, "db_transaction_commit")
     except Exception:
         conn.rollback()
+        log_error(logger, "db_transaction_rollback")
+        logger.exception("db_transaction_exception")
         raise
     finally:
         conn.close()
+        log_info(logger, "db_connection_closed")
 
 def _get_user_record(username: str) -> dict | None:
     with _db_conn() as conn:
@@ -399,6 +494,7 @@ def _init_db() -> None:
 @app.on_event("startup")
 def startup_event():
     _init_db()
+    log_info(logger, "application_started", orchestration_enabled=USE_ORCHESTRATION)
 
 def _get_current_user(request: Request) -> dict | None:
     return request.session.get("user")
@@ -459,36 +555,69 @@ def _list_uploaded_files(scope: str, username: str | None = None) -> list[dict]:
                 for row in cursor.fetchall()
             ]
 
+def _list_chroma_document_names(collection_name: str | None) -> list[str]:
+    if not collection_name:
+        return []
+
+    try:
+        collection = _get_chroma_client().get_collection(name=collection_name)
+        results = collection.get(include=["metadatas"])
+    except Exception as exc:
+        log_error(
+            logger,
+            "document_options_chroma_read_failed",
+            collection_name=collection_name,
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
+        return []
+
+    document_names: set[str] = set()
+    for metadata in results.get("metadatas") or []:
+        if not metadata:
+            continue
+        document_name = str(metadata.get("document_name", "")).strip()
+        if document_name:
+            document_names.add(document_name)
+
+    names = sorted(document_names, key=str.lower)
+    log_info(
+        logger,
+        "document_options_chroma_read_completed",
+        collection_name=collection_name,
+        document_count=len(names),
+    )
+    return names
+
 def _get_document_options(user: dict) -> list[dict]:
     options = [{"value": "", "label": "All policy documents"}]
     seen: set[tuple[str, str]] = set()
 
-    for item in _list_uploaded_files("shared"):
-        filename = item["filename"]
-        key = ("shared", filename)
-        if key in seen:
-            continue
+    def append_option(scope: str, filename: str, label_suffix: str) -> None:
+        normalized_filename = (filename or "").strip()
+        key = (scope, normalized_filename)
+        if not normalized_filename or key in seen:
+            return
         seen.add(key)
         options.append(
             {
-                "value": f"shared::{filename}",
-                "label": f"{filename} (Shared)",
+                "value": f"{scope}::{normalized_filename}",
+                "label": f"{normalized_filename} ({label_suffix})",
             }
         )
 
-    personal_files = _list_uploaded_files("personal", user.get("username"))
-    for item in personal_files:
-        filename = item["filename"]
-        key = ("personal", filename)
-        if key in seen:
-            continue
-        seen.add(key)
-        options.append(
-            {
-                "value": f"personal::{filename}",
-                "label": f"{filename} (Personal)",
-            }
-        )
+    for filename in _list_chroma_document_names(CHROMA_SHARED_COLLECTION_NAME):
+        append_option("shared", filename, "Shared")
+
+    for item in _list_uploaded_files("shared"):
+        append_option("shared", item["filename"], "Shared")
+
+    personal_collection_name = get_personal_collection_name(user.get("username", ""))
+    for filename in _list_chroma_document_names(personal_collection_name):
+        append_option("personal", filename, "Personal")
+
+    for item in _list_uploaded_files("personal", user.get("username")):
+        append_option("personal", item["filename"], "Personal")
 
     return options
 
@@ -881,10 +1010,17 @@ async def upload_policy(
         # Process the new policy
         pipeline = IngestionPipeline(
             dataset_dir=str(UPLOAD_DIR),
-            collection_name="dataset",
+            collection_name=CHROMA_SHARED_COLLECTION_NAME,
             file_paths=[str(file_path)],
         )
         pipeline.run()
+        log_info(
+            logger,
+            "shared_upload_completed",
+            username=user.get("username"),
+            filename=file.filename,
+            collection_name=CHROMA_SHARED_COLLECTION_NAME,
+        )
 
         _add_uploaded_file("shared", file.filename, user.get("username"), file_path.stat().st_size)
         _record_audit_event(
@@ -898,6 +1034,15 @@ async def upload_policy(
         )
         return {"message": f"Successfully processed policy: {file.filename}"}
     except Exception as e:
+        log_error(
+            logger,
+            "shared_upload_failed",
+            username=user.get("username"),
+            filename=file.filename if file else None,
+            error_type=type(e).__name__,
+            error=str(e),
+        )
+        logger.exception("shared_upload_exception")
         return {"error": str(e)}
 
 @app.post("/upload-personal")
@@ -922,10 +1067,17 @@ async def upload_personal(
 
         pipeline = IngestionPipeline(
             dataset_dir=str(user_dir),
-            collection_name=f"user_{user['username']}_documents",
+            collection_name=get_personal_collection_name(user["username"]),
             file_paths=[str(file_path)],
         )
         pipeline.run()
+        log_info(
+            logger,
+            "personal_upload_completed",
+            username=user.get("username"),
+            filename=file.filename,
+            collection_name=get_personal_collection_name(user["username"]),
+        )
 
         _add_uploaded_file("personal", file.filename, user.get("username"), file_path.stat().st_size)
         _record_audit_event(
@@ -939,6 +1091,15 @@ async def upload_personal(
         )
         return {"message": f"Personal policy uploaded: {file.filename}"}
     except Exception as e:
+        log_error(
+            logger,
+            "personal_upload_failed",
+            username=user.get("username"),
+            filename=file.filename if file else None,
+            error_type=type(e).__name__,
+            error=str(e),
+        )
+        logger.exception("personal_upload_exception")
         return {"error": str(e)}
 
 @app.get("/files/shared/{filename}")
@@ -1041,6 +1202,25 @@ def _build_retrieval_debug(chunks: list[dict] | None) -> dict:
     }
 
 
+def _chunk_log_summary(chunks: list[dict] | None, limit: int = 5) -> list[dict]:
+    summary: list[dict] = []
+    for chunk in (chunks or [])[:limit]:
+        metadata = chunk.get("metadata", {}) or {}
+        summary.append(
+            {
+                "document": metadata.get("document_name", "unknown_document"),
+                "section": metadata.get("section_heading", "General"),
+                "distance": chunk.get("distance"),
+                "hybrid_score": chunk.get("hybrid_score"),
+                "semantic_score": chunk.get("semantic_score"),
+                "keyword_score": chunk.get("keyword_score"),
+                "matched_by": chunk.get("matched_by", []),
+                "text_preview": str(chunk.get("text", ""))[:220],
+            }
+        )
+    return summary
+
+
 @app.post("/query")
 async def query(
     request: Request,
@@ -1051,16 +1231,27 @@ async def query(
     csrf_token: str | None = Form(None),
 ):
     _require_csrf(request, csrf_token)
+    query_log_token = None
     try:
         selected_scope, document_filter = _parse_document_selection(selected_document)
         effective_scope = scope
         collection_name = None
         if selected_scope == "shared":
             effective_scope = "shared"
-            collection_name = "dataset"
+            collection_name = CHROMA_SHARED_COLLECTION_NAME
         elif selected_scope == "personal":
             effective_scope = "personal"
-            collection_name = f"user_{user['username']}_documents"
+            collection_name = get_personal_collection_name(user["username"])
+
+        query_log_token = start_query_log(
+            current_transaction_id(),
+            logger=logger,
+            username=user.get("username"),
+            scope=effective_scope,
+            selected_document=document_filter,
+            collection_name=collection_name,
+            generated=query,
+        )
 
         _record_audit_event(
             user.get("username"),
@@ -1072,6 +1263,23 @@ async def query(
                 "query_length": len(query),
                 "selected_document": document_filter,
             },
+        )
+        log_info(
+            logger,
+            "query_processing_started",
+            username=user.get("username"),
+            scope=effective_scope,
+            selected_document=document_filter,
+            collection_name=collection_name,
+        )
+        log_query_step(
+            logger,
+            "query_pipeline_entered",
+            generated=query,
+            username=user.get("username"),
+            scope=effective_scope,
+            selected_document=document_filter,
+            collection_name=collection_name,
         )
         
         if USE_ORCHESTRATION:
@@ -1091,8 +1299,22 @@ async def query(
             route_taken = result.get("route_taken", "unknown")
             retrieval_debug = result.get("retrieval_debug")
             
-            # Log the route taken for debugging
-            print(f"[Query] Route taken: {route_taken}")
+            log_info(
+                logger,
+                "query_orchestration_completed",
+                username=user.get("username"),
+                route_taken=route_taken,
+                source_count=len(sources),
+            )
+            log_query_step(
+                logger,
+                "query_response_ready",
+                generated=response_text,
+                username=user.get("username"),
+                route_taken=route_taken,
+                source_count=len(sources),
+                justification=justification_text,
+            )
             
             _save_query_history(
                 user.get("username"),
@@ -1116,34 +1338,48 @@ async def query(
             rewritten_query = query
             rewriter = _get_rewriter()
             rewritten_query = await rewriter.rewrite_query(query) or query
+            log_query_step(
+                logger,
+                "query_rewrite",
+                generated=rewritten_query,
+                original_query=query,
+            )
 
             retriever = _get_retriever()
             chunks: list[dict] = []
             if effective_scope == "shared":
                 chunks = retriever.retrive_Chunks(
                     rewritten_query,
-                    collection_name="dataset",
+                    collection_name=CHROMA_SHARED_COLLECTION_NAME,
                     document_filter=document_filter,
                 )
             elif effective_scope == "personal":
                 chunks = retriever.retrive_Chunks(
                     rewritten_query,
-                    collection_name=f"user_{user['username']}_documents",
+                    collection_name=get_personal_collection_name(user["username"]),
                     document_filter=document_filter,
                 )
             elif effective_scope == "combined":
                 chunks = retriever.retrive_Chunks(
                     rewritten_query,
-                    collection_name="dataset",
+                    collection_name=CHROMA_SHARED_COLLECTION_NAME,
                     document_filter=document_filter,
                 )
                 chunks += retriever.retrive_Chunks(
                     rewritten_query,
-                    collection_name=f"user_{user['username']}_documents",
+                    collection_name=get_personal_collection_name(user["username"]),
                     document_filter=document_filter,
                 )
             else:
                 return {"error": f"Unknown scope: {scope}"}
+
+            log_query_step(
+                logger,
+                "document_retrieval",
+                generated=_chunk_log_summary(chunks),
+                retrieved_count=len(chunks),
+                rewritten_query=rewritten_query,
+            )
 
             # if not chunks:
             #     if not chunks:
@@ -1178,11 +1414,42 @@ async def query(
             reranker = _get_reranker()
             answer_generator = _get_answer_generator()
             reranked = await reranker.rerank_chunks(rewritten_query, chunks, top_k=5)
+            log_query_step(
+                logger,
+                "chunk_reranking",
+                generated=_chunk_log_summary(reranked),
+                reranked_count=len(reranked),
+            )
             answer = await answer_generator.generate_answer(rewritten_query, reranked)
             response_text = answer.get("answer", "")
             justification_text = answer.get("justification")
             sources = answer.get("source_chunks", [])
             retrieval_debug = _build_retrieval_debug(reranked)
+            log_query_step(
+                logger,
+                "answer_generation",
+                generated=response_text,
+                justification=justification_text,
+                source_count=len(sources),
+            )
+            log_info(
+                logger,
+                "query_legacy_rag_completed",
+                username=user.get("username"),
+                scope=effective_scope,
+                chunk_count=len(chunks),
+                reranked_count=len(reranked),
+                source_count=len(sources),
+            )
+            log_query_step(
+                logger,
+                "query_response_ready",
+                generated=response_text,
+                username=user.get("username"),
+                route_taken="legacy_rag",
+                source_count=len(sources),
+                justification=justification_text,
+            )
 
             _save_query_history(
                 user.get("username"),
@@ -1201,7 +1468,27 @@ async def query(
                 "retrieval_debug": retrieval_debug,
             }
     except Exception as e:
+        log_query_error(
+            logger,
+            "query_processing_failed",
+            generated=str(e),
+            username=user.get("username"),
+            scope=scope,
+            error_type=type(e).__name__,
+        )
+        log_error(
+            logger,
+            "query_processing_failed",
+            username=user.get("username"),
+            scope=scope,
+            error_type=type(e).__name__,
+            error=str(e),
+        )
+        logger.exception("query_processing_exception")
         return {"error": str(e)}
+    finally:
+        if query_log_token is not None:
+            reset_query_id(query_log_token)
 
 @app.get("/history")
 async def history(

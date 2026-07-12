@@ -7,22 +7,26 @@ This module contains the three main processing nodes:
 3. Web Scraping Node - Handles low similarity score scenarios (placeholder)
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, Optional
 import sys
 from pathlib import Path
 
-# Add parent directory to path for imports
+from openai import OpenAI
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from mistralai import Mistral
-from queryRewriter.rewriting import QueryRewriter
+from output.answerGeneration_Chatgpt import AnswerGenerator
+from queryDecomposition.orchestrator_Chatgpt import QueryDecompositionOrchestrator
+from queryRewriter.rewriting_Chatgpt import QueryRewriter
+from retriever.reranking_Chatgpt import ChunkReranker
 from retriever.retrival import retrivalModel
-from retriever.reranking_mistral import ChunkReranker
-from output.answerGeneration_mistral import AnswerGenerator
-from queryDecomposition.orchestrator import QueryDecompositionOrchestrator
+from shared.logging_utils import get_logger, log_error, log_info, log_query_error, log_query_step
 from tavily_fallback.tavily_client import TavilySearchClient
 from tavily_fallback.tavily_service import TavilyService
-from .rag_pipeline import RAGSubQueryProcessor
+from .rag_pipeline_Chatgpt import RAGSubQueryProcessor
+
+
+logger = get_logger(__name__)
 
 
 class DirectLLMNode:
@@ -30,79 +34,88 @@ class DirectLLMNode:
     Node for handling queries that don't require document lookup.
     Provides direct conversational responses using the LLM.
     """
-    
+
     def __init__(self, api_key: str):
         """
         Initialize the Direct LLM Node.
-        
-        Args:
-            api_key: Mistral API key
-        """
-        self.client = Mistral(api_key=api_key)
-        self.model = "mistral-tiny"
-        
-        self.SYSTEM_PROMPT = """You are a helpful medical insurance assistant. 
-You are currently responding to a general query that doesn't require looking up specific policy documents.
 
-Guidelines:
-- Be friendly and conversational
-- For general insurance concepts, provide clear explanations
-- If asked about specific policy details, politely indicate that you'd need the user to ask about their specific policy
-- Keep responses concise but helpful
-- Don't make up specific numbers, coverage amounts, or policy details
-- If the query seems to actually need policy document lookup, suggest rephrasing the question to get specific policy information
-- IMPORTANT: Return PLAIN TEXT only. Do not use any markdown formatting (no asterisks, no bold, no bullet points with dashes). Just use plain sentences and paragraphs."""
+        Args:
+            api_key: OpenAI API key
+        """
+        self.client = OpenAI(api_key=api_key)
+        self.model = "gpt-4o-mini"
+
+        self.SYSTEM_PROMPT = """You are a helpful medical insurance policy assistant.
+You are handling queries that do not require policy-document retrieval, but you must remain within product scope.
+
+Scope:
+- In scope: greetings, thanks, what the assistant can do, clarification requests, and general medical-insurance or policy-related questions.
+- Out of scope: questions unrelated to medical insurance policies or health-insurance topics.
+
+Behavior:
+- If the query is in scope, answer briefly and clearly.
+- If the query is out of scope, do not give the actual answer to that unrelated topic.
+- Instead, reply naturally in a way that acknowledges the user's request and gently redirects them toward medical insurance policy questions.
+- Make the redirect feel contextual to the user's wording, not like a repeated canned line.
+- You may mention examples such as coverage, claims, exclusions, waiting periods, network hospitals, premiums, or benefits.
+- Do not use markdown. Return plain text only.
+- Keep the reply concise, warm, and subtle.
+"""
 
     async def process(self, query: str) -> Dict[str, Any]:
-        """
-        Process a query using direct LLM response.
-        
-        Args:
-            query: The user's original query
-            
-        Returns:
-            Dict containing the response and metadata
-        """
         try:
             messages = [
                 {"role": "system", "content": self.SYSTEM_PROMPT},
                 {"role": "user", "content": query},
             ]
-            
-            response = self.client.chat.complete(
+
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 temperature=0.7,
-                max_tokens=500
+                max_tokens=500,
             )
-            
+
             if response and response.choices:
-                answer = response.choices[0].message.content.strip()
+                answer = (response.choices[0].message.content or "").strip()
+                log_info(logger, "direct_llm_completed", answer_length=len(answer))
+                log_query_step(
+                    logger,
+                    "direct_llm_response",
+                    generated=answer,
+                    answer_length=len(answer),
+                )
                 return {
                     "answer": answer,
                     "justification": None,
                     "sources": [],
                     "route_taken": "direct_llm",
-                    "success": True
+                    "success": True,
                 }
-            else:
-                return {
-                    "answer": "I apologize, but I couldn't generate a response. Please try again.",
-                    "justification": None,
-                    "sources": [],
-                    "route_taken": "direct_llm",
-                    "success": False
-                }
-                
+            return {
+                "answer": "I apologize, but I couldn't generate a response. Please try again.",
+                "justification": None,
+                "sources": [],
+                "route_taken": "direct_llm",
+                "success": False,
+            }
+
         except Exception as e:
-            print(f"[DirectLLMNode] Error: {str(e)}")
+            log_error(logger, "direct_llm_failed", error_type=type(e).__name__, error=str(e))
+            log_query_error(
+                logger,
+                "direct_llm_response",
+                generated=str(e),
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return {
                 "answer": f"An error occurred while processing your query: {str(e)}",
                 "justification": None,
                 "sources": [],
                 "route_taken": "direct_llm",
                 "success": False,
-                "error": str(e)
+                "error": str(e),
             }
 
 
@@ -111,25 +124,15 @@ class RAGProcessNode:
     Node for handling queries that require document retrieval and RAG processing.
     Uses the full RAG pipeline: Query Rewriting -> Retrieval -> Reranking -> Answer Generation
     """
-    
+
     def __init__(
         self,
         api_key: str,
         rewriter: Optional[QueryRewriter] = None,
         retriever: Optional[retrivalModel] = None,
         reranker: Optional[ChunkReranker] = None,
-        answer_generator: Optional[AnswerGenerator] = None
+        answer_generator: Optional[AnswerGenerator] = None,
     ):
-        """
-        Initialize the RAG Process Node.
-        
-        Args:
-            api_key: Mistral API key
-            rewriter: Optional pre-initialized QueryRewriter
-            retriever: Optional pre-initialized retrivalModel
-            reranker: Optional pre-initialized ChunkReranker
-            answer_generator: Optional pre-initialized AnswerGenerator
-        """
         self.api_key = api_key
         self.pipeline = RAGSubQueryProcessor(
             api_key=api_key,
@@ -142,30 +145,24 @@ class RAGProcessNode:
             api_key=api_key,
             rag_processor=self.pipeline,
         )
-    
+
     async def process(
         self,
         query: str,
         scope: str = "shared",
         username: Optional[str] = None,
         collection_name: Optional[str] = None,
-        document_filter: Optional[str] = None
+        document_filter: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """
-        Process a query through the full RAG pipeline.
-        
-        Args:
-            query: The user's original query
-            scope: The search scope ("shared", "personal", "combined")
-            username: Username for personal document access
-            collection_name: Optional specific collection name
-            document_filter: Optional document name to filter within a collection
-            
-        Returns:
-            Dict containing the answer, justification, sources, and metadata
-        """
         try:
-            print(f"[RAGProcessNode] Starting decomposition-aware RAG pipeline...")
+            log_info(logger, "rag_process_node_started", scope=scope, collection_name=collection_name, document_filter=document_filter)
+            log_query_step(
+                logger,
+                "rag_processing_started",
+                scope=scope,
+                collection_name=collection_name,
+                document_filter=document_filter,
+            )
             result = await self.decomposition_orchestrator.process_query(
                 query=query,
                 scope=scope,
@@ -191,9 +188,9 @@ class RAGProcessNode:
                 "retrieval_debug": result.get("retrieval_debug"),
                 "sub_query_results": sub_query_results,
             }
-            
+
         except Exception as e:
-            print(f"[RAGProcessNode] Error: {str(e)}")
+            log_error(logger, "rag_process_node_failed", error_type=type(e).__name__, error=str(e))
             return {
                 "answer": f"An error occurred while processing your query: {str(e)}",
                 "justification": None,
@@ -201,7 +198,7 @@ class RAGProcessNode:
                 "route_taken": "rag",
                 "success": False,
                 "error": str(e),
-                "needs_web_scraping": False
+                "needs_web_scraping": False,
             }
 
 
@@ -211,34 +208,18 @@ class WebScrapingNode:
     """
 
     def __init__(self, api_key: str = None):
-        """
-        Initialize the Web Scraping Node.
-        
-        Args:
-            api_key: Mistral API key (optional, can use LLM for synthesis)
-        """
         self.api_key = api_key
         if api_key:
-            self.client = Mistral(api_key=api_key)
+            self.client = OpenAI(api_key=api_key)
         try:
             self.service = TavilyService(TavilySearchClient())
             self.tavily_available = True
-            print("[WebScrapingNode] Tavily service initialized")
+            log_info(logger, "tavily_initialized")
         except Exception as e:
-            print(f"[WebScrapingNode] Tavily not available: {e}")
+            log_error(logger, "tavily_initialization_failed", error_type=type(e).__name__, error=str(e))
             self.tavily_available = False
 
     async def process(self, query: str, context: Optional[Dict] = None) -> Dict[str, Any]:
-        """
-        Uses Tavily to answer the query using web search.
-        
-        Args:
-            query: The user's query (ideally rewritten)
-            context: Optional context from previous processing
-            
-        Returns:
-            Dict with answer, sources, and metadata
-        """
         if not self.tavily_available:
             return {
                 "answer": "Web search is currently unavailable. Please try again or contact support.",
@@ -246,38 +227,47 @@ class WebScrapingNode:
                 "sources": [],
                 "route_taken": "web_scraping",
                 "success": False,
-                "error": "Tavily API not configured"
+                "error": "Tavily API not configured",
             }
-        
+
         try:
-            print(f"[WebScrapingNode] Searching web for: {query}")
+            log_info(logger, "tavily_search_started", query_length=len(query))
             result = self.service.get_answer(query)
+            log_query_step(
+                logger,
+                "web_search_response",
+                generated=result.get("answer", ""),
+                source_count=len(result.get("sources", []) or []),
+            )
 
             return {
                 "answer": result.get("answer", ""),
                 "justification": "Answer generated using web search",
                 "sources": result.get("sources", []),
                 "route_taken": "web_scraping",
-                "success": True
+                "success": True,
             }
 
         except Exception as e:
-            print(f"[WebScrapingNode] Error: {str(e)}")
+            log_error(logger, "tavily_search_failed", error_type=type(e).__name__, error=str(e))
+            log_query_error(
+                logger,
+                "web_search_response",
+                generated=str(e),
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return {
                 "answer": "Unable to fetch information from web search. Please try again.",
                 "justification": None,
                 "sources": [],
                 "route_taken": "web_scraping",
                 "success": False,
-                "error": str(e)
+                "error": str(e),
             }
 
 
-# Convenience functions for LangGraph node integration
 async def direct_llm_node(state: Dict, api_key: str) -> Dict:
-    """
-    LangGraph-compatible wrapper for DirectLLMNode.
-    """
     node = DirectLLMNode(api_key)
     result = await node.process(state["query"])
     return {**state, "result": result}
@@ -289,17 +279,14 @@ async def rag_process_node(
     rewriter: Optional[QueryRewriter] = None,
     retriever: Optional[retrivalModel] = None,
     reranker: Optional[ChunkReranker] = None,
-    answer_generator: Optional[AnswerGenerator] = None
+    answer_generator: Optional[AnswerGenerator] = None,
 ) -> Dict:
-    """
-    LangGraph-compatible wrapper for RAGProcessNode.
-    """
     node = RAGProcessNode(
         api_key,
         rewriter=rewriter,
         retriever=retriever,
         reranker=reranker,
-        answer_generator=answer_generator
+        answer_generator=answer_generator,
     )
     result = await node.process(
         state["query"],
@@ -312,9 +299,6 @@ async def rag_process_node(
 
 
 async def web_scraping_node(state: Dict, api_key: str) -> Dict:
-    """
-    LangGraph-compatible wrapper for WebScrapingNode.
-    """
     node = WebScrapingNode(api_key)
     result = await node.process(state["query"], context=state.get("result"))
     return {**state, "result": result}

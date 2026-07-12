@@ -1,18 +1,23 @@
 from typing import Optional
-from mistralai import Mistral
-# from mistralai.models.chat_completion import ChatMessage
+
+from openai import OpenAI
+from shared.logging_utils import get_logger, log_error, log_info
+
+
+logger = get_logger(__name__)
+
 
 class QueryRewriter:
     def __init__(self, api_key: str):
         """
-        Initialize the Query Rewriter with Mistral API
-        
+        Initialize the Query Rewriter with OpenAI API
+
         Args:
-            api_key: Mistral API key
+            api_key: OpenAI API key
         """
-        self.client = Mistral(api_key=api_key)
-        self.model = "mistral-tiny"  # Fastest model in Mistral's lineup
-        
+        self.client = OpenAI(api_key=api_key)
+        self.model = "gpt-4o-mini"
+
         # The prompt template for query rewriting
         self.REWRITE_PROMPT = """You are a specialized medical insurance query reformulation expert. Your task is to rewrite user questions into clear, factual queries using proper insurance terminology.
 
@@ -40,30 +45,38 @@ Respond only with the rewritten query, no additional text or explanations."""
                 {"role": "user", "content": query},
             ]
 
-            response = self.client.chat.complete(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 temperature=0.3,
                 top_p=0.95,
-                max_tokens=150
+                max_tokens=150,
             )
 
             if response and response.choices:
-                rewritten_query = response.choices[0].message.content.strip()
-                print(f"Original query: {query}")
-                print(f"Rewritten query: {rewritten_query}")
-                return rewritten_query
+                rewritten_query = (response.choices[0].message.content or "").strip()
+                log_info(
+                    logger,
+                    "query_rewrite_completed",
+                    original_length=len(query),
+                    rewritten_length=len(rewritten_query),
+                )
+                return rewritten_query or None
 
-            print("Error: Empty response from Mistral API")
+            log_error(logger, "query_rewrite_empty_response")
             return None
 
         except Exception as e:
-            print(f"Error in query rewriting: {str(e)}")
-            print(f"Error type: {type(e)}")
+            log_error(
+                logger,
+                "query_rewrite_failed",
+                error_type=type(e).__name__,
+                error=str(e),
+            )
             return None
 
     async def rewrite_query(self, query: str) -> Optional[str]:
-        """Process a query through the Mistral API.
+        """Process a query through the OpenAI API.
 
         Args:
             query: The original user query string to be rewritten
@@ -72,18 +85,3 @@ Respond only with the rewritten query, no additional text or explanations."""
             Optional[str]: The rewritten query with medical insurance terminology, or None if the operation fails
         """
         return self.rewrite_query_sync(query)
-
-# # Example usage
-# if __name__ == "__main__":
-#     import asyncio
-    
-#     async def main():
-#         API_KEY = "your-api-key-here"  # Replace with your actual API key
-#         rewriter = QueryRewriter(API_KEY)
-        
-#         # Example query
-#         test_query = "How much do I need to pay for a doctor's visit?"
-#         rewritten = await rewriter.rewrite_query(test_query)
-#         print(f"Rewritten query: {rewritten}")
-    
-#     asyncio.run(main())

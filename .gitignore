@@ -2,8 +2,10 @@
 chromadb/
 dataset/uploads/
 dataset/user_uploads/
+Logs/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .venv/
+.env

@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import chromadb
+from shared.chroma_config import get_shared_collection_name
 
 # Load environment variables
 env_path = Path(__file__).resolve().parents[2] / ".env"
@@ -16,7 +17,7 @@ load_dotenv(env_path)
 
 
 def export_chunks_to_markdown(
-    collection_name: str = "dataset",
+    collection_name: str | None = None,
     output_file: str = None
 ) -> None:
     """
@@ -26,6 +27,7 @@ def export_chunks_to_markdown(
         collection_name: Name of the ChromaDB collection
         output_file: Path to the output markdown file
     """
+    resolved_collection_name = collection_name or get_shared_collection_name()
     # Connect to ChromaDB Cloud
     client = chromadb.CloudClient(
         api_key=os.getenv("CHROMA_CLOUD_API_KEY"),
@@ -35,13 +37,13 @@ def export_chunks_to_markdown(
     
     # Get the collection
     try:
-        collection = client.get_collection(name=collection_name)
+        collection = client.get_collection(name=resolved_collection_name)
     except Exception as e:
-        print(f"Error: Could not get collection '{collection_name}': {e}")
+        print(f"Error: Could not get collection '{resolved_collection_name}': {e}")
         return
     
     # Get all documents from the collection
-    print(f"Fetching documents from collection: {collection_name}")
+    print(f"Fetching documents from collection: {resolved_collection_name}")
     
     # Get total count first
     total_count = collection.count()
@@ -124,7 +126,7 @@ def export_chunks_to_markdown(
 
 
 def export_chunks_to_csv_style_markdown(
-    collection_name: str = "dataset",
+    collection_name: str | None = None,
     output_file: str = None
 ) -> None:
     """
@@ -137,9 +139,9 @@ def export_chunks_to_csv_style_markdown(
     )
     
     try:
-        collection = client.get_collection(name=collection_name)
+        collection = client.get_collection(name=resolved_collection_name)
     except Exception as e:
-        print(f"Error: Could not get collection '{collection_name}': {e}")
+        print(f"Error: Could not get collection '{resolved_collection_name}': {e}")
         return
     
     total_count = collection.count()
@@ -197,6 +199,6 @@ def export_chunks_to_csv_style_markdown(
 if __name__ == "__main__":
     # Export chunks to markdown (grouped by document)
     export_chunks_to_markdown(
-        collection_name="dataset",
+        collection_name=get_shared_collection_name(),
         output_file=None  # Will save to dataset_chunks.md
     )
